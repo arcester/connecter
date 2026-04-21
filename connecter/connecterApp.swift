@@ -32,6 +32,7 @@ struct connecterApp: App {
                 .environmentObject(mountManager)
                 .environmentObject(loginItemManager)
         }
+        .windowResizability(.contentSize)
 
         MenuBarExtra {
             MenuBarMenuView()

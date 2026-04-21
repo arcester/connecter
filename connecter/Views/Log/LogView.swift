@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct LogView: View {
+    @Environment(\.dismiss) private var dismiss
     @ObservedObject private var logManager = LogManager.shared
 
     var body: some View {
@@ -34,6 +35,16 @@ struct LogView: View {
             }
             .navigationTitle("Activity Log")
             .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button {
+                        dismiss()
+                    } label: {
+                        Image(systemName: "xmark.circle.fill")
+                            .foregroundStyle(.secondary)
+                            .font(.title3)
+                    }
+                    .buttonStyle(.plain)
+                }
                 ToolbarItem(placement: .primaryAction) {
                     Button(role: .destructive) {
                         logManager.clear()
