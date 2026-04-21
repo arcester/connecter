@@ -8,17 +8,26 @@
 import SwiftUI
 
 struct ContentView: View {
+    @EnvironmentObject private var mountManager: MountManager
+
     var body: some View {
-        VStack {
-            Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundStyle(.tint)
-            Text("Hello, world!")
+        TabView {
+            SharesTab()
+                .tabItem { Label("Shares", systemImage: "externaldrive") }
+
+            SettingsTab()
+                .tabItem { Label("Settings", systemImage: "gear") }
+
+            LogView()
+                .tabItem { Label("Log", systemImage: "terminal") }
         }
-        .padding()
+        .frame(minWidth: 560, minHeight: 400)
+        .onAppear { mountManager.startMonitoring() }
     }
 }
 
 #Preview {
     ContentView()
+        .environmentObject(MountManager())
+        .environmentObject(LoginItemManager())
 }

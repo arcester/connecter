@@ -6,8 +6,14 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		FC8072102F8D7EB900601450 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = FC8072112F8D7EB900601450 /* Localizable.strings */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
 		FC8071FB2F8D7EB800601450 /* connecter.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = connecter.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		FC8072122F8D7EB900601450 /* es */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = es; path = Localizable.strings; sourceTree = "<group>"; };
+		FC8072142F8D7EB900601450 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = Localizable.strings; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -34,6 +40,8 @@
 			children = (
 				FC8071FD2F8D7EB800601450 /* connecter */,
 				FC8071FC2F8D7EB800601450 /* Products */,
+				FC8072132F8D7EB900601450 /* es.lproj */,
+				FC8072152F8D7EB900601450 /* en.lproj */,
 			);
 			sourceTree = "<group>";
 		};
@@ -43,6 +51,22 @@
 				FC8071FB2F8D7EB800601450 /* connecter.app */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		FC8072132F8D7EB900601450 /* es.lproj */ = {
+			isa = PBXGroup;
+			children = (
+				FC8072112F8D7EB900601450 /* Localizable.strings */,
+			);
+			path = es.lproj;
+			sourceTree = "<group>";
+		};
+		FC8072152F8D7EB900601450 /* en.lproj */ = {
+			isa = PBXGroup;
+			children = (
+				FC8072142F8D7EB900601450 /* en */,
+			);
+			path = en.lproj;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -91,6 +115,7 @@
 			knownRegions = (
 				en,
 				Base,
+				es,
 			);
 			mainGroup = FC8071F22F8D7EB800601450;
 			minimizedProjectReferenceProxies = 1;
@@ -109,6 +134,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				FC8072102F8D7EB900601450 /* Localizable.strings in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -123,6 +149,18 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXVariantGroup section */
+		FC8072112F8D7EB900601450 /* Localizable.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				FC8072122F8D7EB900601450 /* es */,
+				FC8072142F8D7EB900601450 /* en */,
+			);
+			name = Localizable.strings;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
 
 /* Begin XCBuildConfiguration section */
 		FC8072042F8D7EB900601450 /* Debug */ = {
@@ -250,20 +288,25 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = connecter/connecter.entitlements;
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 4XDZ484XHZ;
-				ENABLE_APP_SANDBOX = YES;
+				ENABLE_APP_SANDBOX = NO;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
-				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = Connectar;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
+				INFOPLIST_KEY_LSUIElement = YES;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = es.guzman.connecter;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -282,20 +325,25 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = connecter/connecter.entitlements;
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 4XDZ484XHZ;
-				ENABLE_APP_SANDBOX = YES;
+				ENABLE_APP_SANDBOX = NO;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
-				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = Connectar;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
+				INFOPLIST_KEY_LSUIElement = YES;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = es.guzman.connecter;
 				PRODUCT_NAME = "$(TARGET_NAME)";
