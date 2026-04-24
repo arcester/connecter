@@ -59,7 +59,12 @@ struct connecterApp: App {
         } label: {
             MenuBarIcon(status: menuBarStatus)
                 .onReceive(NotificationCenter.default.publisher(for: .showMainWindow)) { _ in
-                    openWindow(id: "main")
+                    let regularWindows = NSApp.windows.filter { !($0 is NSPanel) && $0.canBecomeMain }
+                    if let window = regularWindows.first {
+                        window.makeKeyAndOrderFront(nil)
+                    } else {
+                        openWindow(id: "main")
+                    }
                     NSApp.activate(ignoringOtherApps: true)
                 }
         }
