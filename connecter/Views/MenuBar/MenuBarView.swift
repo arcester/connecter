@@ -114,10 +114,10 @@ enum MenuBarStatus {
 
     var iconName: String {
         switch self {
-        case .disabled:      "externaldrive"
-        case .allConnected:  "externaldrive.fill.badge.checkmark"
-        case .partial:       "externaldrive.badge.minus"
-        case .noneConnected: "externaldrive.badge.xmark"
+        case .disabled:      "folder"
+        case .allConnected:  "folder.badge.checkmark"
+        case .partial:       "folder.badge.minus"
+        case .noneConnected: "folder.badge.xmark"
         }
     }
 
