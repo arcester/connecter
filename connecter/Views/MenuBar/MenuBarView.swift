@@ -111,6 +111,8 @@ enum MenuBarStatus {
     case partial
     /// Enabled shares exist but none are connected
     case noneConnected
+    /// At least one share is connecting or disconnecting
+    case busy
 
     var iconName: String {
         switch self {
@@ -118,6 +120,7 @@ enum MenuBarStatus {
         case .allConnected:  "folder.fill"
         case .partial:       "folder.fill"
         case .noneConnected: "folder"
+        case .busy:          "arrow.clockwise"
         }
     }
 
@@ -127,6 +130,7 @@ enum MenuBarStatus {
         case .allConnected:  .green
         case .partial:       .orange
         case .noneConnected: .red
+        case .busy:          .orange
         }
     }
 
@@ -136,6 +140,7 @@ enum MenuBarStatus {
         case .allConnected:  String(localized: "All connected")
         case .partial:       String(localized: "Partial connection")
         case .noneConnected: String(localized: "Not connected")
+        case .busy:          String(localized: "Connecting…")
         }
     }
 }

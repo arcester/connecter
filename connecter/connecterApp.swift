@@ -75,6 +75,7 @@ struct connecterApp: App {
         let enabled = mountManager.configs.filter(\.isEnabled)
         guard !enabled.isEmpty else { return .disabled }
         let statuses = enabled.map(\.connectionStatus)
+        if statuses.contains(.connecting) || statuses.contains(.disconnecting) { return .busy }
         if statuses.allSatisfy({ $0 == .connected }) { return .allConnected }
         if statuses.contains(.connected)              { return .partial }
         return .noneConnected
@@ -85,10 +86,24 @@ struct connecterApp: App {
 
 private struct MenuBarIcon: View {
     let status: MenuBarStatus
+    @State private var rotation: Double = 0
 
     var body: some View {
         Image(systemName: status.iconName)
             .symbolRenderingMode(.multicolor)
             .foregroundStyle(status.color)
+            .rotationEffect(.degrees(status == .busy ? rotation : 0))
+            .animation(
+                status == .busy
+                    ? .linear(duration: 1).repeatForever(autoreverses: false)
+                    : .default,
+                value: rotation
+            )
+            .onChange(of: status) { _, new in
+                rotation = new == .busy ? 360 : 0
+            }
+            .onAppear {
+                if status == .busy { rotation = 360 }
+            }
     }
 }
