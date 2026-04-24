@@ -21,6 +21,8 @@ struct WindowResizer: NSViewRepresentable {
 
     final class ResizingView: NSView {
         var targetSize: NSSize = .zero
+        // First resize is always instant so the window doesn't visibly jump on open.
+        private var settled = false
 
         override func viewDidMoveToWindow() {
             super.viewDidMoveToWindow()
@@ -52,8 +54,9 @@ struct WindowResizer: NSViewRepresentable {
             let topY = frame.maxY
             frame.size = newFrameSize
             frame.origin.y = topY - newFrameSize.height
-            window.setFrame(frame, display: true, animate: animated)
+            window.setFrame(frame, display: true, animate: animated && settled)
 
+            settled = true
             window.minSize = newFrameSize
             window.maxSize = newFrameSize
         }
