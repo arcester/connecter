@@ -57,7 +57,7 @@ struct connecterApp: App {
             MenuBarMenuView()
                 .environmentObject(mountManager)
         } label: {
-            MenuBarIcon(status: menuBarStatus)
+            MenuBarIcon()
                 .onReceive(NotificationCenter.default.publisher(for: .showMainWindow)) { _ in
                     let regularWindows = NSApp.windows.filter { !($0 is NSPanel) && $0.canBecomeMain }
                     if let window = regularWindows.first {
@@ -85,28 +85,7 @@ struct connecterApp: App {
 // MARK: - Dynamic menu bar icon
 
 private struct MenuBarIcon: View {
-    let status: MenuBarStatus
-    @State private var rotation: Double = 0
-
     var body: some View {
-        ZStack(alignment: .bottomTrailing) {
-            Image(systemName: status == .busy ? "folder.fill" : status.iconName)
-                .foregroundStyle(status.color)
-
-            if status == .busy {
-                Image(systemName: "arrow.clockwise")
-                    .font(.system(size: 7, weight: .heavy))
-                    .foregroundStyle(.white)
-                    .padding(1.5)
-                    .background(Circle().fill(Color.orange))
-                    .rotationEffect(.degrees(rotation))
-                    .offset(x: 5, y: 5)
-                    .onAppear {
-                        withAnimation(.linear(duration: 0.8).repeatForever(autoreverses: false)) {
-                            rotation = 360
-                        }
-                    }
-            }
-        }
+        Image(systemName: "folder")
     }
 }
