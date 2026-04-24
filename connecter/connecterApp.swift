@@ -89,19 +89,24 @@ private struct MenuBarIcon: View {
     @State private var rotation: Double = 0
 
     var body: some View {
-        Image(systemName: status.iconName)
-            .symbolRenderingMode(.multicolor)
-            .foregroundStyle(status.color)
-            .rotationEffect(.degrees(rotation))
-            .onChange(of: status, initial: true) { _, new in
-                if new == .busy {
-                    rotation = 0
-                    withAnimation(.linear(duration: 1).repeatForever(autoreverses: false)) {
-                        rotation = 360
+        ZStack(alignment: .bottomTrailing) {
+            Image(systemName: status == .busy ? "folder.fill" : status.iconName)
+                .foregroundStyle(status.color)
+
+            if status == .busy {
+                Image(systemName: "arrow.clockwise")
+                    .font(.system(size: 7, weight: .heavy))
+                    .foregroundStyle(.white)
+                    .padding(1.5)
+                    .background(Circle().fill(Color.orange))
+                    .rotationEffect(.degrees(rotation))
+                    .offset(x: 5, y: 5)
+                    .onAppear {
+                        withAnimation(.linear(duration: 0.8).repeatForever(autoreverses: false)) {
+                            rotation = 360
+                        }
                     }
-                } else {
-                    rotation = 0
-                }
             }
+        }
     }
 }
