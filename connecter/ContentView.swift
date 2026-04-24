@@ -19,8 +19,12 @@ struct ContentView: View {
                     ToolbarItemGroup(placement: .automatic) {
                         Button { showAddSheet = true } label: {
                             Image(systemName: "plus")
-                                .foregroundStyle(.green)
+                                .fontWeight(.semibold)
+                                .foregroundStyle(.white)
+                                .padding(4)
+                                .background(.green, in: RoundedRectangle(cornerRadius: 6, style: .continuous))
                         }
+                        .buttonStyle(.plain)
                         .help("Add share")
 
                         Button {
