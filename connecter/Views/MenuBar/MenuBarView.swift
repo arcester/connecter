@@ -115,9 +115,9 @@ enum MenuBarStatus {
     var iconName: String {
         switch self {
         case .disabled:      "folder"
-        case .allConnected:  "folder.badge.checkmark"
-        case .partial:       "folder.badge.minus"
-        case .noneConnected: "folder.badge.xmark"
+        case .allConnected:  "folder.fill"
+        case .partial:       "folder.fill"
+        case .noneConnected: "folder"
         }
     }
 
