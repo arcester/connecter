@@ -7,17 +7,6 @@ struct MenuBarMenuView: View {
     @EnvironmentObject private var mountManager: MountManager
 
     var body: some View {
-        // Global status summary
-        HStack(spacing: 8) {
-            Image(systemName: globalStatus.iconName)
-                .foregroundStyle(globalStatus.color)
-            Text(globalStatus.label)
-                .font(.headline)
-        }
-        .padding(.horizontal, 4)
-
-        Divider()
-
         // One item per share — tap to mount/unmount
         let sorted = mountManager.configs.sorted {
             ($0.name.isEmpty ? $0.host : $0.name).localizedCaseInsensitiveCompare(
