@@ -7,17 +7,18 @@
 
 import SwiftUI
 
+extension Notification.Name {
+    static let showMainWindow = Notification.Name("connecter.showMainWindow")
+}
+
 final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         if !AppSettings.shared.showOnLaunch {
-            NSApp.windows.forEach { $0.orderOut(nil) }
+            // Defer so SwiftUI has time to create the window before we hide it.
+            DispatchQueue.main.async {
+                NSApp.windows.forEach { $0.orderOut(nil) }
+            }
         }
-    }
-
-    static func showMainWindow() {
-        NSApp.windows.first { $0.title == "Connecter" }?.makeKeyAndOrderFront(nil)
-        ?? NSApp.windows.first?.makeKeyAndOrderFront(nil)
-        NSApp.activate(ignoringOtherApps: true)
     }
 }
 
@@ -26,8 +27,10 @@ struct connecterApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
     @StateObject private var mountManager = MountManager()
     @StateObject private var loginItemManager = LoginItemManager()
+    @Environment(\.openWindow) private var openWindow
 
     init() {
+        NSWindow.allowsAutomaticWindowTabbing = false
         NotificationManager.shared.requestAuthorization()
     }
 
@@ -55,6 +58,10 @@ struct connecterApp: App {
                 .environmentObject(mountManager)
         } label: {
             MenuBarIcon(status: menuBarStatus)
+                .onReceive(NotificationCenter.default.publisher(for: .showMainWindow)) { _ in
+                    openWindow(id: "main")
+                    NSApp.activate(ignoringOtherApps: true)
+                }
         }
         .menuBarExtraStyle(.menu)
     }

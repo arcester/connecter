@@ -29,9 +29,9 @@ struct WindowResizer: NSViewRepresentable {
 
         private func applyWindowChrome() {
             guard let window else { return }
-            // Hide minimize and zoom (maximize) — only close remains.
             window.standardWindowButton(.miniaturizeButton)?.isHidden = true
             window.standardWindowButton(.zoomButton)?.isHidden = true
+            window.tabbingMode = .disallowed
         }
 
         func applyIfNeeded(animated: Bool) {

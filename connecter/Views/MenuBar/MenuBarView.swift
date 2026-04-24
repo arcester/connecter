@@ -36,7 +36,7 @@ struct MenuBarMenuView: View {
         Divider()
 
         Button("Open Connectar…") {
-            AppDelegate.showMainWindow()
+            NotificationCenter.default.post(name: .showMainWindow, object: nil)
         }
         .keyboardShortcut("o", modifiers: .command)
 
