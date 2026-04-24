@@ -21,13 +21,17 @@ struct WindowResizer: NSViewRepresentable {
 
     final class ResizingView: NSView {
         var targetSize: NSSize = .zero
-        // First resize is always instant so the window doesn't visibly jump on open.
+        // True once the content-measured size has been applied at least once.
         private var settled = false
 
         override func viewDidMoveToWindow() {
             super.viewDidMoveToWindow()
+            guard let window else { return }
+            // Hide until the real measured size arrives so the user never sees
+            // the fallback-height window flash before it snaps to the right size.
+            settled = false
+            window.alphaValue = 0
             applyWindowChrome()
-            applyIfNeeded(animated: false)
         }
 
         private func applyWindowChrome() {
@@ -39,6 +43,16 @@ struct WindowResizer: NSViewRepresentable {
 
         func applyIfNeeded(animated: Bool) {
             guard let window = self.window, targetSize != .zero else { return }
+
+            // Always reveal the window once we have the target size, even if no
+            // resize is needed (sizes already match).
+            defer {
+                if !settled {
+                    settled = true
+                    window.alphaValue = 1
+                }
+            }
+
             let currentContent = window.contentRect(forFrameRect: window.frame).size
             let dw = abs(currentContent.width - targetSize.width)
             let dh = abs(currentContent.height - targetSize.height)
@@ -54,9 +68,9 @@ struct WindowResizer: NSViewRepresentable {
             let topY = frame.maxY
             frame.size = newFrameSize
             frame.origin.y = topY - newFrameSize.height
+            // Only animate after the initial sizing is done.
             window.setFrame(frame, display: true, animate: animated && settled)
 
-            settled = true
             window.minSize = newFrameSize
             window.maxSize = newFrameSize
         }
