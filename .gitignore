@@ -1,0 +1,37 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Xcode
+xcuserdata/
+*.xcuserstate
+*.xcscmblueprint
+*.xccheckout
+DerivedData/
+*.moved-aside
+*.pbxuser
+*.mode1v3
+*.mode2v3
+*.perspectivev3
+
+# Build artifacts
+build/
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+# Signing (keep out of version control)
+*.p12
+*.cer
+*.mobileprovision
+ExportOptions.plist
+
+# Local config
+*.xcconfig.local
+
+# Claude Code
+.claude/
+
+# Design assets
+Brand/
