@@ -25,6 +25,7 @@ struct ContentView: View {
                                 .background(.green, in: Circle())
                         }
                         .buttonStyle(.plain)
+                        .padding(.leading, 8)
                         .help("Add share")
 
                         Button {
