@@ -92,18 +92,16 @@ private struct MenuBarIcon: View {
         Image(systemName: status.iconName)
             .symbolRenderingMode(.multicolor)
             .foregroundStyle(status.color)
-            .rotationEffect(.degrees(status == .busy ? rotation : 0))
-            .animation(
-                status == .busy
-                    ? .linear(duration: 1).repeatForever(autoreverses: false)
-                    : .default,
-                value: rotation
-            )
-            .onChange(of: status) { _, new in
-                rotation = new == .busy ? 360 : 0
-            }
-            .onAppear {
-                if status == .busy { rotation = 360 }
+            .rotationEffect(.degrees(rotation))
+            .onChange(of: status, initial: true) { _, new in
+                if new == .busy {
+                    rotation = 0
+                    withAnimation(.linear(duration: 1).repeatForever(autoreverses: false)) {
+                        rotation = 360
+                    }
+                } else {
+                    rotation = 0
+                }
             }
     }
 }
