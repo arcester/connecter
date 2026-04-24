@@ -2,13 +2,12 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-    <!-- Sin sandbox: necesario para ejecutar `open` y `diskutil` via Process() -->
     <key>com.apple.security.app-sandbox</key>
     <false/>
 
-    <!-- Acceso de red como cliente (para conexiones SMB salientes) -->
     <key>com.apple.security.network.client</key>
     <true/>
+
 
 </dict>
 </plist>

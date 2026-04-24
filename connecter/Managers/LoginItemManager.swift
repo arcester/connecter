@@ -5,6 +5,8 @@ import Combine
 @MainActor
 final class LoginItemManager: ObservableObject {
 
+    static let shared = LoginItemManager()
+
     @Published private(set) var status: SMAppService.Status = .notRegistered
 
     private let service = SMAppService.mainApp

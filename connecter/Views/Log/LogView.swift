@@ -1,7 +1,6 @@
 import SwiftUI
 
 struct LogView: View {
-    @Environment(\.dismiss) private var dismiss
     @ObservedObject private var logManager = LogManager.shared
 
     var body: some View {
@@ -17,7 +16,6 @@ struct LogView: View {
                     }
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                 } else {
-                    // Entries list, newest first
                     ScrollViewReader { proxy in
                         List(logManager.entries.reversed()) { entry in
                             LogEntryRow(entry: entry)
@@ -25,6 +23,13 @@ struct LogView: View {
                                 .id(entry.id)
                         }
                         .listStyle(.plain)
+                        .contextMenu {
+                            Button(role: .destructive) {
+                                logManager.clear()
+                            } label: {
+                                Label("Clear log", systemImage: "trash")
+                            }
+                        }
                         .onChange(of: logManager.entries.count) { _, _ in
                             if let last = logManager.entries.last {
                                 proxy.scrollTo(last.id, anchor: .top)
@@ -34,28 +39,9 @@ struct LogView: View {
                 }
             }
             .navigationTitle("Activity Log")
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button {
-                        dismiss()
-                    } label: {
-                        Image(systemName: "xmark.circle.fill")
-                            .foregroundStyle(.secondary)
-                            .font(.title3)
-                    }
-                    .buttonStyle(.plain)
-                }
-                ToolbarItem(placement: .primaryAction) {
-                    Button(role: .destructive) {
-                        logManager.clear()
-                    } label: {
-                        Label("Clear", systemImage: "trash")
-                    }
-                    .help("Clear all log entries")
-                }
-            }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .modalWindowStyle()
     }
 }
 
@@ -75,7 +61,7 @@ private struct LogEntryRow: View {
             Text(Self.timeFormatter.string(from: entry.date))
                 .font(.system(.caption, design: .monospaced))
                 .foregroundStyle(.secondary)
-                .frame(width: 90, alignment: .leading)
+                .frame(width: 90, height: nil, alignment: .leading)
 
             Text(entry.message)
                 .font(.system(.caption, design: .monospaced))

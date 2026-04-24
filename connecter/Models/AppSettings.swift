@@ -27,11 +27,26 @@ final class AppSettings: ObservableObject {
         didSet { UserDefaults.standard.set(showOnLaunch, forKey: Keys.showOnLaunch) }
     }
 
+    // TODO: iCloud sync — descomentar cuando haya cuenta de desarrollador con iCloud habilitado
+    // @Published var iCloudSync: Bool {
+    //     didSet {
+    //         UserDefaults.standard.set(iCloudSync, forKey: Keys.iCloudSync)
+    //         ShareConfig.migrateStorage(toCloud: iCloudSync)
+    //         if iCloudSync {
+    //             MountManager.shared.startCloudObserver()
+    //         } else {
+    //             MountManager.shared.stopCloudObserver()
+    //         }
+    //     }
+    // }
+    @Published var iCloudSync: Bool = false
+
     private enum Keys {
         static let monitorInterval       = "app.monitorInterval"
         static let maxFailures           = "app.maxFailuresBeforeDisable"
         static let notificationsEnabled  = "app.notificationsEnabled"
         static let showOnLaunch          = "app.showOnLaunch"
+        static let iCloudSync            = "app.iCloudSync"
     }
 
     private init() {
@@ -54,5 +69,7 @@ final class AppSettings: ObservableObject {
         } else {
             showOnLaunch = d.bool(forKey: Keys.showOnLaunch)
         }
+
+        // iCloudSync = d.bool(forKey: Keys.iCloudSync)
     }
 }

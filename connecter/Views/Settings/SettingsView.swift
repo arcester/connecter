@@ -1,7 +1,6 @@
 import SwiftUI
 
 struct SettingsTab: View {
-    @Environment(\.dismiss) private var dismiss
     @EnvironmentObject private var loginItemManager: LoginItemManager
     @ObservedObject private var settings = AppSettings.shared
 
@@ -59,6 +58,28 @@ struct SettingsTab: View {
                 }
 
                 Section {
+                    HStack {
+                        VStack(alignment: .leading, spacing: 3) {
+                            Text("iCloud Sync")
+                                .font(.body)
+                            Text("Share configurations are synced across your devices via iCloud.")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                        Spacer()
+                        Toggle("", isOn: $settings.iCloudSync)
+                            .toggleStyle(.switch)
+                            .labelsHidden()
+                            .disabled(true)
+                    }
+                    Label("Requires an Apple Developer account with iCloud capability.", systemImage: "info.circle")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                } header: {
+                    Text("Sync")
+                }
+
+                Section {
                     VStack(alignment: .leading, spacing: 6) {
                         HStack {
                             Text("Check interval")
@@ -87,20 +108,8 @@ struct SettingsTab: View {
             }
             .formStyle(.grouped)
             .navigationTitle("Settings")
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button {
-                        dismiss()
-                    } label: {
-                        Image(systemName: "xmark.circle.fill")
-                            .foregroundStyle(.secondary)
-                            .font(.title3)
-                    }
-                    .buttonStyle(.plain)
-                }
-            }
         }
-        .frame(width: 420)
-        .fixedSize(horizontal: true, vertical: true)
+        .frame(width: 420, height: 550)
+        .modalWindowStyle()
     }
 }

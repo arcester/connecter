@@ -55,19 +55,27 @@ struct ShareConfig: Codable, Identifiable {
 // MARK: - Persistence
 
 extension ShareConfig {
-    private static let userDefaultsKey = "shareConfigs"
+    private static let storeKey = "shareConfigs"
 
-    /// Carga todos los shares, migrando contraseñas en texto plano al Keychain si las hubiera.
     static func loadAll() -> [ShareConfig] {
-        guard
-            let data = UserDefaults.standard.data(forKey: userDefaultsKey),
-            var configs = try? JSONDecoder().decode([ShareConfig].self, from: data)
+        // TODO: iCloud — cuando se active el sync, leer de NSUbiquitousKeyValueStore
+        // let useCloud = AppSettings.shared.iCloudSync
+        // let rawData: Data?
+        // if useCloud {
+        //     rawData = NSUbiquitousKeyValueStore.default.data(forKey: storeKey)
+        //            ?? UserDefaults.standard.data(forKey: storeKey)
+        // } else {
+        //     rawData = UserDefaults.standard.data(forKey: storeKey)
+        // }
+        let rawData = UserDefaults.standard.data(forKey: storeKey)
+
+        guard let data = rawData,
+              var configs = try? JSONDecoder().decode([ShareConfig].self, from: data)
         else { return [] }
 
         var needsMigration = false
         for i in configs.indices {
             if !configs[i].password.isEmpty {
-                // Contraseña en texto plano → Keychain
                 KeychainManager.save(configs[i].password, forID: configs[i].id)
                 configs[i].password = ""
                 needsMigration = true
@@ -76,11 +84,9 @@ extension ShareConfig {
         }
 
         if needsMigration { _persist(configs) }
-
         return configs
     }
 
-    /// Guarda todos los shares. Las contraseñas van al Keychain; el resto a UserDefaults.
     static func saveAll(_ configs: [ShareConfig]) {
         for config in configs {
             KeychainManager.save(config.password, forID: config.id)
@@ -88,11 +94,31 @@ extension ShareConfig {
         _persist(configs)
     }
 
-    /// Escribe las configs en UserDefaults con las contraseñas vacías.
+    // TODO: iCloud — descomentar cuando haya cuenta de desarrollador con iCloud habilitado
+    // static func migrateStorage(toCloud: Bool) {
+    //     if toCloud {
+    //         if let data = UserDefaults.standard.data(forKey: storeKey) {
+    //             NSUbiquitousKeyValueStore.default.set(data, forKey: storeKey)
+    //             NSUbiquitousKeyValueStore.default.synchronize()
+    //         }
+    //     } else {
+    //         if let data = NSUbiquitousKeyValueStore.default.data(forKey: storeKey) {
+    //             UserDefaults.standard.set(data, forKey: storeKey)
+    //         }
+    //     }
+    // }
+
     private static func _persist(_ configs: [ShareConfig]) {
         var stripped = configs
         for i in stripped.indices { stripped[i].password = "" }
         guard let data = try? JSONEncoder().encode(stripped) else { return }
-        UserDefaults.standard.set(data, forKey: userDefaultsKey)
+        // TODO: iCloud — cuando se active el sync, escribir a NSUbiquitousKeyValueStore
+        // if AppSettings.shared.iCloudSync {
+        //     NSUbiquitousKeyValueStore.default.set(data, forKey: storeKey)
+        //     NSUbiquitousKeyValueStore.default.synchronize()
+        // } else {
+        //     UserDefaults.standard.set(data, forKey: storeKey)
+        // }
+        UserDefaults.standard.set(data, forKey: storeKey)
     }
 }

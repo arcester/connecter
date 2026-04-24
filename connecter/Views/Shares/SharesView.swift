@@ -1,5 +1,13 @@
 import SwiftUI
 
+// Reports the natural height of the share list content (cards + padding).
+struct ShareListHeightKey: PreferenceKey {
+    static let defaultValue: CGFloat = 0
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
+        value = max(value, nextValue())
+    }
+}
+
 struct SharesBody: View {
     @EnvironmentObject private var mountManager: MountManager
     @Binding var editingConfig: ShareConfig?
@@ -17,28 +25,34 @@ struct SharesBody: View {
             emptyState
         } else {
             ScrollView {
-                GlassEffectContainer(spacing: 40) {
-                    VStack(spacing: 10) {
-                        ForEach(sortedConfigs) { config in
-                            ShareCard(config: config) { enabled in
-                                if !enabled && mountManager.isMounted(config) {
-                                    mountManager.markDisconnecting(id: config.id)
-                                    Task {
-                                        try? await mountManager.unmount(config)
-                                        mountManager.setEnabled(false, forID: config.id)
-                                    }
-                                } else {
-                                    mountManager.setEnabled(enabled, forID: config.id)
+                VStack(spacing: 10) {
+                    ForEach(sortedConfigs) { config in
+                        ShareCard(config: config) { enabled in
+                            if !enabled && mountManager.isMounted(config) {
+                                mountManager.markDisconnecting(id: config.id)
+                                Task {
+                                    try? await mountManager.unmount(config)
+                                    mountManager.setEnabled(false, forID: config.id)
                                 }
-                            } onTap: {
-                                editingConfig = config
-                            } onRetry: {
-                                Task { await mountManager.retryShare(id: config.id) }
+                            } else {
+                                mountManager.setEnabled(enabled, forID: config.id)
                             }
+                        } onTap: {
+                            editingConfig = config
+                        } onRetry: {
+                            Task { await mountManager.retryShare(id: config.id) }
                         }
                     }
-                    .padding(16)
                 }
+                .padding(16)
+                .background(
+                    GeometryReader { geo in
+                        Color.clear.preference(
+                            key: ShareListHeightKey.self,
+                            value: geo.size.height
+                        )
+                    }
+                )
             }
         }
     }

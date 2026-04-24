@@ -5,7 +5,6 @@ import ServiceManagement
 
 struct MenuBarMenuView: View {
     @EnvironmentObject private var mountManager: MountManager
-    @Environment(\.openWindow) private var openWindow
 
     var body: some View {
         // Global status summary
@@ -37,8 +36,7 @@ struct MenuBarMenuView: View {
         Divider()
 
         Button("Open Connectar…") {
-            NSApp.activate(ignoringOtherApps: true)
-            openWindow(id: "main")
+            AppDelegate.showMainWindow()
         }
         .keyboardShortcut("o", modifiers: .command)
 

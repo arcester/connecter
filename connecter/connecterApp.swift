@@ -7,12 +7,17 @@
 
 import SwiftUI
 
-private final class AppDelegate: NSObject, NSApplicationDelegate {
+final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
-        // Hide windows on launch if showOnLaunch is disabled.
         if !AppSettings.shared.showOnLaunch {
             NSApp.windows.forEach { $0.orderOut(nil) }
         }
+    }
+
+    static func showMainWindow() {
+        NSApp.windows.first { $0.title == "Connecter" }?.makeKeyAndOrderFront(nil)
+        ?? NSApp.windows.first?.makeKeyAndOrderFront(nil)
+        NSApp.activate(ignoringOtherApps: true)
     }
 }
 
@@ -32,7 +37,18 @@ struct connecterApp: App {
                 .environmentObject(mountManager)
                 .environmentObject(loginItemManager)
         }
+        .windowResizability(.contentMinSize)
+
+        Window("Settings", id: "settings") {
+            SettingsTab()
+                .environmentObject(loginItemManager)
+        }
         .windowResizability(.contentSize)
+
+        Window("Activity Log", id: "activity-log") {
+            LogView()
+        }
+        .defaultSize(width: 560, height: 440)
 
         MenuBarExtra {
             MenuBarMenuView()

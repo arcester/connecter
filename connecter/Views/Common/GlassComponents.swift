@@ -1,4 +1,35 @@
 import SwiftUI
+import AppKit
+
+// MARK: - Window button configuration
+
+/// Removes the minimize (amber) button from the host NSWindow.
+private struct MiniaturizeDisabler: NSViewRepresentable {
+    func makeNSView(context: Context) -> NSView {
+        let view = NSView()
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) { configure(view.window) }
+        return view
+    }
+
+    func updateNSView(_ nsView: NSView, context: Context) {
+        guard nsView.window != nil else { return }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) { configure(nsView.window) }
+    }
+
+    private func configure(_ window: NSWindow?) {
+        guard let window else { return }
+        window.styleMask.remove(.miniaturizable)
+        window.standardWindowButton(.miniaturizeButton)?.isHidden = true
+        window.standardWindowButton(.miniaturizeButton)?.superview?.needsDisplay = true
+    }
+}
+
+extension View {
+    /// Hides the amber (minimize) traffic-light button on the containing NSWindow.
+    func disableMiniaturize() -> some View {
+        background(MiniaturizeDisabler())
+    }
+}
 
 // MARK: - Section panel
 

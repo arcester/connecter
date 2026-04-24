@@ -1,5 +1,6 @@
 import Foundation
 import Combine
+import NetFS
 
 // MARK: - Errors
 
@@ -29,12 +30,7 @@ enum MountError: LocalizedError {
 @MainActor
 final class MountManager: ObservableObject {
 
-    private enum Constants {
-        /// Nanoseconds between mount-poll attempts while waiting for the volume to appear.
-        static let mountPollInterval: UInt64 = 250_000_000
-        /// Maximum number of poll attempts (250 ms × 20 = 5 s total).
-        static let maxMountAttempts = 20
-    }
+    static let shared = MountManager()
 
     private let log = LogManager.shared
 
@@ -46,9 +42,36 @@ final class MountManager: ObservableObject {
     /// Consecutive failure count per share. Reset to 0 on success or manual retry.
     private var failureCounts: [UUID: Int] = [:]
 
+    // TODO: iCloud — descomentar cuando haya cuenta de desarrollador con iCloud habilitado
+    // private var cloudObserver: NSObjectProtocol?
+
     init() {
         log.info("MountManager started")
+        // if AppSettings.shared.iCloudSync { startCloudObserver() }
     }
+
+    // MARK: - iCloud sync observer (desactivado hasta tener cuenta de desarrollador)
+
+    // func startCloudObserver() {
+    //     guard cloudObserver == nil else { return }
+    //     NSUbiquitousKeyValueStore.default.synchronize()
+    //     cloudObserver = NotificationCenter.default.addObserver(
+    //         forName: NSUbiquitousKeyValueStore.didChangeExternallyNotification,
+    //         object: NSUbiquitousKeyValueStore.default,
+    //         queue: .main
+    //     ) { [weak self] _ in
+    //         self?.reloadConfigs()
+    //     }
+    //     log.info("iCloud sync observer started")
+    // }
+
+    // func stopCloudObserver() {
+    //     if let obs = cloudObserver {
+    //         NotificationCenter.default.removeObserver(obs)
+    //         cloudObserver = nil
+    //         log.info("iCloud sync observer stopped")
+    //     }
+    // }
 
     // MARK: - Monitoring lifecycle
 
@@ -134,32 +157,50 @@ final class MountManager: ObservableObject {
     func mount(_ config: ShareConfig) async throws {
         guard !isMounted(config) else { throw MountError.alreadyMounted }
 
-        guard let smbURL = smbOpenURL(for: config) else {
+        let path = config.path.hasPrefix("/") ? config.path : "/\(config.path)"
+        let urlString = "smb://\(config.host)\(path)"
+        guard let url = URL(string: urlString) else {
             log.error("Invalid SMB URL for \(config.displayName)")
             throw MountError.invalidURL
         }
 
-        let safeURL = config.password.isEmpty
-            ? smbURL
-            : smbURL.replacingOccurrences(of: config.password, with: "***")
-        log.info("Mounting via Finder: \(safeURL)")
+        log.info("Mounting via NetFS: \(urlString)")
 
-        let script = "mount volume \"\(smbURL)\""
-        let (output, exitCode) = try await runProcess("/usr/bin/osascript", arguments: ["-e", script])
-
-        if exitCode != 0 {
-            log.error("osascript failed (\(exitCode)): \(output.isEmpty ? "(no output)" : output)")
-            throw MountError.mountFailed(humanReadableMountError(output: output, exitCode: exitCode))
+        // Prefer password from config; fall back to system Keychain (Finder-saved entries)
+        var password = config.password
+        if password.isEmpty {
+            password = KeychainManager.findSystemPassword(
+                server: config.host, username: config.username
+            ) ?? ""
         }
 
-        // osascript may return before the volume is registered in the kernel — poll up to 5 s
-        for _ in 0..<Constants.maxMountAttempts {
-            if isMounted(config) { return }
-            try? await Task.sleep(nanoseconds: Constants.mountPollInterval)
-        }
+        let user: CFString? = config.username.isEmpty ? nil : (config.username as CFString)
+        let pass: CFString? = password.isEmpty ? nil : (password as CFString)
 
-        log.error("Volume did not appear after mount command")
-        throw MountError.mountFailed("Volume did not appear after mounting")
+        // "UIOption" = "NoUI" suppresses the NetAuth credential dialog
+        let openOpts = NSMutableDictionary(dictionary: ["UIOption": "NoUI"])
+        // SoftMount: report errors immediately instead of hanging on unresponsive servers
+        let mountOpts = NSMutableDictionary(dictionary: ["SoftMount": true])
+
+        let status: Int32 = await Task.detached(priority: .userInitiated) {
+            var mounts: Unmanaged<CFArray>? = nil
+            return NetFSMountURLSync(
+                url as CFURL,
+                nil,        // mountpath: nil → macOS picks /Volumes/…
+                user,
+                pass,
+                openOpts,
+                mountOpts,
+                &mounts
+            )
+        }.value
+
+        if status != 0 {
+            let msg = netFSError(status)
+            log.error("NetFS mount failed (\(status)): \(msg)")
+            throw MountError.mountFailed(msg)
+        }
+        // NetFSMountURLSync only returns after the volume is confirmed mounted
     }
 
     func unmount(_ config: ShareConfig) async throws {
@@ -326,27 +367,20 @@ final class MountManager: ObservableObject {
 
     // MARK: - Private: helpers
 
-    private func smbOpenURL(for config: ShareConfig) -> String? {
-        // Prefer password from config (already populated from app Keychain by loadAll).
-        // Fall back to the system Keychain (entries saved by Finder / the OS).
-        var password = config.password
-        if password.isEmpty {
-            password = KeychainManager.findSystemPassword(
-                server: config.host, username: config.username
-            ) ?? ""
+    private func netFSError(_ status: Int32) -> String {
+        switch status {
+        case EACCES, EPERM:   return "Authentication failed — check username and password"
+        case ENOENT:          return "Share not found — check host and path"
+        case ECONNREFUSED:    return "Connection refused — check that SMB is enabled on the server"
+        case ETIMEDOUT:       return "Connection timed out — server may be unreachable"
+        case -5999:           return "Account is restricted or locked"   // ENETFSACCOUNTRESTRICTED
+        case -5998:           return "No share points available"         // ENETFSNOSHARESAVAIL
+        case -5997:           return "No supported authentication mechanism" // ENETFSNOAUTHMECHSUPP
+        case -128:            return "Mount cancelled"                   // userCanceledErr
+        default:
+            if status > 0, let msg = String(validatingUTF8: strerror(status)) { return msg }
+            return "Error \(status)"
         }
-
-        let allowed = CharacterSet.urlPasswordAllowed
-        guard
-            let encodedPassword = password.addingPercentEncoding(withAllowedCharacters: allowed),
-            let encodedUser     = config.username.addingPercentEncoding(withAllowedCharacters: allowed)
-        else { return nil }
-
-        let path = config.path.hasPrefix("/") ? config.path : "/\(config.path)"
-        if config.username.isEmpty {
-            return "smb://\(config.host)\(path)"
-        }
-        return "smb://\(encodedUser):\(encodedPassword)@\(config.host)\(path)"
     }
 
     private func actualMountPoint(for config: ShareConfig) -> String? {
@@ -373,26 +407,6 @@ final class MountManager: ObservableObject {
                 : remount.path).lowercased()
             return urlPath == targetPath
         }?.path
-    }
-
-    /// Maps raw osascript/mount error output to a user-readable message.
-    private func humanReadableMountError(output: String, exitCode: Int32) -> String {
-        let lower = output.lowercased()
-        if lower.contains("authentication") || lower.contains("incorrect user name or password")
-            || lower.contains("invalid credentials") || lower.contains("wrong password") {
-            return "Authentication failed — check username and password"
-        }
-        if lower.contains("unable to connect") || lower.contains("there was a problem connecting")
-            || lower.contains("connection refused") {
-            return "Could not connect to server — check host name and that SMB is enabled"
-        }
-        if lower.contains("timed out") || lower.contains("time out") || lower.contains("timeout") {
-            return "Connection timed out — server may be unreachable"
-        }
-        if lower.contains("no such file") || lower.contains("share") && lower.contains("not found") {
-            return "Share not found on server — check path"
-        }
-        return output.isEmpty ? "Unknown error (exit \(exitCode))" : output
     }
 
     private func runProcess(_ executable: String, arguments: [String]) async throws -> (String, Int32) {
