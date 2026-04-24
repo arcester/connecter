@@ -21,8 +21,8 @@ struct ContentView: View {
                             Image(systemName: "plus")
                                 .fontWeight(.semibold)
                                 .foregroundStyle(.white)
-                                .padding(4)
-                                .background(.green, in: RoundedRectangle(cornerRadius: 6, style: .continuous))
+                                .frame(width: 20, height: 20)
+                                .background(.green, in: Circle())
                         }
                         .buttonStyle(.plain)
                         .help("Add share")
