@@ -15,7 +15,8 @@ struct WindowResizer: NSViewRepresentable {
 
     func updateNSView(_ nsView: ResizingView, context: Context) {
         nsView.targetSize = NSSize(width: width, height: height)
-        nsView.applyIfNeeded(animated: true)
+        // Defer so the resize doesn't happen mid-layout, which causes reentrancy warnings.
+        DispatchQueue.main.async { nsView.applyIfNeeded(animated: true) }
     }
 
     final class ResizingView: NSView {
