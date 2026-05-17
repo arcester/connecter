@@ -26,8 +26,8 @@ struct SharesBody: View {
         } else {
             ScrollView {
                 VStack(spacing: 10) {
-                    ForEach(sortedConfigs) { config in
-                        ShareCard(config: config) { enabled in
+                    ForEach(Array(sortedConfigs.enumerated()), id: \.element.id) { index, config in
+                        ShareCard(index: index, config: config) { enabled in
                             if !enabled && mountManager.isMounted(config) {
                                 mountManager.markDisconnecting(id: config.id)
                                 Task {

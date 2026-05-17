@@ -1,5 +1,6 @@
 import Foundation
 import Combine
+import SwiftUI
 
 /// Persisted user-configurable settings.
 /// Singleton — access via AppSettings.shared.
@@ -27,6 +28,26 @@ final class AppSettings: ObservableObject {
         didSet { UserDefaults.standard.set(showOnLaunch, forKey: Keys.showOnLaunch) }
     }
 
+    /// Name of the accent color used across the share list UI.
+    @Published var accentColorName: String {
+        didSet { UserDefaults.standard.set(accentColorName, forKey: Keys.accentColorName) }
+    }
+
+    var accentColor: Color {
+        Self.colorOptions.first { $0.name == accentColorName }?.color ?? .blue
+    }
+
+    static let colorOptions: [(name: String, color: Color)] = [
+        ("blue",     .blue),
+        ("purple",   .purple),
+        ("pink",     Color(hue: 0.92, saturation: 0.65, brightness: 0.90)),
+        ("red",      .red),
+        ("orange",   .orange),
+        ("yellow",   .yellow),
+        ("green",    .green),
+        ("graphite", Color(white: 0.55)),
+    ]
+
     // TODO: iCloud sync — descomentar cuando haya cuenta de desarrollador con iCloud habilitado
     // @Published var iCloudSync: Bool {
     //     didSet {
@@ -47,6 +68,7 @@ final class AppSettings: ObservableObject {
         static let notificationsEnabled  = "app.notificationsEnabled"
         static let showOnLaunch          = "app.showOnLaunch"
         static let iCloudSync            = "app.iCloudSync"
+        static let accentColorName       = "app.accentColorName"
     }
 
     private init() {
@@ -69,6 +91,8 @@ final class AppSettings: ObservableObject {
         } else {
             showOnLaunch = d.bool(forKey: Keys.showOnLaunch)
         }
+
+        accentColorName = d.string(forKey: Keys.accentColorName) ?? "blue"
 
         // iCloudSync = d.bool(forKey: Keys.iCloudSync)
     }

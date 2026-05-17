@@ -4,6 +4,7 @@ struct ContentView: View {
     @EnvironmentObject private var mountManager: MountManager
     @EnvironmentObject private var loginItemManager: LoginItemManager
     @Environment(\.openWindow) private var openWindow
+    @ObservedObject private var settings = AppSettings.shared
     @State private var showAddSheet = false
     @State private var editingConfig: ShareConfig?
     @State private var refreshRotation = 0.0
@@ -19,7 +20,7 @@ struct ContentView: View {
                     ToolbarItemGroup(placement: .automatic) {
                         Button { showAddSheet = true } label: {
                             Image(systemName: "plus.circle.fill")
-                                .foregroundStyle(.green)
+                                .foregroundStyle(settings.accentColor)
                                 .font(.title3)
                         }
                         .help("Add share")
@@ -89,7 +90,6 @@ struct ContentView: View {
     private static let listPadding: CGFloat = 32
     private static let fallbackCardHeight: CGFloat = 52
     private static let minVisible = 2
-    private static let maxVisible = 8
 
     private var desiredContentHeight: CGFloat {
         let count = mountManager.configs.count
@@ -104,10 +104,17 @@ struct ContentView: View {
             cardH = Self.fallbackCardHeight
         }
 
-        let visible = max(Self.minVisible, min(count, Self.maxVisible))
+        // Cap to available screen height (visible frame excludes menu bar and Dock).
+        let screenH = NSScreen.main?.visibleFrame.height ?? 900
+        let maxContentH = screenH - 20  // small margin
+        let maxItems = max(Self.minVisible,
+            Int((maxContentH - Self.toolbarHeight - Self.listPadding)
+                / (cardH + Self.cardSpacing)))
+
+        let visible = max(Self.minVisible, min(count, maxItems))
         let listH = Self.listPadding
             + CGFloat(visible) * cardH
             + CGFloat(visible - 1) * Self.cardSpacing
-        return Self.toolbarHeight + listH
+        return min(Self.toolbarHeight + listH, maxContentH)
     }
 }

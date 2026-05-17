@@ -58,6 +58,41 @@ struct SettingsTab: View {
                 }
 
                 Section {
+                    VStack(alignment: .leading, spacing: 10) {
+                        VStack(alignment: .leading, spacing: 3) {
+                            Text("Accent Color")
+                                .font(.body)
+                            Text("Color used for share names, numbers, and toggles.")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                        HStack(spacing: 10) {
+                            ForEach(AppSettings.colorOptions, id: \.name) { option in
+                                Button {
+                                    settings.accentColorName = option.name
+                                } label: {
+                                    ZStack {
+                                        Circle()
+                                            .fill(option.color)
+                                            .frame(width: 26, height: 26)
+                                        if settings.accentColorName == option.name {
+                                            Image(systemName: "checkmark")
+                                                .font(.system(size: 11, weight: .bold))
+                                                .foregroundStyle(.white)
+                                        }
+                                    }
+                                }
+                                .buttonStyle(.plain)
+                                .help(option.name.capitalized)
+                            }
+                        }
+                    }
+                    .padding(.vertical, 4)
+                } header: {
+                    Text("Appearance")
+                }
+
+                Section {
                     HStack {
                         VStack(alignment: .leading, spacing: 3) {
                             Text("iCloud Sync")
