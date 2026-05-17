@@ -131,10 +131,11 @@ struct ShareFormSheet: View {
 
             HStack {
                 if isEditing, onDelete != nil {
-                    Button(role: .destructive) {
+                    Button {
                         showDeleteConfirmation = true
                     } label: {
-                        Label("Delete share", systemImage: "trash")
+                        Image(systemName: "trash")
+                            .foregroundStyle(.red)
                     }
                     .confirmationDialog(
                         "Delete \"\(name.isEmpty ? host : name)\"?",

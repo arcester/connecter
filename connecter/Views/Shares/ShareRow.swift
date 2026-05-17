@@ -1,6 +1,8 @@
 import SwiftUI
 
 struct ShareCard: View {
+    static let cardHeight: CGFloat = 56
+
     let index: Int
     let config: ShareConfig
     let onEnable: (Bool) -> Void
@@ -80,7 +82,7 @@ struct ShareCard: View {
             .help(config.isEnabled ? "Disable this share" : "Enable this share")
         }
         .padding(.horizontal, 16)
-        .padding(.vertical, 11)
+        .frame(height: Self.cardHeight)
         .glassEffect(.regular.interactive(), in: .rect(cornerRadius: 14))
         .overlay(
             RoundedRectangle(cornerRadius: 14)
