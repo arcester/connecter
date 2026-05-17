@@ -1,29 +1,40 @@
 import SwiftUI
 
 struct ShareCard: View {
+    let index: Int
     let config: ShareConfig
     let onEnable: (Bool) -> Void
     let onTap: () -> Void
     let onRetry: () -> Void
 
-    var body: some View {
-        HStack(spacing: 12) {
-            // Drive icon reflects connection state
-            Image(systemName: config.isEnabled ? config.connectionStatus.iconName : "externaldrive")
-                .font(.system(size: 20, weight: .medium))
-                .foregroundStyle(config.isEnabled ? config.connectionStatus.color : Color.secondary)
-                .frame(width: 30)
-                .symbolEffect(.pulse, options: .repeating, isActive: config.isBusy)
+    @ObservedObject private var settings = AppSettings.shared
+    private var accent: Color { settings.accentColor }
 
-            // Name + URL — tap anywhere here to open edit sheet
+    private var isConnected: Bool {
+        config.isEnabled && config.connectionStatus == .connected
+    }
+
+    var body: some View {
+        HStack(spacing: 14) {
+            // Numbered circle badge
+            ZStack {
+                Circle()
+                    .fill(Color.primary.opacity(0.07))
+                    .frame(width: 30, height: 30)
+                Text("\(index + 1)")
+                    .font(.system(size: 13, weight: .semibold, design: .rounded))
+                    .foregroundStyle(config.isEnabled ? accent : Color.secondary)
+            }
+
+            // Name + URL — tap to edit
             Button(action: onTap) {
-                VStack(alignment: .leading, spacing: 3) {
+                VStack(alignment: .leading, spacing: 2) {
                     Text(config.name.isEmpty ? config.host : config.name)
-                        .font(.body.weight(.medium))
-                        .foregroundStyle(config.isEnabled ? Color.primary : Color.secondary)
+                        .font(.body.weight(.semibold))
+                        .foregroundStyle(config.isEnabled ? accent : Color.secondary)
                     Text("smb://\(config.host)/\(config.path)")
                         .font(.caption)
-                        .foregroundStyle(Color(nsColor: .tertiaryLabelColor))
+                        .foregroundStyle(.tertiary)
                         .lineLimit(1)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -32,7 +43,7 @@ struct ShareCard: View {
             .buttonStyle(.plain)
             .help("Tap to edit")
 
-            // Retry button (error state) or status badge
+            // Status badge or retry button
             if config.isEnabled {
                 if config.connectionStatus == .error {
                     Button(action: onRetry) {
@@ -52,6 +63,7 @@ struct ShareCard: View {
                             .regular.tint(config.connectionStatus.color.opacity(0.25)),
                             in: Capsule()
                         )
+                        .symbolEffect(.pulse, options: .repeating, isActive: config.isBusy)
                 }
             }
 
@@ -61,13 +73,21 @@ struct ShareCard: View {
                 set: { onEnable($0) }
             ))
             .toggleStyle(.switch)
+            .tint(accent)
             .controlSize(.small)
             .disabled(config.isBusy)
             .labelsHidden()
             .help(config.isEnabled ? "Disable this share" : "Enable this share")
         }
-        .padding(.horizontal, 14)
-        .padding(.vertical, 12)
-        .glassEffect(.regular.interactive(), in: .rect(cornerRadius: 12))
+        .padding(.horizontal, 16)
+        .padding(.vertical, 11)
+        .glassEffect(.regular.interactive(), in: .rect(cornerRadius: 14))
+        .overlay(
+            RoundedRectangle(cornerRadius: 14)
+                .strokeBorder(
+                    isConnected ? accent.opacity(0.35) : Color.primary.opacity(0.06),
+                    lineWidth: 1
+                )
+        )
     }
 }
