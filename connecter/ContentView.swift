@@ -12,9 +12,6 @@ struct ContentView: View {
     var body: some View {
         NavigationStack {
             SharesBody(editingConfig: $editingConfig)
-                .onPreferenceChange(ShareListHeightKey.self) { h in
-                    if h > 0 { measuredListHeight = h }
-                }
                 .navigationTitle("Connecter")
                 .toolbar {
                     ToolbarItemGroup(placement: .automatic) {
@@ -53,7 +50,7 @@ struct ContentView: View {
                     }
                 }
         }
-        .frame(width: 440, height: desiredContentHeight)
+        .frame(width: 440)
         .background(WindowResizer(width: 440, height: desiredContentHeight))
         .sheet(isPresented: $showAddSheet) {
             ShareFormSheet(existing: nil) { newConfig in
@@ -81,37 +78,22 @@ struct ContentView: View {
         .onAppear { mountManager.startMonitoring() }
     }
 
-    // Measured from real rendered content via ShareListHeightKey preference.
-    @State private var measuredListHeight: CGFloat = 0
-
-    // Fallback constants used only before first measurement.
-    private static let toolbarHeight: CGFloat = 40
+    private static let toolbarHeight: CGFloat = 55  // NavigationStack toolbar inside the frame
     private static let cardSpacing: CGFloat = 10
     private static let listPadding: CGFloat = 32
-    private static let fallbackCardHeight: CGFloat = 52
     private static let minVisible = 2
 
     private var desiredContentHeight: CGFloat {
         let count = mountManager.configs.count
+        let cardH = ShareCard.cardHeight
 
-        // measuredListHeight = listPadding + count*cardH + (count-1)*spacing
-        // → cardH = (measuredListHeight - listPadding - (count-1)*spacing) / count
-        let cardH: CGFloat
-        if measuredListHeight > 0, count > 0 {
-            cardH = (measuredListHeight - Self.listPadding
-                     - CGFloat(count - 1) * Self.cardSpacing) / CGFloat(count)
-        } else {
-            cardH = Self.fallbackCardHeight
-        }
-
-        // Cap to available screen height (visible frame excludes menu bar and Dock).
         let screenH = NSScreen.main?.visibleFrame.height ?? 900
-        let maxContentH = screenH - 20  // small margin
-        let maxItems = max(Self.minVisible,
+        let maxContentH = screenH - 40
+        let maxVisible = max(Self.minVisible,
             Int((maxContentH - Self.toolbarHeight - Self.listPadding)
                 / (cardH + Self.cardSpacing)))
 
-        let visible = max(Self.minVisible, min(count, maxItems))
+        let visible = max(Self.minVisible, min(count, maxVisible))
         let listH = Self.listPadding
             + CGFloat(visible) * cardH
             + CGFloat(visible - 1) * Self.cardSpacing

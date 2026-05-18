@@ -1,13 +1,5 @@
 import SwiftUI
 
-// Reports the natural height of the share list content (cards + padding).
-struct ShareListHeightKey: PreferenceKey {
-    static let defaultValue: CGFloat = 0
-    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
-        value = max(value, nextValue())
-    }
-}
-
 struct SharesBody: View {
     @EnvironmentObject private var mountManager: MountManager
     @Binding var editingConfig: ShareConfig?
@@ -45,14 +37,6 @@ struct SharesBody: View {
                     }
                 }
                 .padding(16)
-                .background(
-                    GeometryReader { geo in
-                        Color.clear.preference(
-                            key: ShareListHeightKey.self,
-                            value: geo.size.height
-                        )
-                    }
-                )
             }
         }
     }

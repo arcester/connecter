@@ -1,8 +1,9 @@
 import SwiftUI
 import AppKit
 
-/// Drives the host NSWindow's content size from SwiftUI and applies window chrome tweaks.
-/// Place as `.background(WindowResizer(width:height:))` on the root view.
+/// Animates the host NSWindow's content size and applies window chrome tweaks.
+/// Window sizing is driven from SwiftUI via `width`/`height`; the actual frame
+/// transition uses `NSWindow.setFrame(_:display:animate:)` for a smooth resize.
 struct WindowResizer: NSViewRepresentable {
     let width: CGFloat
     let height: CGFloat
@@ -14,24 +15,27 @@ struct WindowResizer: NSViewRepresentable {
     }
 
     func updateNSView(_ nsView: ResizingView, context: Context) {
-        nsView.targetSize = NSSize(width: width, height: height)
-        // Defer so the resize doesn't happen mid-layout, which causes reentrancy warnings.
+        let newSize = NSSize(width: width, height: height)
+        // Only apply when the target actually changes — prevents redundant work
+        // when SwiftUI re-renders for unrelated reasons.
+        guard nsView.targetSize != newSize else { return }
+        nsView.targetSize = newSize
         DispatchQueue.main.async { nsView.applyIfNeeded(animated: true) }
     }
 
     final class ResizingView: NSView {
         var targetSize: NSSize = .zero
-        // True once the content-measured size has been applied at least once.
         private var settled = false
 
         override func viewDidMoveToWindow() {
             super.viewDidMoveToWindow()
             guard let window else { return }
-            // Hide until the real measured size arrives so the user never sees
-            // the fallback-height window flash before it snaps to the right size.
             settled = false
             window.alphaValue = 0
             applyWindowChrome()
+            // Apply the initial size without animation so the window doesn't
+            // fade in at the wrong size.
+            DispatchQueue.main.async { self.applyIfNeeded(animated: false) }
         }
 
         private func applyWindowChrome() {
@@ -44,8 +48,6 @@ struct WindowResizer: NSViewRepresentable {
         func applyIfNeeded(animated: Bool) {
             guard let window = self.window, targetSize != .zero else { return }
 
-            // Always reveal the window once we have the target size, even if no
-            // resize is needed (sizes already match).
             defer {
                 if !settled {
                     settled = true
@@ -58,9 +60,6 @@ struct WindowResizer: NSViewRepresentable {
             let dh = abs(currentContent.height - targetSize.height)
             if dw < 0.5 && dh < 0.5 { return }
 
-            let hadResizable = window.styleMask.contains(.resizable)
-            if !hadResizable { window.styleMask.insert(.resizable) }
-
             let newFrameSize = window.frameRect(
                 forContentRect: NSRect(origin: .zero, size: targetSize)
             ).size
@@ -68,11 +67,16 @@ struct WindowResizer: NSViewRepresentable {
             let topY = frame.maxY
             frame.size = newFrameSize
             frame.origin.y = topY - newFrameSize.height
-            // Only animate after the initial sizing is done.
-            window.setFrame(frame, display: true, animate: animated && settled)
 
-            window.minSize = newFrameSize
-            window.maxSize = newFrameSize
+            guard animated && settled else {
+                window.setFrame(frame, display: true)
+                return
+            }
+            NSAnimationContext.runAnimationGroup { ctx in
+                ctx.duration = 0.25
+                ctx.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
+                window.animator().setFrame(frame, display: true)
+            }
         }
     }
 }
