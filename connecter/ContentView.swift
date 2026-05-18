@@ -50,7 +50,7 @@ struct ContentView: View {
                     }
                 }
         }
-        .frame(width: 440, height: desiredContentHeight)
+        .frame(width: 440)
         .background(WindowResizer(width: 440, height: desiredContentHeight))
         .sheet(isPresented: $showAddSheet) {
             ShareFormSheet(existing: nil) { newConfig in
@@ -78,7 +78,7 @@ struct ContentView: View {
         .onAppear { mountManager.startMonitoring() }
     }
 
-    private static let toolbarHeight: CGFloat = 40
+    private static let toolbarHeight: CGFloat = 55  // NavigationStack toolbar inside the frame
     private static let cardSpacing: CGFloat = 10
     private static let listPadding: CGFloat = 32
     private static let minVisible = 2
@@ -88,7 +88,7 @@ struct ContentView: View {
         let cardH = ShareCard.cardHeight
 
         let screenH = NSScreen.main?.visibleFrame.height ?? 900
-        let maxContentH = screenH - 20
+        let maxContentH = screenH - 40
         let maxVisible = max(Self.minVisible,
             Int((maxContentH - Self.toolbarHeight - Self.listPadding)
                 / (cardH + Self.cardSpacing)))
