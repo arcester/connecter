@@ -1,6 +1,7 @@
 import Foundation
 import Combine
 import NetFS
+import AppKit
 
 // MARK: - Errors
 
@@ -42,11 +43,15 @@ final class MountManager: ObservableObject {
     /// Consecutive failure count per share. Reset to 0 on success or manual retry.
     private var failureCounts: [UUID: Int] = [:]
 
+    /// Observer for system wake-from-sleep notification.
+    private var wakeObserver: NSObjectProtocol?
+
     // TODO: iCloud — descomentar cuando haya cuenta de desarrollador con iCloud habilitado
     // private var cloudObserver: NSObjectProtocol?
 
     init() {
         log.info("MountManager started")
+        startWakeObserver()
         // if AppSettings.shared.iCloudSync { startCloudObserver() }
     }
 
@@ -85,6 +90,42 @@ final class MountManager: ObservableObject {
         for task in shareTasks.values { task.cancel() }
         shareTasks.removeAll()
         log.info("Monitor stopped")
+    }
+
+    // MARK: - Sleep / wake handling
+
+    private func startWakeObserver() {
+        guard wakeObserver == nil else { return }
+        wakeObserver = NSWorkspace.shared.notificationCenter.addObserver(
+            forName: NSWorkspace.didWakeNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor [weak self] in
+                await self?.handleSystemWake()
+            }
+        }
+    }
+
+    /// Called automatically when the Mac wakes from sleep.
+    /// Cancels stale tasks (which may be blocked on dead network I/O),
+    /// resets failure counts, and restarts monitoring after a short delay
+    /// so the network stack has time to come back up.
+    private func handleSystemWake() async {
+        log.info("System wake detected — restarting monitors in 5 s")
+
+        for task in shareTasks.values { task.cancel() }
+        shareTasks.removeAll()
+        failureCounts.removeAll()
+
+        // Mark enabled shares as connecting so the UI reflects the real state
+        for i in configs.indices where configs[i].isEnabled {
+            configs[i].connectionStatus = .connecting
+        }
+
+        try? await Task.sleep(for: .seconds(5))
+        syncTasks()
+        log.info("Monitors restarted after wake (\(shareTasks.count) task(s))")
     }
 
     // MARK: - Config management
