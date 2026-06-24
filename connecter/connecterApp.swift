@@ -13,6 +13,10 @@ extension Notification.Name {
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
+        // Start share monitoring unconditionally — must not depend on the main
+        // window's onAppear, which never fires if the window starts hidden.
+        MountManager.shared.startMonitoring()
+
         if !AppSettings.shared.showOnLaunch {
             // Defer so SwiftUI has time to create the window before we hide it.
             DispatchQueue.main.async {
@@ -25,7 +29,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 @main
 struct connecterApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
-    @StateObject private var mountManager = MountManager()
+    @StateObject private var mountManager = MountManager.shared
     @StateObject private var loginItemManager = LoginItemManager()
     @Environment(\.openWindow) private var openWindow
 
