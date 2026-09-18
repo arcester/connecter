@@ -105,7 +105,6 @@
 "Open Connecter and choose “Restart NetAuth” to fix it." = "Open Connecter and choose “Restart NetAuth” to fix it.";
 
 /* Usability (context menu, menu bar, form hints) */
-"Settings…" = "Settings…";
 "Edit…" = "Edit…";
 "Open in Finder" = "Open in Finder";
 "Copy SMB URL" = "Copy SMB URL";

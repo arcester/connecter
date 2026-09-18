@@ -5,7 +5,6 @@ import ServiceManagement
 
 struct MenuBarMenuView: View {
     @EnvironmentObject private var mountManager: MountManager
-    @Environment(\.openWindow) private var openWindow
 
     var body: some View {
         // One item per share — tap to mount/unmount
@@ -38,12 +37,6 @@ struct MenuBarMenuView: View {
             NotificationCenter.default.post(name: .showMainWindow, object: nil)
         }
         .keyboardShortcut("o", modifiers: .command)
-
-        Button("Settings…") {
-            openWindow(id: "settings")
-            NSApp.activate(ignoringOtherApps: true)
-        }
-        .keyboardShortcut(",", modifiers: .command)
 
         Divider()
 
