@@ -16,7 +16,7 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "FC8071FA2F8D7EB800601450"
-               BuildableName = "connecter.app"
+               BuildableName = "Connecter.app"
                BlueprintName = "connecter"
                ReferencedContainer = "container:connecter.xcodeproj">
             </BuildableReference>
@@ -46,7 +46,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "FC8071FA2F8D7EB800601450"
-            BuildableName = "connecter.app"
+            BuildableName = "Connecter.app"
             BlueprintName = "connecter"
             ReferencedContainer = "container:connecter.xcodeproj">
          </BuildableReference>
@@ -63,7 +63,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "FC8071FA2F8D7EB800601450"
-            BuildableName = "connecter.app"
+            BuildableName = "Connecter.app"
             BlueprintName = "connecter"
             ReferencedContainer = "container:connecter.xcodeproj">
          </BuildableReference>
