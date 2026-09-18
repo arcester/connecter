@@ -12,7 +12,7 @@ struct SettingsTab: View {
                         VStack(alignment: .leading, spacing: 3) {
                             Text("Launch at Login")
                                 .font(.body)
-                            Text("Connectar will open automatically on login.")
+                            Text("Connecter will open automatically on login.")
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
                         }
@@ -92,27 +92,8 @@ struct SettingsTab: View {
                     Text("Appearance")
                 }
 
-                Section {
-                    HStack {
-                        VStack(alignment: .leading, spacing: 3) {
-                            Text("iCloud Sync")
-                                .font(.body)
-                            Text("Share configurations are synced across your devices via iCloud.")
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                        }
-                        Spacer()
-                        Toggle("", isOn: $settings.iCloudSync)
-                            .toggleStyle(.switch)
-                            .labelsHidden()
-                            .disabled(true)
-                    }
-                    Label("Requires an Apple Developer account with iCloud capability.", systemImage: "info.circle")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                } header: {
-                    Text("Sync")
-                }
+                // iCloud sync section intentionally hidden until the app has an
+                // Apple Developer account with the iCloud capability (see AppSettings).
 
                 Section {
                     VStack(alignment: .leading, spacing: 6) {
@@ -144,7 +125,7 @@ struct SettingsTab: View {
             .formStyle(.grouped)
             .navigationTitle("Settings")
         }
-        .frame(width: 420, height: 550)
+        .frame(width: 420, height: 470)
         .modalWindowStyle()
     }
 }

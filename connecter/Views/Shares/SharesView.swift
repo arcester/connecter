@@ -34,6 +34,28 @@ struct SharesBody: View {
                         } onRetry: {
                             Task { await mountManager.retryShare(id: config.id) }
                         }
+                        .contextMenu {
+                            Button {
+                                editingConfig = config
+                            } label: {
+                                Label("Edit…", systemImage: "pencil")
+                            }
+                            if let mountPoint = mountManager.mountPoint(for: config) {
+                                Button {
+                                    NSWorkspace.shared.open(URL(fileURLWithPath: mountPoint))
+                                } label: {
+                                    Label("Open in Finder", systemImage: "folder")
+                                }
+                            }
+                            Button {
+                                NSPasteboard.general.clearContents()
+                                NSPasteboard.general.setString(
+                                    "smb://\(config.host)/\(config.path)", forType: .string
+                                )
+                            } label: {
+                                Label("Copy SMB URL", systemImage: "doc.on.doc")
+                            }
+                        }
                     }
                 }
                 .padding(16)

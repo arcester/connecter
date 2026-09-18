@@ -127,6 +127,9 @@ struct ShareFormSheet: View {
                         SecureField("Optional", text: $password)
                     }
                 }
+                Text("Leave the password empty to use the one Finder saved for this server.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
             }
 
             HStack {
@@ -241,7 +244,7 @@ struct DiscoveredShareButton: View {
                 }
                 Spacer()
                 Image(systemName: "arrow.down.circle")
-                    .foregroundStyle(Color.accentColor)
+                    .foregroundStyle(AppSettings.shared.accentColor)
             }
             .padding(.vertical, 4)
             .contentShape(Rectangle())

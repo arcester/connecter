@@ -77,19 +77,9 @@ struct connecterApp: App {
         }
         .menuBarExtraStyle(.menu)
     }
-
-    private var menuBarStatus: MenuBarStatus {
-        let enabled = mountManager.configs.filter(\.isEnabled)
-        guard !enabled.isEmpty else { return .disabled }
-        let statuses = enabled.map(\.connectionStatus)
-        if statuses.contains(.connecting) || statuses.contains(.disconnecting) { return .busy }
-        if statuses.allSatisfy({ $0 == .connected }) { return .allConnected }
-        if statuses.contains(.connected)              { return .partial }
-        return .noneConnected
-    }
 }
 
-// MARK: - Dynamic menu bar icon
+// MARK: - Menu bar icon
 
 private struct MenuBarIcon: View {
     var body: some View {

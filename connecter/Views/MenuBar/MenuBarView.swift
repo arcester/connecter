@@ -5,6 +5,7 @@ import ServiceManagement
 
 struct MenuBarMenuView: View {
     @EnvironmentObject private var mountManager: MountManager
+    @Environment(\.openWindow) private var openWindow
 
     var body: some View {
         // One item per share — tap to mount/unmount
@@ -33,25 +34,23 @@ struct MenuBarMenuView: View {
 
         Divider()
 
-        Button("Open Connectar…") {
+        Button("Open Connecter…") {
             NotificationCenter.default.post(name: .showMainWindow, object: nil)
         }
         .keyboardShortcut("o", modifiers: .command)
+
+        Button("Settings…") {
+            openWindow(id: "settings")
+            NSApp.activate(ignoringOtherApps: true)
+        }
+        .keyboardShortcut(",", modifiers: .command)
+
+        Divider()
 
         Button("Quit") {
             NSApp.terminate(nil)
         }
         .keyboardShortcut("q", modifiers: .command)
-    }
-
-    /// Global status derived from enabled shares (no global toggle).
-    var globalStatus: MenuBarStatus {
-        let enabled = mountManager.configs.filter(\.isEnabled)
-        guard !enabled.isEmpty else { return .disabled }
-        let statuses = enabled.map(\.connectionStatus)
-        if statuses.allSatisfy({ $0 == .connected }) { return .allConnected }
-        if statuses.contains(.connected)             { return .partial }
-        return .noneConnected
     }
 }
 
@@ -95,51 +94,6 @@ private struct ShareMenuItem: View {
               : config.connectionStatus == .connecting ? "Connecting…"
               : config.isEnabled ? "Tap to mount"
               : "Tap to enable and mount")
-    }
-}
-
-// MARK: - Global menu bar status
-
-enum MenuBarStatus {
-    /// No enabled shares
-    case disabled
-    /// All enabled shares are connected
-    case allConnected
-    /// Some connected, some not
-    case partial
-    /// Enabled shares exist but none are connected
-    case noneConnected
-    /// At least one share is connecting or disconnecting
-    case busy
-
-    var iconName: String {
-        switch self {
-        case .disabled:      "folder"
-        case .allConnected:  "folder.fill"
-        case .partial:       "folder.fill"
-        case .noneConnected: "folder"
-        case .busy:          "arrow.clockwise"
-        }
-    }
-
-    var color: Color {
-        switch self {
-        case .disabled:      .secondary
-        case .allConnected:  .green
-        case .partial:       .orange
-        case .noneConnected: .red
-        case .busy:          .orange
-        }
-    }
-
-    var label: String {
-        switch self {
-        case .disabled:      String(localized: "No active shares")
-        case .allConnected:  String(localized: "All connected")
-        case .partial:       String(localized: "Partial connection")
-        case .noneConnected: String(localized: "Not connected")
-        case .busy:          String(localized: "Connecting…")
-        }
     }
 }
 

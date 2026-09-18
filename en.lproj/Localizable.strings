@@ -44,7 +44,7 @@
 /* Settings - General */
 "General" = "General";
 "Launch at Login" = "Launch at Login";
-"Connectar will open automatically on login." = "Connectar will open automatically on login.";
+"Connecter will open automatically on login." = "Connecter will open automatically on login.";
 "Requires approval in System Settings." = "Requires approval in System Settings.";
 "Approve…" = "Approve…";
 "Show on Launch" = "Show on Launch";
@@ -77,7 +77,7 @@
 "All connected" = "All connected";
 "Partial connection" = "Partial connection";
 "Not connected" = "Not connected";
-"Open Connectar…" = "Open Connectar…";
+"Open Connecter…" = "Open Connecter…";
 "Quit" = "Quit";
 
 /* Menu bar - share item tooltips */
@@ -103,3 +103,10 @@
 "OK" = "OK";
 "macOS is not responding to mount requests" = "macOS is not responding to mount requests";
 "Open Connecter and choose “Restart NetAuth” to fix it." = "Open Connecter and choose “Restart NetAuth” to fix it.";
+
+/* Usability (context menu, menu bar, form hints) */
+"Settings…" = "Settings…";
+"Edit…" = "Edit…";
+"Open in Finder" = "Open in Finder";
+"Copy SMB URL" = "Copy SMB URL";
+"Leave the password empty to use the one Finder saved for this server." = "Leave the password empty to use the one Finder saved for this server.";

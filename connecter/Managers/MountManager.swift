@@ -578,6 +578,11 @@ final class MountManager: ObservableObject {
         configs[i].connectionStatus = status
     }
 
+    /// Local path where the share is currently mounted, or `nil` if it isn't.
+    func mountPoint(for config: ShareConfig) -> String? {
+        actualMountPoint(for: config)
+    }
+
     // MARK: - Private: helpers
 
     private func netFSError(_ status: Int32) -> String {

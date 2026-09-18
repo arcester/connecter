@@ -1,36 +1,6 @@
 import SwiftUI
 import AppKit
 
-// MARK: - Window button configuration
-
-/// Removes the minimize (amber) button from the host NSWindow.
-private struct MiniaturizeDisabler: NSViewRepresentable {
-    func makeNSView(context: Context) -> NSView {
-        let view = NSView()
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) { configure(view.window) }
-        return view
-    }
-
-    func updateNSView(_ nsView: NSView, context: Context) {
-        guard nsView.window != nil else { return }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) { configure(nsView.window) }
-    }
-
-    private func configure(_ window: NSWindow?) {
-        guard let window else { return }
-        window.styleMask.remove(.miniaturizable)
-        window.standardWindowButton(.miniaturizeButton)?.isHidden = true
-        window.standardWindowButton(.miniaturizeButton)?.superview?.needsDisplay = true
-    }
-}
-
-extension View {
-    /// Hides the amber (minimize) traffic-light button on the containing NSWindow.
-    func disableMiniaturize() -> some View {
-        background(MiniaturizeDisabler())
-    }
-}
-
 // MARK: - Section panel
 
 /// Glass-styled section container.
@@ -48,16 +18,6 @@ struct GlassSection<Content: View>: View {
         }
         .padding(12)
         .glassEffect(in: .rect(cornerRadius: 12))
-    }
-}
-
-// MARK: - Status badge
-
-/// Tinted glass capsule for connection status labels.
-struct GlassBadge: ViewModifier {
-    let tint: Color
-    func body(content: Content) -> some View {
-        content.glassEffect(.regular.tint(tint.opacity(0.35)), in: Capsule())
     }
 }
 
@@ -122,29 +82,3 @@ struct NetAuthBanner: View {
     }
 }
 
-// MARK: - Global status banner
-
-/// Full-width pill that reflects the overall connection state across all shares.
-struct GlobalStatusBanner: View {
-    let status: MenuBarStatus
-
-    var body: some View {
-        HStack(spacing: 8) {
-            Image(systemName: status.iconName)
-                .font(.subheadline.weight(.semibold))
-                .foregroundStyle(status.color)
-                .symbolEffect(
-                    .pulse,
-                    options: .repeating,
-                    isActive: status == .noneConnected || status == .partial
-                )
-            Text(status.label)
-                .font(.subheadline.weight(.medium))
-                .foregroundStyle(status.color)
-            Spacer()
-        }
-        .padding(.horizontal, 14)
-        .padding(.vertical, 9)
-        .glassEffect(.regular.tint(status.color.opacity(0.18)), in: .rect(cornerRadius: 10))
-    }
-}

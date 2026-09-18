@@ -41,7 +41,7 @@ enum KeychainManager {
             kSecAttrService as String: service,
             kSecAttrAccount as String: account,
             kSecValueData as String: Data(password.utf8),
-            kSecAttrLabel as String: "Connectar",
+            kSecAttrLabel as String: "Connecter",
             kSecAttrSynchronizable as String: kCFBooleanTrue!
         ]
         SecItemAdd(addQuery as CFDictionary, nil)
