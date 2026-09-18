@@ -57,6 +57,17 @@ final class NotificationManager {
         )
     }
 
+    /// Notifies that macOS's NetAuth agent stopped answering mount requests.
+    func sendNetAuthNotResponding() {
+        guard AppSettings.shared.notificationsEnabled else { return }
+        send(
+            id: "netauth-not-responding",
+            title: String(localized: "macOS is not responding to mount requests"),
+            body: String(localized: "Open Connecter and choose “Restart NetAuth” to fix it."),
+            sound: .defaultCritical
+        )
+    }
+
     // MARK: - Private
 
     private func send(id: String, title: String, body: String, sound: UNNotificationSound?) {

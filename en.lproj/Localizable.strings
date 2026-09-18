@@ -92,3 +92,14 @@
 "Clear" = "Clear";
 "Clear all log entries" = "Clear all log entries";
 "No entries" = "No entries";
+
+/* NetAuth warning (macOS 27) */
+"Mount requests are stuck" = "Mount requests are stuck";
+"macOS's NetAuth service is not responding. Restarting it needs an administrator password." = "macOS's NetAuth service is not responding. Restarting it needs an administrator password.";
+"Restart NetAuth" = "Restart NetAuth";
+"Restart NetAuth…" = "Restart NetAuth…";
+"Dismiss" = "Dismiss";
+"Could not restart NetAuth" = "Could not restart NetAuth";
+"OK" = "OK";
+"macOS is not responding to mount requests" = "macOS is not responding to mount requests";
+"Open Connecter and choose “Restart NetAuth” to fix it." = "Open Connecter and choose “Restart NetAuth” to fix it.";

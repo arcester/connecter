@@ -22,6 +22,15 @@ struct MenuBarMenuView: View {
             }
         }
 
+        if mountManager.netAuthSuspected {
+            Divider()
+            Button {
+                Task { try? await mountManager.restartNetAuth() }
+            } label: {
+                Label("Restart NetAuth…", systemImage: "exclamationmark.triangle.fill")
+            }
+        }
+
         Divider()
 
         Button("Open Connectar…") {
