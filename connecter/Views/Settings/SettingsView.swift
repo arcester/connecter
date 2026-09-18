@@ -123,9 +123,11 @@ struct SettingsTab: View {
                 }
             }
             .formStyle(.grouped)
+            .scrollDisabled(true)
             .navigationTitle("Settings")
         }
-        .frame(width: 420, height: 470)
+        .frame(width: 420)
+        .fixedSize(horizontal: false, vertical: true)
         .modalWindowStyle()
     }
 }
