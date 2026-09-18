@@ -1,16 +1,6 @@
 import SwiftUI
 
 extension ShareConfig.ConnectionStatus {
-    var iconName: String {
-        switch self {
-        case .disconnected:  "externaldrive"
-        case .connecting:    "arrow.trianglehead.2.clockwise"
-        case .connected:     "externaldrive.fill.badge.checkmark"
-        case .disconnecting: "arrow.trianglehead.2.clockwise"
-        case .error:         "externaldrive.badge.xmark"
-        }
-    }
-
     var color: Color {
         switch self {
         case .disconnected:  .secondary
