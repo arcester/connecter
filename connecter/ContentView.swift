@@ -8,10 +8,23 @@ struct ContentView: View {
     @State private var showAddSheet = false
     @State private var editingConfig: ShareConfig?
     @State private var refreshRotation = 0.0
+    @State private var isRestartingNetAuth = false
+    @State private var netAuthError: String?
 
     var body: some View {
         NavigationStack {
-            SharesBody(editingConfig: $editingConfig)
+            VStack(spacing: 0) {
+                if mountManager.netAuthSuspected {
+                    NetAuthBanner(
+                        isRestarting: isRestartingNetAuth,
+                        onRestart: restartNetAuth,
+                        onDismiss: { mountManager.dismissNetAuthWarning() }
+                    )
+                    .padding(.horizontal, 16)
+                    .padding(.top, 16)
+                }
+                SharesBody(editingConfig: $editingConfig)
+            }
                 .navigationTitle("Connecter")
                 .toolbar {
                     ToolbarItemGroup(placement: .automatic) {
@@ -75,7 +88,32 @@ struct ContentView: View {
                 mountManager.reloadConfigs()
             }
         }
+        .alert(
+            "Could not restart NetAuth",
+            isPresented: Binding(
+                get: { netAuthError != nil },
+                set: { if !$0 { netAuthError = nil } }
+            )
+        ) {
+            Button("OK") {}
+        } message: {
+            Text(netAuthError ?? "")
+        }
         .onAppear { mountManager.startMonitoring() }
+    }
+
+    private func restartNetAuth() {
+        isRestartingNetAuth = true
+        Task {
+            do {
+                try await mountManager.restartNetAuth()
+            } catch MountError.netAuthRestartCancelled {
+                // User dismissed the password dialog — nothing to report
+            } catch {
+                netAuthError = error.localizedDescription
+            }
+            isRestartingNetAuth = false
+        }
     }
 
     private static let toolbarHeight: CGFloat = 55  // NavigationStack toolbar inside the frame
@@ -86,17 +124,19 @@ struct ContentView: View {
     private var desiredContentHeight: CGFloat {
         let count = mountManager.configs.count
         let cardH = ShareCard.cardHeight
+        // Banner sits above the list with its own top padding
+        let bannerH: CGFloat = mountManager.netAuthSuspected ? NetAuthBanner.height + 16 : 0
 
         let screenH = NSScreen.main?.visibleFrame.height ?? 900
         let maxContentH = screenH - 40
         let maxVisible = max(Self.minVisible,
-            Int((maxContentH - Self.toolbarHeight - Self.listPadding)
+            Int((maxContentH - Self.toolbarHeight - bannerH - Self.listPadding)
                 / (cardH + Self.cardSpacing)))
 
         let visible = max(Self.minVisible, min(count, maxVisible))
         let listH = Self.listPadding
             + CGFloat(visible) * cardH
             + CGFloat(visible - 1) * Self.cardSpacing
-        return min(Self.toolbarHeight + listH, maxContentH)
+        return min(Self.toolbarHeight + bannerH + listH, maxContentH)
     }
 }
