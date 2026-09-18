@@ -65,10 +65,16 @@ final class MountManager: ObservableObject {
     @Published private(set) var netAuthSuspected = false
     private var netAuthDiagnosisRunning = false
 
-    /// Hard limit for a single NetFS mount attempt. On macOS 27, a failed
-    /// authentication with `UIOption = NoUI` never returns from NetAuth, so
-    /// without this the share would stay "connecting" forever.
-    private static let mountTimeout: TimeInterval = 45
+    /// When the app last restarted NetAuth on its own; automatic restarts are
+    /// rate-limited so a persistent problem surfaces to the user instead of looping.
+    private var lastAutoNetAuthRestart: Date?
+    private static let autoNetAuthRestartCooldown: TimeInterval = 600
+
+    /// Hard limit for a single NetFS mount attempt. On macOS 27, NetAuth can stop
+    /// answering (a failed authentication with `UIOption = NoUI`, or a remount
+    /// right after a share drops), so without this the share would stay
+    /// "connecting" forever. Healthy mounts complete in 1–15 s.
+    private static let mountTimeout: TimeInterval = 30
 
     /// QA-only: simulate a hung NetAuth (see `mount()`); cleared by `restartNetAuth()`.
     private static var simulateNetAuthHang =
@@ -164,13 +170,31 @@ final class MountManager: ObservableObject {
 
     /// After a mount timeout, checks whether the server's SMB port still answers.
     /// If it does, the request never completed because NetAuth is not responding.
+    /// The NetAuth agents run in the user session, so the app first tries to
+    /// restart them itself (rate-limited); the warning banner only appears when
+    /// that is not possible or did not help.
     private func diagnoseNetAuth(host: String) async {
         guard !netAuthSuspected, !netAuthDiagnosisRunning else { return }
         netAuthDiagnosisRunning = true
         defer { netAuthDiagnosisRunning = false }
         guard await isSMBPortOpen(host: host) else { return }
+        log.warning("NetAuth is not responding: \(host):445 answers but the mount request never completed")
+
+        let cooledDown = lastAutoNetAuthRestart.map {
+            Date().timeIntervalSince($0) > Self.autoNetAuthRestartCooldown
+        } ?? true
+        if cooledDown && !Self.simulateNetAuthHang {
+            lastAutoNetAuthRestart = Date()
+            if await killNetAuthAgentsUnprivileged() {
+                log.info("NetAuth agents restarted automatically — retrying shares")
+                restartAllTasks()
+                syncTasks()
+                return
+            }
+        }
+
         netAuthSuspected = true
-        log.warning("NetAuth is not responding: \(host):445 answers but the mount request never completed. Use “Restart NetAuth” in the main window (needs an administrator password).")
+        log.warning("Use “Restart NetAuth” in the main window to recover")
         NotificationManager.shared.sendNetAuthNotResponding()
     }
 
@@ -180,23 +204,43 @@ final class MountManager: ObservableObject {
         return result.1 == 0
     }
 
-    /// Restarts the system NetAuth agents (macOS asks for an administrator
-    /// password through its standard dialog) and retries every enabled share.
+    /// Kills the NetAuth agents as the current user. They are per-session
+    /// LaunchAgents, so no privileges are needed; launchd respawns them on demand.
+    /// Returns `false` only if the processes belong to another user.
+    private func killNetAuthAgentsUnprivileged() async -> Bool {
+        guard let (output, _) = try? await runProcess(
+            "/usr/bin/killall", arguments: ["NetAuthSysAgent", "NetAuthAgent"]
+        ) else { return false }
+        // killall exits non-zero when one of the names has no process — that is
+        // fine (nothing to restart); only a permission error means we cannot do it.
+        if output.localizedCaseInsensitiveContains("not permitted") {
+            log.warning("Cannot restart NetAuth without privileges: \(output)")
+            return false
+        }
+        return true
+    }
+
+    /// Restarts the NetAuth agents and retries every enabled share. Tries the
+    /// unprivileged path first; falls back to macOS's administrator-password
+    /// dialog only if the agents belong to another user.
     func restartNetAuth() async throws {
         log.info("Restarting NetAuth agents…")
-        let shell = "/usr/bin/killall NetAuthSysAgent NetAuthAgent 2>/dev/null; exit 0"
-        let script = "do shell script \"\(shell)\" with administrator privileges"
-        let (output, code) = try await runProcess("/usr/bin/osascript", arguments: ["-e", script])
-        guard code == 0 else {
-            if output.contains("-128") {
-                log.info("NetAuth restart cancelled by the user")
-                throw MountError.netAuthRestartCancelled
+        if await killNetAuthAgentsUnprivileged() == false {
+            let shell = "/usr/bin/killall NetAuthSysAgent NetAuthAgent 2>/dev/null; exit 0"
+            let script = "do shell script \"\(shell)\" with administrator privileges"
+            let (output, code) = try await runProcess("/usr/bin/osascript", arguments: ["-e", script])
+            guard code == 0 else {
+                if output.contains("-128") {
+                    log.info("NetAuth restart cancelled by the user")
+                    throw MountError.netAuthRestartCancelled
+                }
+                log.error("NetAuth restart failed: \(output)")
+                throw MountError.netAuthRestartFailed(output)
             }
-            log.error("NetAuth restart failed: \(output)")
-            throw MountError.netAuthRestartFailed(output)
         }
         log.info("NetAuth agents restarted — retrying shares")
         Self.simulateNetAuthHang = false
+        lastAutoNetAuthRestart = Date()
         netAuthSuspected = false
         restartAllTasks()
         syncTasks()
@@ -526,6 +570,10 @@ final class MountManager: ObservableObject {
         if wasConnected {
             log.warning("[\(name)] Dropped — no longer mounted")
             NotificationManager.shared.sendUnmounted(config: config)
+            // Give the SMB client a moment to tear the old session down; remounting
+            // immediately after a drop is what tends to leave NetAuth hanging.
+            try? await Task.sleep(for: .seconds(5))
+            guard !Task.isCancelled else { return }
         } else if (failureCounts[id] ?? 0) == 0 {
             log.info("[\(name)] Not mounted, attempting to mount…")
         }

@@ -51,7 +51,7 @@ struct NetAuthBanner: View {
                 Text("Mount requests are stuck")
                     .font(.subheadline.weight(.semibold))
                     .lineLimit(1)
-                Text("macOS's NetAuth service is not responding. Restarting it needs an administrator password.")
+                Text("macOS's NetAuth service is not responding. Restart it to recover the mounts.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .lineLimit(2)

@@ -95,7 +95,7 @@
 
 /* NetAuth warning (macOS 27) */
 "Mount requests are stuck" = "Mount requests are stuck";
-"macOS's NetAuth service is not responding. Restarting it needs an administrator password." = "macOS's NetAuth service is not responding. Restarting it needs an administrator password.";
+"macOS's NetAuth service is not responding. Restart it to recover the mounts." = "macOS's NetAuth service is not responding. Restart it to recover the mounts.";
 "Restart NetAuth" = "Restart NetAuth";
 "Restart NetAuth…" = "Restart NetAuth…";
 "Dismiss" = "Dismiss";
