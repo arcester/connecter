@@ -1,8 +1,8 @@
-// Genera el icono de la app: carpeta plana blanca→azul (degradado) con una cola de puntos,
-// sobre fondo azul casi plano calcado del icono de referencia (estilo PayPal).
-// Uso:  swift tools/icon/makeicon.swift   → AppIcon-flat2-1/2/3.png y sheet7.png
-// Variante instalada: flat2-2 (carpeta + puntos verticales debajo).
-// Copia la variante elegida a connecter/Assets.xcassets/AppIcon.appiconset/AppIcon-1024.png
+// Genera el icono de la app: carpeta plana blanca→azul (degradado) con sombra suave
+// y una cola de puntos (con su propia sombra), sobre fondo azul casi plano calcado
+// del icono de referencia (estilo PayPal).
+// Uso:  swift tools/icon/makeicon.swift   → AppIcon-shadow-1/2/3.png y sheet8.png
+// Variante instalada: shadow-2 (carpeta + puntos verticales debajo, con sombra).
 
 import AppKit
 
@@ -62,9 +62,24 @@ func render(_ variant: String) -> NSBitmapImageRep {
     draw(into: rep) { ctx in
         bg.draw(in: NSRect(x: 0, y: 0, width: S, height: S), angle: -90)
         func fillGlyph(_ path: NSBezierPath, in rect: NSRect) {
+            // Cast a soft shadow first (opaque fill so the shadow reads clearly),
+            // then paint the gradient on top of the now-shadowed shape.
+            ctx.saveGState()
+            ctx.setShadow(offset: CGSize(width: 0, height: -10), blur: 22, color: NSColor.black.withAlphaComponent(0.22).cgColor)
+            NSColor.white.setFill()
+            path.fill()
+            ctx.restoreGState()
+
             ctx.saveGState()
             path.addClip()
             glyphGradient.draw(in: rect, angle: -90)
+            ctx.restoreGState()
+        }
+        func fillDot(_ path: NSBezierPath, color: NSColor) {
+            ctx.saveGState()
+            ctx.setShadow(offset: CGSize(width: 0, height: -5), blur: 10, color: NSColor.black.withAlphaComponent(0.25).cgColor)
+            color.setFill()
+            path.fill()
             ctx.restoreGState()
         }
         switch variant {
@@ -82,24 +97,22 @@ func render(_ variant: String) -> NSBitmapImageRep {
             let fx: CGFloat = 212, fy: CGFloat = 430, fw: CGFloat = 600, fh: CGFloat = 440
             let folder2 = folderPath(x: fx, y: fy, w: fw, h: fh)
             fillGlyph(folder2, in: NSRect(x: fx, y: fy, width: fw, height: fh))
-            glyphTop.setFill()
             for (i, y) in [340.0, 250.0, 160.0].enumerated() {
                 let rad: CGFloat = 30 - CGFloat(i) * 4
-                NSBezierPath(ovalIn: NSRect(x: 512 - rad, y: CGFloat(y) - rad, width: rad * 2, height: rad * 2)).fill()
+                fillDot(NSBezierPath(ovalIn: NSRect(x: 512 - rad, y: CGFloat(y) - rad, width: rad * 2, height: rad * 2)), color: glyphTop)
             }
         default:   // "3": folder above, three dots in a row below
             let fx: CGFloat = 212, fy: CGFloat = 400, fw: CGFloat = 600, fh: CGFloat = 440
             let folder3 = folderPath(x: fx, y: fy, w: fw, h: fh)
             fillGlyph(folder3, in: NSRect(x: fx, y: fy, width: fw, height: fh))
-            glyphTop.setFill()
             let rad: CGFloat = 34, gap: CGFloat = 130, cy: CGFloat = 262
             for i in -1...1 {
                 let cx = 512 + CGFloat(i) * gap
-                NSBezierPath(ovalIn: NSRect(x: cx - rad, y: cy - rad, width: rad * 2, height: rad * 2)).fill()
+                fillDot(NSBezierPath(ovalIn: NSRect(x: cx - rad, y: cy - rad, width: rad * 2, height: rad * 2)), color: glyphTop)
             }
         }
     }
-    savePNG(rep, "AppIcon-flat2-\(variant).png")
+    savePNG(rep, "AppIcon-shadow-\(variant).png")
     return rep
 }
 
@@ -131,5 +144,5 @@ draw(into: sheet) { _ in
         }
     }
 }
-savePNG(sheet, "sheet7.png")
+savePNG(sheet, "sheet8.png")
 print("ok")
