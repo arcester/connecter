@@ -1,7 +1,7 @@
 // Genera el icono de la app: carpeta plana blanca→azul (degradado) con sombra suave
 // y una cola de puntos (con su propia sombra), sobre fondo azul casi plano calcado
 // del icono de referencia (estilo PayPal).
-// Uso:  swift tools/icon/makeicon.swift   → AppIcon-shadow-1/2/3.png y sheet8.png
+// Uso:  swift tools/icon/makeicon.swift   → AppIcon-shadow-1/2/3.png y sheet9.png
 // Variante instalada: shadow-2 (carpeta + puntos verticales debajo, con sombra).
 
 import AppKit
@@ -65,7 +65,7 @@ func render(_ variant: String) -> NSBitmapImageRep {
             // Cast a soft shadow first (opaque fill so the shadow reads clearly),
             // then paint the gradient on top of the now-shadowed shape.
             ctx.saveGState()
-            ctx.setShadow(offset: CGSize(width: 0, height: -10), blur: 22, color: NSColor.black.withAlphaComponent(0.22).cgColor)
+            ctx.setShadow(offset: CGSize(width: 0, height: -16), blur: 32, color: NSColor.black.withAlphaComponent(0.34).cgColor)
             NSColor.white.setFill()
             path.fill()
             ctx.restoreGState()
@@ -77,7 +77,7 @@ func render(_ variant: String) -> NSBitmapImageRep {
         }
         func fillDot(_ path: NSBezierPath, color: NSColor) {
             ctx.saveGState()
-            ctx.setShadow(offset: CGSize(width: 0, height: -5), blur: 10, color: NSColor.black.withAlphaComponent(0.25).cgColor)
+            ctx.setShadow(offset: CGSize(width: 0, height: -8), blur: 14, color: NSColor.black.withAlphaComponent(0.35).cgColor)
             color.setFill()
             path.fill()
             ctx.restoreGState()
@@ -112,7 +112,7 @@ func render(_ variant: String) -> NSBitmapImageRep {
             }
         }
     }
-    savePNG(rep, "AppIcon-shadow-\(variant).png")
+    savePNG(rep, "AppIcon-shadow2-\(variant).png")
     return rep
 }
 
@@ -144,5 +144,5 @@ draw(into: sheet) { _ in
         }
     }
 }
-savePNG(sheet, "sheet8.png")
+savePNG(sheet, "sheet9.png")
 print("ok")
