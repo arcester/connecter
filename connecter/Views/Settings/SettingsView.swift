@@ -17,7 +17,7 @@ struct SettingsTab: View {
                                 .foregroundStyle(.secondary)
                         }
                         Spacer()
-                        Toggle("", isOn: Binding(
+                        Toggle("Launch at Login", isOn: Binding(
                             get: { loginItemManager.isEnabled },
                             set: { _ in loginItemManager.toggle() }
                         ))
@@ -29,6 +29,7 @@ struct SettingsTab: View {
                         HStack {
                             Image(systemName: "exclamationmark.triangle.fill")
                                 .foregroundStyle(.orange)
+                                .accessibilityHidden(true)
                             Text("Requires approval in System Settings.")
                                 .foregroundStyle(.secondary)
                                 .font(.caption)
@@ -49,7 +50,7 @@ struct SettingsTab: View {
                                 .foregroundStyle(.secondary)
                         }
                         Spacer()
-                        Toggle("", isOn: $settings.showOnLaunch)
+                        Toggle("Show on Launch", isOn: $settings.showOnLaunch)
                             .toggleStyle(.switch)
                             .labelsHidden()
                     }
@@ -68,6 +69,7 @@ struct SettingsTab: View {
                         }
                         HStack(spacing: 10) {
                             ForEach(AppSettings.colorOptions, id: \.name) { option in
+                                let title = AppSettings.localizedColorName(option.name)
                                 Button {
                                     settings.accentColorName = option.name
                                 } label: {
@@ -83,7 +85,9 @@ struct SettingsTab: View {
                                     }
                                 }
                                 .buttonStyle(.plain)
-                                .help(option.name.capitalized)
+                                .help(title)
+                                .accessibilityLabel(Text(title))
+                                .accessibilityAddTraits(settings.accentColorName == option.name ? .isSelected : [])
                             }
                         }
                     }
@@ -91,9 +95,6 @@ struct SettingsTab: View {
                 } header: {
                     Text("Appearance")
                 }
-
-                // iCloud sync section intentionally hidden until the app has an
-                // Apple Developer account with the iCloud capability (see AppSettings).
 
                 Section {
                     VStack(alignment: .leading, spacing: 6) {
@@ -104,7 +105,10 @@ struct SettingsTab: View {
                                 .foregroundStyle(.secondary)
                                 .monospacedDigit()
                         }
-                        Slider(value: $settings.monitorInterval, in: 15...300, step: 15)
+                        Slider(value: $settings.monitorInterval, in: 15...300, step: 15) {
+                            Text("Check interval")
+                        }
+                        .labelsHidden()
                     }
 
                     Stepper(
@@ -120,6 +124,17 @@ struct SettingsTab: View {
                     Text("Backoff: after each failure the next check is delayed (×2, ×4, then 5 min).")
                         .font(.caption)
                         .foregroundStyle(.tertiary)
+                }
+
+                Section {
+                    HStack {
+                        Spacer()
+                        Text("Connecter \(AppEnvironment.shortVersion) (\(AppEnvironment.buildNumber))")
+                            .font(.caption)
+                            .foregroundStyle(.tertiary)
+                        Spacer()
+                    }
+                    .listRowBackground(Color.clear)
                 }
             }
             .formStyle(.grouped)
