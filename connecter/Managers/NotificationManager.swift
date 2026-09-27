@@ -30,7 +30,7 @@ final class NotificationManager {
         send(
             id: "mounted-\(config.id)",
             title: String(localized: "Share mounted"),
-            body: String(format: String(localized: "\"%@\" is available in /Volumes/"), config.displayName),
+            body: String(localized: "\"\(config.displayName)\" is available in /Volumes/"),
             sound: .default
         )
     }
@@ -41,7 +41,7 @@ final class NotificationManager {
         send(
             id: "unmounted-\(config.id)",
             title: String(localized: "Share disconnected"),
-            body: String(format: String(localized: "\"%@\" is no longer available. Reconnecting\u{2026}"), config.displayName),
+            body: String(localized: "\"\(config.displayName)\" is no longer available. Reconnecting…"),
             sound: .defaultCritical
         )
     }
@@ -52,7 +52,19 @@ final class NotificationManager {
         send(
             id: "error-\(config.id)",
             title: String(localized: "Mount error"),
-            body: String(format: String(localized: "Could not reconnect \"%@\". Check the network or credentials."), config.displayName),
+            body: String(localized: "Could not reconnect \"\(config.displayName)\". Check the network or credentials."),
+            sound: .defaultCritical
+        )
+    }
+
+    /// Notifies that a share was switched off after repeated failures, so the
+    /// user knows why it stopped reconnecting.
+    func sendAutoDisabled(config: ShareConfig, failures: Int) {
+        guard AppSettings.shared.notificationsEnabled else { return }
+        send(
+            id: "disabled-\(config.id)",
+            title: String(localized: "Share disabled"),
+            body: String(localized: "\"\(config.displayName)\" was disabled after \(failures) failed attempts. Turn it on again in Connecter to retry."),
             sound: .defaultCritical
         )
     }
@@ -63,7 +75,9 @@ final class NotificationManager {
         send(
             id: "netauth-not-responding",
             title: String(localized: "macOS is not responding to mount requests"),
-            body: String(localized: "Open Connecter and choose “Restart NetAuth” to fix it."),
+            body: AppEnvironment.isSandboxed
+                ? String(localized: "Open Connecter for instructions to recover the mounts.")
+                : String(localized: "Open Connecter and choose “Restart NetAuth” to fix it."),
             sound: .defaultCritical
         )
     }

@@ -6,9 +6,7 @@ struct SharesBody: View {
 
     private var sortedConfigs: [ShareConfig] {
         mountManager.configs.sorted {
-            ($0.name.isEmpty ? $0.host : $0.name).localizedCaseInsensitiveCompare(
-                $1.name.isEmpty ? $1.host : $1.name
-            ) == .orderedAscending
+            $0.displayName.localizedCaseInsensitiveCompare($1.displayName) == .orderedAscending
         }
     }
 
@@ -20,48 +18,67 @@ struct SharesBody: View {
                 VStack(spacing: 10) {
                     ForEach(Array(sortedConfigs.enumerated()), id: \.element.id) { index, config in
                         ShareCard(index: index, config: config) { enabled in
-                            if !enabled && mountManager.isMounted(config) {
-                                mountManager.markDisconnecting(id: config.id)
-                                Task {
-                                    try? await mountManager.unmount(config)
-                                    mountManager.setEnabled(false, forID: config.id)
-                                }
-                            } else {
-                                mountManager.setEnabled(enabled, forID: config.id)
-                            }
+                            setEnabled(enabled, for: config)
                         } onTap: {
                             editingConfig = config
                         } onRetry: {
                             Task { await mountManager.retryShare(id: config.id) }
                         }
-                        .contextMenu {
-                            Button {
-                                editingConfig = config
-                            } label: {
-                                Label("Edit…", systemImage: "pencil")
-                            }
-                            if let mountPoint = mountManager.mountPoint(for: config) {
-                                Button {
-                                    NSWorkspace.shared.open(URL(fileURLWithPath: mountPoint))
-                                } label: {
-                                    Label("Open in Finder", systemImage: "folder")
-                                }
-                            }
-                            Button {
-                                NSPasteboard.general.clearContents()
-                                NSPasteboard.general.setString(
-                                    "smb://\(config.host)/\(config.path)", forType: .string
-                                )
-                            } label: {
-                                Label("Copy SMB URL", systemImage: "doc.on.doc")
-                            }
-                        }
+                        .contextMenu { contextMenu(for: config) }
                     }
                 }
                 .padding(16)
             }
         }
     }
+
+    // MARK: - Actions
+
+    private func setEnabled(_ enabled: Bool, for config: ShareConfig) {
+        if !enabled && mountManager.isMounted(config) {
+            mountManager.markDisconnecting(id: config.id)
+            Task {
+                try? await mountManager.unmount(config)
+                mountManager.setEnabled(false, forID: config.id)
+            }
+        } else {
+            mountManager.setEnabled(enabled, forID: config.id)
+        }
+    }
+
+    @ViewBuilder
+    private func contextMenu(for config: ShareConfig) -> some View {
+        Button {
+            editingConfig = config
+        } label: {
+            Label("Edit…", systemImage: "pencil")
+        }
+        if let mountPoint = mountManager.mountPoint(for: config) {
+            Button {
+                openInFinder(config, mountPoint: mountPoint)
+            } label: {
+                Label("Open in Finder", systemImage: "folder")
+            }
+        }
+        Button {
+            NSPasteboard.general.clearContents()
+            NSPasteboard.general.setString(config.smbURLString, forType: .string)
+        } label: {
+            Label("Copy SMB URL", systemImage: "doc.on.doc")
+        }
+    }
+
+    /// A sandboxed app may not open arbitrary paths under /Volumes, but Finder
+    /// opens the share's smb:// URL and reuses the existing mount.
+    private func openInFinder(_ config: ShareConfig, mountPoint: String) {
+        if AppEnvironment.isSandboxed, let url = URL(string: config.smbURLString) {
+            NSWorkspace.shared.open(url)
+        } else {
+            NSWorkspace.shared.open(URL(fileURLWithPath: mountPoint))
+        }
+    }
+
+    // MARK: - Empty state
 
     private var emptyState: some View {
         VStack(spacing: 16) {
@@ -70,6 +87,7 @@ struct SharesBody: View {
                 .foregroundStyle(.secondary)
                 .padding(24)
                 .glassEffect(in: Circle())
+                .accessibilityHidden(true)
             Text("No shares configured")
                 .font(.headline)
             Text("Press + to add an SMB share.")

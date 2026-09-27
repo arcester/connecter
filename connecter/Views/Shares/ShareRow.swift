@@ -16,6 +16,15 @@ struct ShareCard: View {
         config.isEnabled && config.connectionStatus == .connected
     }
 
+    /// States that get a status capsule; `.disconnected` shows nothing and
+    /// `.error` shows the retry button instead.
+    private var showsStatusBadge: Bool {
+        switch config.connectionStatus {
+        case .connecting, .connected, .disconnecting, .offline: true
+        case .disconnected, .error: false
+        }
+    }
+
     var body: some View {
         HStack(spacing: 14) {
             // Numbered circle badge
@@ -23,18 +32,19 @@ struct ShareCard: View {
                 Circle()
                     .fill(Color.primary.opacity(0.07))
                     .frame(width: 30, height: 30)
-                Text("\(index + 1)")
+                Text(verbatim: "\(index + 1)")
                     .font(.system(size: 13, weight: .semibold, design: .rounded))
                     .foregroundStyle(config.isEnabled ? accent : Color.secondary)
             }
+            .accessibilityHidden(true)
 
-            // Name + URL — tap to edit
+            // Name + URL — click to edit
             Button(action: onTap) {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(config.name.isEmpty ? config.host : config.name)
+                    Text(config.displayName)
                         .font(.body.weight(.semibold))
                         .foregroundStyle(config.isEnabled ? accent : Color.secondary)
-                    Text("smb://\(config.host)/\(config.path)")
+                    Text(config.smbURLString)
                         .font(.caption)
                         .foregroundStyle(.tertiary)
                         .lineLimit(1)
@@ -44,7 +54,10 @@ struct ShareCard: View {
                 .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
-            .help("Tap to edit")
+            .help("Click to edit")
+            .accessibilityLabel(Text(config.displayName))
+            .accessibilityValue(Text(config.isEnabled ? config.connectionStatus.label : String(localized: "Disabled")))
+            .accessibilityHint(Text("Click to edit"))
 
             // Status badge or retry button
             if config.isEnabled {
@@ -56,7 +69,8 @@ struct ShareCard: View {
                     }
                     .buttonStyle(.plain)
                     .help("Retry connection")
-                } else if config.connectionStatus != .disconnected {
+                    .accessibilityLabel(Text("Retry connection"))
+                } else if showsStatusBadge {
                     Text(config.connectionStatus.label)
                         .font(.caption)
                         .foregroundStyle(config.connectionStatus.color)
@@ -71,7 +85,7 @@ struct ShareCard: View {
             }
 
             // Enable / disable toggle
-            Toggle("", isOn: Binding(
+            Toggle("Enabled", isOn: Binding(
                 get: { config.isEnabled },
                 set: { onEnable($0) }
             ))

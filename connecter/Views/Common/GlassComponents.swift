@@ -32,13 +32,15 @@ struct PrimaryButtonStyle: ViewModifier {
 
 // MARK: - NetAuth warning banner
 
-/// Warns that macOS's NetAuth service stopped answering mount requests and
-/// offers to restart it. Fixed height so the window size stays deterministic.
+/// Warns that macOS's NetAuth service stopped answering mount requests.
+/// Non-sandboxed builds offer to restart it; the sandboxed App Store build
+/// opens step-by-step instructions instead. Fixed height so the window size
+/// stays deterministic.
 struct NetAuthBanner: View {
     static let height: CGFloat = 74
 
     let isRestarting: Bool
-    let onRestart: () -> Void
+    let onPrimaryAction: () -> Void
     let onDismiss: () -> Void
 
     var body: some View {
@@ -46,6 +48,7 @@ struct NetAuthBanner: View {
             Image(systemName: "exclamationmark.triangle.fill")
                 .font(.title3)
                 .foregroundStyle(.orange)
+                .accessibilityHidden(true)
 
             VStack(alignment: .leading, spacing: 2) {
                 Text("Mount requests are stuck")
@@ -58,9 +61,11 @@ struct NetAuthBanner: View {
             }
             .frame(maxWidth: .infinity, alignment: .leading)
 
-            Button(action: onRestart) {
+            Button(action: onPrimaryAction) {
                 if isRestarting {
                     ProgressView().controlSize(.small)
+                } else if AppEnvironment.isSandboxed {
+                    Text("How to Fix…")
                 } else {
                     Text("Restart NetAuth")
                 }
@@ -75,10 +80,10 @@ struct NetAuthBanner: View {
             }
             .buttonStyle(.plain)
             .help("Dismiss")
+            .accessibilityLabel(Text("Dismiss"))
         }
         .padding(.horizontal, 14)
         .frame(height: Self.height)
         .glassEffect(.regular.tint(.orange.opacity(0.18)), in: .rect(cornerRadius: 14))
     }
 }
-

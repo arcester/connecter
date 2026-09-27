@@ -14,6 +14,7 @@ enum MountError: LocalizedError {
     case notMounted
     case netAuthRestartCancelled
     case netAuthRestartFailed(String)
+    case netAuthRestartUnavailable
 
     var errorDescription: String? {
         switch self {
@@ -26,8 +27,22 @@ enum MountError: LocalizedError {
         case .notMounted:               return "Volume is not mounted"
         case .netAuthRestartCancelled:  return "NetAuth restart was cancelled"
         case .netAuthRestartFailed(let msg): return "Could not restart NetAuth: \(msg)"
+        case .netAuthRestartUnavailable:
+            return "The sandboxed build cannot restart NetAuth; run “\(MountManager.netAuthRestartCommand)” in Terminal"
         }
     }
+}
+
+// MARK: - Mounted volume snapshot
+
+/// An SMB volume currently mounted on this Mac.
+struct MountedSMBVolume: Sendable {
+    let host: String
+    /// Share path without leading/trailing slashes, e.g. "video" or "team/docs".
+    let sharePath: String
+    let mountPoint: String
+    let volumeName: String
+    let user: String?
 }
 
 // MARK: - Manager
@@ -39,6 +54,10 @@ enum MountError: LocalizedError {
 final class MountManager: ObservableObject {
 
     static let shared = MountManager()
+
+    /// Terminal command that restarts the NetAuth agents; shown to the user
+    /// when the app itself is not allowed to do it (App Sandbox).
+    nonisolated static let netAuthRestartCommand = "killall NetAuthSysAgent NetAuthAgent"
 
     private let log = LogManager.shared
 
@@ -52,6 +71,9 @@ final class MountManager: ObservableObject {
 
     /// Observer for system wake-from-sleep notification.
     private var wakeObserver: NSObjectProtocol?
+
+    /// Pending re-check scheduled after the network came back.
+    private var networkRecoveryTask: Task<Void, Never>?
 
     /// Shares with a check/mount currently in progress (share id → attempt token).
     /// Prevents overlapping mount attempts for the same share (e.g. refresh pressed
@@ -80,37 +102,11 @@ final class MountManager: ObservableObject {
     private static var simulateNetAuthHang =
         ProcessInfo.processInfo.environment["CONNECTER_SIMULATE_NETAUTH_HANG"] != nil
 
-    // TODO: iCloud — descomentar cuando haya cuenta de desarrollador con iCloud habilitado
-    // private var cloudObserver: NSObjectProtocol?
-
     init() {
-        log.info("MountManager started")
+        log.info("MountManager started\(AppEnvironment.isSandboxed ? " (App Sandbox)" : "")")
         startWakeObserver()
-        // if AppSettings.shared.iCloudSync { startCloudObserver() }
+        startNetworkObserver()
     }
-
-    // MARK: - iCloud sync observer (desactivado hasta tener cuenta de desarrollador)
-
-    // func startCloudObserver() {
-    //     guard cloudObserver == nil else { return }
-    //     NSUbiquitousKeyValueStore.default.synchronize()
-    //     cloudObserver = NotificationCenter.default.addObserver(
-    //         forName: NSUbiquitousKeyValueStore.didChangeExternallyNotification,
-    //         object: NSUbiquitousKeyValueStore.default,
-    //         queue: .main
-    //     ) { [weak self] _ in
-    //         self?.reloadConfigs()
-    //     }
-    //     log.info("iCloud sync observer started")
-    // }
-
-    // func stopCloudObserver() {
-    //     if let obs = cloudObserver {
-    //         NotificationCenter.default.removeObserver(obs)
-    //         cloudObserver = nil
-    //         log.info("iCloud sync observer stopped")
-    //     }
-    // }
 
     // MARK: - Monitoring lifecycle
 
@@ -166,48 +162,86 @@ final class MountManager: ObservableObject {
         }
     }
 
+    // MARK: - Network availability
+
+    private func startNetworkObserver() {
+        NetworkMonitor.shared.onAvailabilityChange = { [weak self] available in
+            self?.handleNetworkChange(available: available)
+        }
+    }
+
+    /// Pauses checks while offline and re-checks every enabled share shortly
+    /// after connectivity returns, instead of waiting for the next
+    /// (possibly backed-off) interval.
+    private func handleNetworkChange(available: Bool) {
+        networkRecoveryTask?.cancel()
+        guard available else {
+            log.warning("Network unavailable — mount checks paused")
+            for i in configs.indices
+            where configs[i].isEnabled && configs[i].connectionStatus != .connected {
+                configs[i].connectionStatus = .offline
+            }
+            return
+        }
+
+        log.info("Network available — re-checking shares in 3 s")
+        networkRecoveryTask = Task { [weak self] in
+            try? await Task.sleep(for: .seconds(3))
+            guard !Task.isCancelled, let self else { return }
+            self.failureCounts.removeAll()
+            let ids = self.configs.filter(\.isEnabled).map(\.id)
+            await withTaskGroup(of: Void.self) { group in
+                for id in ids {
+                    group.addTask { await self.checkShare(id: id) }
+                }
+            }
+        }
+    }
+
     // MARK: - NetAuth health (macOS 27 hang)
 
     /// After a mount timeout, checks whether the server's SMB port still answers.
     /// If it does, the request never completed because NetAuth is not responding.
-    /// The NetAuth agents run in the user session, so the app first tries to
-    /// restart them itself (rate-limited); the warning banner only appears when
-    /// that is not possible or did not help.
+    /// The NetAuth agents run in the user session, so a non-sandboxed build
+    /// restarts them itself (rate-limited); the sandboxed App Store build is
+    /// not allowed to signal other processes and shows instructions instead.
     private func diagnoseNetAuth(host: String) async {
         guard !netAuthSuspected, !netAuthDiagnosisRunning else { return }
         netAuthDiagnosisRunning = true
         defer { netAuthDiagnosisRunning = false }
-        guard await isSMBPortOpen(host: host) else { return }
+        guard await PortProbe.isOpen(host: host) else { return }
         log.warning("NetAuth is not responding: \(host):445 answers but the mount request never completed")
 
-        let cooledDown = lastAutoNetAuthRestart.map {
-            Date().timeIntervalSince($0) > Self.autoNetAuthRestartCooldown
-        } ?? true
-        if cooledDown && !Self.simulateNetAuthHang {
-            lastAutoNetAuthRestart = Date()
-            if await killNetAuthAgentsUnprivileged() {
-                log.info("NetAuth agents restarted automatically — retrying shares")
-                restartAllTasks()
-                syncTasks()
-                return
+        if !AppEnvironment.isSandboxed {
+            let cooledDown = lastAutoNetAuthRestart.map {
+                Date().timeIntervalSince($0) > Self.autoNetAuthRestartCooldown
+            } ?? true
+            if cooledDown && !Self.simulateNetAuthHang {
+                lastAutoNetAuthRestart = Date()
+                if await killNetAuthAgentsUnprivileged() {
+                    log.info("NetAuth agents restarted automatically — retrying shares")
+                    restartAllTasks()
+                    syncTasks()
+                    return
+                }
             }
         }
 
         netAuthSuspected = true
-        log.warning("Use “Restart NetAuth” in the main window to recover")
+        if AppEnvironment.isSandboxed {
+            log.warning("This build cannot restart NetAuth itself — run “\(Self.netAuthRestartCommand)” in Terminal, then retry")
+        } else {
+            log.warning("Use “Restart NetAuth” in the main window to recover")
+        }
         NotificationManager.shared.sendNetAuthNotResponding()
-    }
-
-    private func isSMBPortOpen(host: String) async -> Bool {
-        guard let result = try? await runProcess("/usr/bin/nc", arguments: ["-z", "-w", "3", host, "445"])
-        else { return false }
-        return result.1 == 0
     }
 
     /// Kills the NetAuth agents as the current user. They are per-session
     /// LaunchAgents, so no privileges are needed; launchd respawns them on demand.
-    /// Returns `false` only if the processes belong to another user.
+    /// Returns `false` if the processes belong to another user or the app is
+    /// sandboxed (signals to other processes are denied there).
     private func killNetAuthAgentsUnprivileged() async -> Bool {
+        guard !AppEnvironment.isSandboxed else { return false }
         guard let (output, _) = try? await runProcess(
             "/usr/bin/killall", arguments: ["NetAuthSysAgent", "NetAuthAgent"]
         ) else { return false }
@@ -224,6 +258,7 @@ final class MountManager: ObservableObject {
     /// unprivileged path first; falls back to macOS's administrator-password
     /// dialog only if the agents belong to another user.
     func restartNetAuth() async throws {
+        guard !AppEnvironment.isSandboxed else { throw MountError.netAuthRestartUnavailable }
         log.info("Restarting NetAuth agents…")
         if await killNetAuthAgentsUnprivileged() == false {
             let shell = "/usr/bin/killall NetAuthSysAgent NetAuthAgent 2>/dev/null; exit 0"
@@ -241,6 +276,16 @@ final class MountManager: ObservableObject {
         log.info("NetAuth agents restarted — retrying shares")
         Self.simulateNetAuthHang = false
         lastAutoNetAuthRestart = Date()
+        netAuthSuspected = false
+        restartAllTasks()
+        syncTasks()
+    }
+
+    /// Forgets failures and retries every enabled share right away — used after
+    /// the user has restarted NetAuth by hand (sandboxed build).
+    func retryAfterManualRecovery() {
+        log.info("Retrying all shares after manual recovery")
+        Self.simulateNetAuthHang = false
         netAuthSuspected = false
         restartAllTasks()
         syncTasks()
@@ -303,7 +348,7 @@ final class MountManager: ObservableObject {
 
     // MARK: - Public: immediate actions
 
-    /// Triggers an immediate check for one share (used after trigger fire or manual mount).
+    /// Triggers an immediate check for one share (used by the refresh button).
     func refreshShare(id: UUID) async {
         await checkShare(id: id)
     }
@@ -319,11 +364,11 @@ final class MountManager: ObservableObject {
     // MARK: - Public: mount / unmount
 
     func mount(_ config: ShareConfig) async throws {
-        guard !isMounted(config) else { throw MountError.alreadyMounted }
+        guard await mountPointOffMain(for: config) == nil else { throw MountError.alreadyMounted }
 
-        let path = config.path.hasPrefix("/") ? config.path : "/\(config.path)"
-        let urlString = "smb://\(config.host)\(path)"
-        guard let url = URL(string: urlString) else {
+        let sharePath = Self.normalizedSharePath(config.path)
+        let urlString = "smb://\(config.host)/\(sharePath)"
+        guard !config.host.isEmpty, !sharePath.isEmpty, let url = URL(string: urlString) else {
             log.error("Invalid SMB URL for \(config.displayName)")
             throw MountError.invalidURL
         }
@@ -445,53 +490,94 @@ final class MountManager: ObservableObject {
         }
     }
 
+    /// Unmounts the share through Disk Arbitration (`FileManager.unmountVolume`),
+    /// which is allowed inside the App Sandbox — unlike spawning `diskutil`.
     func unmount(_ config: ShareConfig) async throws {
-        guard isMounted(config) else { throw MountError.notMounted }
-
-        guard let mountPoint = actualMountPoint(for: config) else {
+        guard let mountPoint = await mountPointOffMain(for: config) else {
             throw MountError.notMounted
         }
         log.info("Unmounting \(mountPoint)…")
 
-        let (output, exitCode) = try await runProcess(
-            "/usr/sbin/diskutil",
-            arguments: ["unmount", mountPoint]
-        )
-
-        if exitCode != 0 {
-            let msg = output.isEmpty ? "code \(exitCode)" : output
-            log.error("diskutil failed: \(msg)")
-            throw MountError.unmountFailed(msg)
+        do {
+            try await Self.unmountVolume(at: URL(fileURLWithPath: mountPoint))
+        } catch {
+            log.error("Unmount failed: \(error.localizedDescription)")
+            throw MountError.unmountFailed(error.localizedDescription)
         }
+        log.info("Unmounted \(mountPoint)")
+    }
 
-        log.info("Unmounted: \(output)")
+    private nonisolated static func unmountVolume(at url: URL) async throws {
+        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+            FileManager.default.unmountVolume(at: url, options: []) { error in
+                if let error {
+                    continuation.resume(throwing: error)
+                } else {
+                    continuation.resume()
+                }
+            }
+        }
     }
 
     // MARK: - Mount status
 
+    /// Synchronous check for UI code paths (user-initiated, infrequent).
     func isMounted(_ config: ShareConfig) -> Bool {
-        let key = URLResourceKey.volumeURLForRemountingKey
+        Self.findMountPoint(host: config.host, path: config.path) != nil
+    }
+
+    /// Local path where the share is currently mounted, or `nil` if it isn't.
+    func mountPoint(for config: ShareConfig) -> String? {
+        Self.findMountPoint(host: config.host, path: config.path)
+    }
+
+    /// Same as `mountPoint(for:)` but runs the volume scan off the main actor:
+    /// stat-ing a dead SMB mount can block for a long time, and the periodic
+    /// checks must never freeze the UI.
+    private func mountPointOffMain(for config: ShareConfig) async -> String? {
+        let host = config.host
+        let path = config.path
+        return await Task.detached(priority: .utility) {
+            Self.findMountPoint(host: host, path: path)
+        }.value
+    }
+
+    /// Every browsable SMB volume currently mounted, as seen by the system.
+    nonisolated static func mountedSMBVolumes() -> [MountedSMBVolume] {
+        let keys: Set<URLResourceKey> = [.volumeURLForRemountingKey, .volumeLocalizedNameKey]
         guard let volumes = FileManager.default.mountedVolumeURLs(
-            includingResourceValuesForKeys: [key], options: []
-        ) else { return false }
+            includingResourceValuesForKeys: Array(keys), options: [.skipHiddenVolumes]
+        ) else { return [] }
 
-        let targetHost = config.host.lowercased()
-        let targetPath = (config.path.hasPrefix("/")
-            ? String(config.path.dropFirst())
-            : config.path).lowercased()
-
-        return volumes.contains { url in
+        return volumes.compactMap { url in
             guard
-                let values  = try? url.resourceValues(forKeys: [key]),
+                let values = try? url.resourceValues(forKeys: keys),
                 let remount = values.volumeURLForRemounting,
                 remount.scheme == "smb",
-                let host    = remount.host
-            else { return false }
-            let urlPath = (remount.path.hasPrefix("/")
-                ? String(remount.path.dropFirst())
-                : remount.path).lowercased()
-            return host.lowercased() == targetHost && urlPath == targetPath
+                let host = remount.host, !host.isEmpty
+            else { return nil }
+            return MountedSMBVolume(
+                host: host,
+                sharePath: normalizedSharePath(remount.path),
+                mountPoint: url.path,
+                volumeName: values.volumeLocalizedName ?? url.lastPathComponent,
+                user: remount.user
+            )
         }
+    }
+
+    private nonisolated static func findMountPoint(host: String, path: String) -> String? {
+        let targetHost = host.lowercased()
+        let targetPath = normalizedSharePath(path).lowercased()
+        return mountedSMBVolumes().first {
+            $0.host.lowercased() == targetHost && $0.sharePath.lowercased() == targetPath
+        }?.mountPoint
+    }
+
+    /// Share path without surrounding slashes or whitespace ("/video/" → "video").
+    nonisolated static func normalizedSharePath(_ path: String) -> String {
+        path.trimmingCharacters(in: .whitespacesAndNewlines)
+            .trimmingCharacters(in: CharacterSet(charactersIn: "/"))
     }
 
     // MARK: - Private: task management
@@ -534,9 +620,6 @@ final class MountManager: ObservableObject {
     // MARK: - Private: per-share check (only touches this share's slot in configs)
 
     private func checkShare(id: UUID) async {
-        // Skip check if there is no network connection to avoid accumulating failures
-        guard NetworkMonitor.shared.isAvailable else { return }
-
         // One check at a time per share — a refresh while a mount is in progress
         // must not start a second (possibly hanging) NetFS request.
         guard inFlight[id] == nil else { return }
@@ -552,8 +635,15 @@ final class MountManager: ObservableObject {
         let name         = config.displayName
         let wasConnected = config.connectionStatus == .connected
 
+        // Offline: don't touch the file system (a dead SMB mount can block) and
+        // don't count a failure. The network observer re-checks when it's back.
+        guard NetworkMonitor.shared.isAvailable else {
+            if !wasConnected { setStatus(.offline, forID: id) }
+            return
+        }
+
         // Already mounted — nothing to do
-        if isMounted(config) {
+        if await mountPointOffMain(for: config) != nil {
             if !wasConnected {
                 log.info("[\(name)] Detected mounted")
                 NotificationManager.shared.sendMounted(config: config)
@@ -586,7 +676,7 @@ final class MountManager: ObservableObject {
             netAuthSuspected = false
             setStatus(.connected, forID: id)
         } catch MountError.alreadyMounted {
-            // Mounted by a concurrent action between our isMounted check and mount attempt
+            // Mounted by a concurrent action between our check and mount attempt
             failureCounts[id] = 0
             setStatus(.connected, forID: id)
         } catch {
@@ -608,6 +698,7 @@ final class MountManager: ObservableObject {
             if failures >= maxFailures {
                 log.warning("[\(name)] Disabling after \(failures) consecutive failure(s)")
                 setEnabled(false, forID: id)
+                NotificationManager.shared.sendAutoDisabled(config: config, failures: failures)
                 return
             }
             setStatus(.error, forID: id)
@@ -624,11 +715,6 @@ final class MountManager: ObservableObject {
     private func setStatus(_ status: ShareConfig.ConnectionStatus, forID id: UUID) {
         guard let i = configs.firstIndex(where: { $0.id == id }) else { return }
         configs[i].connectionStatus = status
-    }
-
-    /// Local path where the share is currently mounted, or `nil` if it isn't.
-    func mountPoint(for config: ShareConfig) -> String? {
-        actualMountPoint(for: config)
     }
 
     // MARK: - Private: helpers
@@ -649,32 +735,8 @@ final class MountManager: ObservableObject {
         }
     }
 
-    private func actualMountPoint(for config: ShareConfig) -> String? {
-        let key = URLResourceKey.volumeURLForRemountingKey
-        guard let volumes = FileManager.default.mountedVolumeURLs(
-            includingResourceValuesForKeys: [key], options: []
-        ) else { return nil }
-
-        let targetHost = config.host.lowercased()
-        let targetPath = (config.path.hasPrefix("/")
-            ? String(config.path.dropFirst())
-            : config.path).lowercased()
-
-        return volumes.first { url in
-            guard
-                let values  = try? url.resourceValues(forKeys: [key]),
-                let remount = values.volumeURLForRemounting,
-                remount.scheme == "smb",
-                let host    = remount.host,
-                host.lowercased() == targetHost
-            else { return false }
-            let urlPath = (remount.path.hasPrefix("/")
-                ? String(remount.path.dropFirst())
-                : remount.path).lowercased()
-            return urlPath == targetPath
-        }?.path
-    }
-
+    /// Runs a system tool and returns its combined output and exit code.
+    /// Only used by the non-sandboxed NetAuth recovery path.
     private func runProcess(_ executable: String, arguments: [String]) async throws -> (String, Int32) {
         try await Task.detached(priority: .userInitiated) {
             let process = Process()
@@ -700,4 +762,9 @@ final class MountManager: ObservableObject {
 
 extension ShareConfig {
     var displayName: String { name.isEmpty ? host : name }
+
+    /// Canonical `smb://host/share` string for display and the clipboard.
+    var smbURLString: String {
+        "smb://\(host)/\(MountManager.normalizedSharePath(path))"
+    }
 }

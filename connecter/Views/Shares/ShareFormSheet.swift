@@ -12,7 +12,8 @@ struct ShareFormSheet: View {
     @State private var username: String
     @State private var password: String
     @State private var showDeleteConfirmation = false
-    @State private var discoveredShares: [DiscoveredShare] = []
+    @State private var allConfigs: [ShareConfig] = []
+    @State private var discoveredShares: [MountedSMBVolume] = []
     @State private var isTestingConnection = false
     @State private var connectionTestPassed: Bool? = nil
 
@@ -28,15 +29,34 @@ struct ShareFormSheet: View {
     }
 
     private var isEditing: Bool { existing != nil }
-    private var isValid: Bool { !host.isEmpty && !path.isEmpty }
 
-    private func applyDiscovered(_ d: DiscoveredShare) {
-        name = d.volumeName
-        host = d.serverHost
-        path = d.sharePath
-        if let u = d.loginUser { username = u }
+    // MARK: - Normalised input
+
+    private var cleanHost: String {
+        host.trimmingCharacters(in: .whitespacesAndNewlines)
+            .trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+    }
+    private var cleanPath: String { MountManager.normalizedSharePath(path) }
+
+    /// Another configured share already points at the same host and path.
+    private var isDuplicate: Bool {
+        allConfigs.contains {
+            $0.id != existing?.id
+                && $0.host.caseInsensitiveCompare(cleanHost) == .orderedSame
+                && MountManager.normalizedSharePath($0.path).caseInsensitiveCompare(cleanPath) == .orderedSame
+        }
     }
 
+    private var isValid: Bool { !cleanHost.isEmpty && !cleanPath.isEmpty && !isDuplicate }
+
+    private func applyDiscovered(_ volume: MountedSMBVolume) {
+        name = volume.volumeName
+        host = volume.host
+        path = volume.sharePath
+        if let user = volume.user { username = user }
+    }
+
+    /// Accepts a pasted `smb://host/share` and splits it into host and path.
     private func parseHostInput(_ raw: String) {
         var value = raw
         for prefix in ["smb://", "smb:", "//"] {
@@ -62,8 +82,8 @@ struct ShareFormSheet: View {
             if !isEditing && !discoveredShares.isEmpty {
                 GlassSection(label: "Mounted in Finder") {
                     VStack(spacing: 0) {
-                        ForEach(discoveredShares) { d in
-                            DiscoveredShareButton(d: d, onSelect: { applyDiscovered(d) })
+                        ForEach(discoveredShares) { volume in
+                            DiscoveredShareButton(volume: volume, onSelect: { applyDiscovered(volume) })
                         }
                     }
                 }
@@ -101,17 +121,23 @@ struct ShareFormSheet: View {
                                     Label("Test connection", systemImage: "network")
                                 }
                             }
-                            .disabled(host.isEmpty || isTestingConnection)
+                            .disabled(cleanHost.isEmpty || isTestingConnection)
 
                             if let passed = connectionTestPassed {
                                 Image(systemName: passed ? "checkmark.circle.fill" : "xmark.circle.fill")
                                     .foregroundStyle(passed ? .green : .red)
+                                    .accessibilityHidden(true)
                                 Text(passed ? "Port 445 reachable" : "Port 445 unreachable")
                                     .font(.caption)
                                     .foregroundStyle(.secondary)
                             }
                         }
                     }
+                }
+                if isDuplicate {
+                    Label("This share is already configured.", systemImage: "exclamationmark.triangle.fill")
+                        .font(.caption)
+                        .foregroundStyle(.orange)
                 }
             }
             .onChange(of: host) { connectionTestPassed = nil }
@@ -140,6 +166,8 @@ struct ShareFormSheet: View {
                         Image(systemName: "trash")
                             .foregroundStyle(.red)
                     }
+                    .help("Delete share")
+                    .accessibilityLabel(Text("Delete share"))
                     .confirmationDialog(
                         "Delete \"\(name.isEmpty ? host : name)\"?",
                         isPresented: $showDeleteConfirmation,
@@ -161,10 +189,10 @@ struct ShareFormSheet: View {
                 Button(isEditing ? "Save" : "Add") {
                     let config = ShareConfig(
                         id: existing?.id ?? UUID(),
-                        name: name,
-                        host: host,
-                        path: path,
-                        username: username,
+                        name: name.trimmingCharacters(in: .whitespacesAndNewlines),
+                        host: cleanHost,
+                        path: cleanPath,
+                        username: username.trimmingCharacters(in: .whitespacesAndNewlines),
                         password: password,
                         isEnabled: existing?.isEnabled ?? true,
                         connectionStatus: existing?.connectionStatus ?? .disconnected
@@ -181,8 +209,15 @@ struct ShareFormSheet: View {
         .frame(width: 420)
         .fixedSize(horizontal: false, vertical: true)
         .onAppear {
+            allConfigs = ShareConfig.loadAll()
             if !isEditing {
-                discoveredShares = discoverMountedSMBShares(excluding: ShareConfig.loadAll())
+                discoveredShares = MountManager.mountedSMBVolumes().filter { volume in
+                    !allConfigs.contains {
+                        $0.host.caseInsensitiveCompare(volume.host) == .orderedSame
+                            && MountManager.normalizedSharePath($0.path)
+                                .caseInsensitiveCompare(volume.sharePath) == .orderedSame
+                    }
+                }
             }
         }
     }
@@ -191,92 +226,49 @@ struct ShareFormSheet: View {
 // MARK: - Connection test
 
 extension ShareFormSheet {
-    /// Tests TCP connectivity to port 445 (SMB) on the current host.
-    /// Uses `nc -z` for a non-blocking probe with a 3-second timeout.
+    /// Tests TCP connectivity to port 445 (SMB) on the current host with a 3-second timeout.
     func testConnection() async {
-        guard !host.isEmpty else { return }
+        let target = cleanHost
+        guard !target.isEmpty else { return }
         isTestingConnection = true
         connectionTestPassed = nil
-        let h = host
-
-        let success = await Task.detached(priority: .userInitiated) {
-            let process = Process()
-            process.executableURL = URL(fileURLWithPath: "/usr/bin/nc")
-            process.arguments = ["-z", "-w", "3", h, "445"]
-            let pipe = Pipe()
-            process.standardOutput = pipe
-            process.standardError = pipe
-            try? process.run()
-            process.waitUntilExit()
-            return process.terminationStatus == 0
-        }.value
-
+        let success = await PortProbe.isOpen(host: target)
         isTestingConnection = false
         connectionTestPassed = success
     }
 }
 
-// MARK: - Discovered share model
+// MARK: - Discovered share row
 
-struct DiscoveredShare: Identifiable {
-    let id = UUID()
-    let volumeName: String
-    let serverHost: String
-    let sharePath: String
-    let loginUser: String?
+extension MountedSMBVolume: Identifiable {
+    var id: String { mountPoint }
 }
 
-/// Button row for a single discovered share.
+/// Button row for an SMB volume that Finder already has mounted.
 struct DiscoveredShareButton: View {
-    let d: DiscoveredShare
+    let volume: MountedSMBVolume
     let onSelect: () -> Void
 
     var body: some View {
         Button(action: onSelect) {
             HStack {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(d.volumeName)
+                    Text(volume.volumeName)
                         .font(.headline)
                         .foregroundStyle(.primary)
-                    Text("smb://\(d.serverHost)/\(d.sharePath)")
+                    Text(verbatim: "smb://\(volume.host)/\(volume.sharePath)")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
                 Spacer()
                 Image(systemName: "arrow.down.circle")
                     .foregroundStyle(AppSettings.shared.accentColor)
+                    .accessibilityHidden(true)
             }
             .padding(.vertical, 4)
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-    }
-}
-
-// MARK: - SMB share discovery
-
-func discoverMountedSMBShares(excluding existing: [ShareConfig]) -> [DiscoveredShare] {
-    let keys: Set<URLResourceKey> = [.volumeURLForRemountingKey, .volumeLocalizedNameKey]
-    guard let volumes = FileManager.default.mountedVolumeURLs(
-        includingResourceValuesForKeys: Array(keys), options: []
-    ) else { return [] }
-
-    return volumes.compactMap { url in
-        guard
-            let values = try? url.resourceValues(forKeys: keys),
-            let remountURL = values.volumeURLForRemounting,
-            remountURL.scheme == "smb",
-            let host = remountURL.host, !host.isEmpty
-        else { return nil }
-
-        let volName = values.volumeLocalizedName ?? url.lastPathComponent
-        let rawPath = remountURL.path
-        let sharePath = rawPath.hasPrefix("/") ? String(rawPath.dropFirst()) : rawPath
-
-        if existing.contains(where: { $0.host == host && $0.path == sharePath }) { return nil }
-
-        return DiscoveredShare(
-            volumeName: volName, serverHost: host, sharePath: sharePath, loginUser: remountURL.user
-        )
+        .help("Use this share")
     }
 }

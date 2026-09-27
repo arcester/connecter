@@ -19,6 +19,8 @@ struct ShareConfig: Codable, Identifiable {
         case connected
         case disconnecting
         case error
+        /// Enabled, not mounted, and the Mac has no network connection.
+        case offline
     }
 
     /// True while a transition is in progress and the UI should block interaction.
