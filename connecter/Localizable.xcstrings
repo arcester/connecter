@@ -291,6 +291,16 @@
         }
       }
     },
+    "All connected": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Todo montado"
+          }
+        }
+      }
+    },
     "All saved shares are already in the list.": {
       "localizations": {
         "es": {
@@ -964,6 +974,16 @@
         }
       }
     },
+    "No active shares": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sin recursos activos"
+          }
+        }
+      }
+    },
     "No entries": {
       "localizations": {
         "es": {
@@ -1020,6 +1040,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Aún no hay recursos guardados en el llavero."
+          }
+        }
+      }
+    },
+    "Not connected": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sin conexión"
           }
         }
       }
@@ -1110,6 +1140,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Naranja"
+          }
+        }
+      }
+    },
+    "Partial connection": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conexión parcial"
           }
         }
       }
@@ -1390,6 +1430,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Muestra el archivo de registro en el Finder"
+          }
+        }
+      }
+    },
+    "System": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sistema"
           }
         }
       }

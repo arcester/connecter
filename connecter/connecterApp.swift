@@ -63,7 +63,7 @@ struct connecterApp: App {
             MenuBarMenuView()
                 .environmentObject(mountManager)
         } label: {
-            MenuBarIcon()
+            MenuBarIcon(status: mountManager.overallStatus)
                 .onReceive(NotificationCenter.default.publisher(for: .showMainWindow)) { _ in
                     let regularWindows = NSApp.windows.filter { !($0 is NSPanel) && $0.canBecomeMain }
                     if let window = regularWindows.first {
@@ -80,9 +80,43 @@ struct connecterApp: App {
 
 // MARK: - Menu bar icon
 
+/// Folder glyph with a small colour dot summarising every enabled share:
+/// green = all mounted, orange = some connecting or partially mounted,
+/// red = an error or a stuck NetAuth. No dot when nothing is enabled.
 private struct MenuBarIcon: View {
+    let status: MountManager.OverallStatus
+
     var body: some View {
-        Image(systemName: "folder")
-            .accessibilityLabel(Text("Connecter"))
+        ZStack(alignment: .bottomTrailing) {
+            Image(systemName: "folder")
+                .foregroundStyle(.primary)
+            if let color = dotColor {
+                Circle()
+                    .fill(color)
+                    .frame(width: 6, height: 6)
+                    .overlay(Circle().strokeBorder(.background, lineWidth: 1))
+                    .offset(x: 1, y: 1)
+            }
+        }
+        .accessibilityLabel(Text("Connecter"))
+        .accessibilityValue(Text(statusDescription))
+    }
+
+    private var dotColor: Color? {
+        switch status {
+        case .idle:      nil
+        case .allMounted: .green
+        case .partial:   .orange
+        case .error:     .red
+        }
+    }
+
+    private var statusDescription: String {
+        switch status {
+        case .idle:       String(localized: "No active shares")
+        case .allMounted: String(localized: "All connected")
+        case .partial:    String(localized: "Partial connection")
+        case .error:      String(localized: "Not connected")
+        }
     }
 }

@@ -34,10 +34,12 @@ final class AppSettings: ObservableObject {
     }
 
     var accentColor: Color {
-        Self.colorOptions.first { $0.name == accentColorName }?.color ?? .blue
+        Self.colorOptions.first { $0.name == accentColorName }?.color ?? .accentColor
     }
 
+    /// "system" follows the accent colour chosen in System Settings.
     static let colorOptions: [(name: String, color: Color)] = [
+        ("system",   .accentColor),
         ("blue",     .blue),
         ("purple",   .purple),
         ("pink",     Color(hue: 0.92, saturation: 0.65, brightness: 0.90)),
@@ -51,6 +53,7 @@ final class AppSettings: ObservableObject {
     /// User-facing name of one of `colorOptions`.
     static func localizedColorName(_ name: String) -> String {
         switch name {
+        case "system":   String(localized: "System")
         case "blue":     String(localized: "Blue")
         case "purple":   String(localized: "Purple")
         case "pink":     String(localized: "Pink")
@@ -107,7 +110,7 @@ final class AppSettings: ObservableObject {
             showOnLaunch = d.bool(forKey: Keys.showOnLaunch)
         }
 
-        accentColorName = d.string(forKey: Keys.accentColorName) ?? "blue"
+        accentColorName = d.string(forKey: Keys.accentColorName) ?? "system"
 
         // iCloudSync = d.bool(forKey: Keys.iCloudSync)
     }
