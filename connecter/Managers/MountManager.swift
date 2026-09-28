@@ -305,11 +305,11 @@ final class MountManager: ObservableObject {
 
         // Cancel tasks and remove Keychain passwords for deleted shares
         let storedIDs = Set(stored.map(\.id))
-        for id in shareTasks.keys where !storedIDs.contains(id) {
-            shareTasks[id]?.cancel()
-            shareTasks.removeValue(forKey: id)
-            failureCounts.removeValue(forKey: id)
-            KeychainManager.delete(forID: id)
+        for removed in configs where !storedIDs.contains(removed.id) {
+            shareTasks[removed.id]?.cancel()
+            shareTasks.removeValue(forKey: removed.id)
+            failureCounts.removeValue(forKey: removed.id)
+            KeychainManager.delete(for: removed)
         }
 
         // Rebuild configs array preserving live connection statuses
@@ -324,12 +324,72 @@ final class MountManager: ObservableObject {
         syncTasks()
     }
 
+    /// Outcome of `recoverSharesFromKeychain()`.
+    struct KeychainRecovery {
+        var added = 0
+        var alreadyConfigured = 0
+        var unreadable = 0
+
+        /// User-facing summary for an alert.
+        var message: String {
+            var lines: [String] = []
+            if added > 0 {
+                lines.append(String(localized: "\(added) shares recovered"))
+            } else if alreadyConfigured > 0 {
+                lines.append(String(localized: "All saved shares are already in the list."))
+            } else if unreadable == 0 {
+                lines.append(String(localized: "No saved shares found in the Keychain."))
+            }
+            if unreadable > 0 {
+                lines.append(String(localized: "\(unreadable) shares could not be read from the Keychain."))
+            }
+            return lines.joined(separator: "\n")
+        }
+    }
+
+    /// Adds every share that has a readable password in the Keychain but is
+    /// missing from the list (e.g. after moving to the sandboxed build, or
+    /// shares added on another Mac with iCloud Keychain). Items whose secret
+    /// cannot be read are left untouched and reported.
+    @discardableResult
+    func recoverSharesFromKeychain() -> KeychainRecovery {
+        var current = ShareConfig.loadAll()
+        var result = KeychainRecovery()
+        for stored in KeychainManager.storedShares() {
+            let alreadyConfigured = current.contains {
+                $0.host.caseInsensitiveCompare(stored.host) == .orderedSame
+                    && $0.normalizedPath.caseInsensitiveCompare(stored.sharePath) == .orderedSame
+            }
+            if alreadyConfigured {
+                result.alreadyConfigured += 1
+                continue
+            }
+            var config = ShareConfig(
+                name: stored.name, host: stored.host, path: stored.sharePath,
+                username: stored.username, isEnabled: true
+            )
+            guard let password = KeychainManager.load(for: config).password else {
+                result.unreadable += 1
+                continue
+            }
+            config.password = password
+            current.append(config)
+            result.added += 1
+        }
+        if result.added > 0 {
+            ShareConfig.saveList(current)   // the Keychain items already exist
+            reloadConfigs()
+        }
+        log.info("Recover from Keychain: \(result.added) added, \(result.alreadyConfigured) already configured, \(result.unreadable) unreadable")
+        return result
+    }
+
     /// Enables or disables a single share. Starts or stops its task accordingly.
     func setEnabled(_ enabled: Bool, forID id: UUID) {
         var stored = ShareConfig.loadAll()
         guard let index = stored.firstIndex(where: { $0.id == id }) else { return }
         stored[index].isEnabled = enabled
-        ShareConfig.saveAll(stored)
+        ShareConfig.saveList(stored)
 
         guard let i = configs.firstIndex(where: { $0.id == id }) else { return }
         let name = configs[i].displayName
@@ -385,6 +445,9 @@ final class MountManager: ObservableObject {
 
         let userLabel = config.username.isEmpty ? "(guest)" : config.username
         log.info("Mounting via NetFS: \(urlString) — user=\(userLabel), password from \(passwordSource)")
+        if config.passwordUnavailable {
+            log.warning("[\(config.displayName)] The stored password could not be read from the Keychain; using \(passwordSource)")
+        }
         if !config.username.isEmpty && password.isEmpty {
             log.warning("[\(config.displayName)] No stored password — on macOS 27 NetAuth will not answer; re-enter the password in the share settings")
         }

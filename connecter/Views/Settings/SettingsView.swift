@@ -3,6 +3,7 @@ import SwiftUI
 struct SettingsTab: View {
     @EnvironmentObject private var loginItemManager: LoginItemManager
     @ObservedObject private var settings = AppSettings.shared
+    @State private var recoveryMessage: String?
 
     var body: some View {
         NavigationStack {
@@ -56,6 +57,25 @@ struct SettingsTab: View {
                     }
                 } header: {
                     Text("General")
+                }
+
+                Section {
+                    HStack(alignment: .top) {
+                        VStack(alignment: .leading, spacing: 3) {
+                            Text("Recover shares")
+                                .font(.body)
+                            Text("Shares saved with a password can be restored from the macOS Keychain, also on another Mac with iCloud Keychain.")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                        Spacer()
+                        Button("Recover…") {
+                            recoveryMessage = MountManager.shared.recoverSharesFromKeychain().message
+                        }
+                        .controlSize(.small)
+                    }
+                } header: {
+                    Text("Keychain")
                 }
 
                 Section {
@@ -144,5 +164,16 @@ struct SettingsTab: View {
         .frame(width: 420)
         .fixedSize(horizontal: false, vertical: true)
         .modalWindowStyle()
+        .alert(
+            "Recover from Keychain",
+            isPresented: Binding(
+                get: { recoveryMessage != nil },
+                set: { if !$0 { recoveryMessage = nil } }
+            )
+        ) {
+            Button("OK") {}
+        } message: {
+            Text(recoveryMessage ?? "")
+        }
     }
 }

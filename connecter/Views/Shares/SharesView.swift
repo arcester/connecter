@@ -3,6 +3,9 @@ import SwiftUI
 struct SharesBody: View {
     @EnvironmentObject private var mountManager: MountManager
     @Binding var editingConfig: ShareConfig?
+    /// Shares that have a password in the Keychain and could be restored.
+    @State private var recoverableShares = 0
+    @State private var recoveryMessage: String?
 
     private var sortedConfigs: [ShareConfig] {
         mountManager.configs.sorted {
@@ -93,8 +96,30 @@ struct SharesBody: View {
             Text("Press + to add an SMB share.")
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
+            if recoverableShares > 0 {
+                Button {
+                    let result = mountManager.recoverSharesFromKeychain()
+                    if result.added == 0 { recoveryMessage = result.message }
+                } label: {
+                    Label("Recover from Keychain", systemImage: "key")
+                }
+                .buttonStyle(.glassProminent)
+                .help("Restore the shares whose passwords are saved in your Keychain")
+            }
         }
         .padding()
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .onAppear { recoverableShares = KeychainManager.storedShares().count }
+        .alert(
+            "Recover from Keychain",
+            isPresented: Binding(
+                get: { recoveryMessage != nil },
+                set: { if !$0 { recoveryMessage = nil } }
+            )
+        ) {
+            Button("OK") {}
+        } message: {
+            Text(recoveryMessage ?? "")
+        }
     }
 }

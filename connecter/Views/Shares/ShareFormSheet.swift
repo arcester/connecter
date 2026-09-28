@@ -153,6 +153,11 @@ struct ShareFormSheet: View {
                         SecureField("Optional", text: $password)
                     }
                 }
+                if existing?.passwordUnavailable == true {
+                    Label("The saved password could not be read from the Keychain. Enter it again to replace it.", systemImage: "exclamationmark.triangle.fill")
+                        .font(.caption)
+                        .foregroundStyle(.orange)
+                }
                 Text("Leave the password empty to use the one Finder saved for this server.")
                     .font(.caption)
                     .foregroundStyle(.secondary)

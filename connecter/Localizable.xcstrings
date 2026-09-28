@@ -91,6 +91,86 @@
         }
       }
     },
+    "%lld shares could not be read from the Keychain.": {
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld share could not be read from the Keychain."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld shares could not be read from the Keychain."
+                }
+              }
+            }
+          }
+        },
+        "es": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld recurso no se ha podido leer del llavero."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld recursos no se han podido leer del llavero."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "%lld shares recovered": {
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld share recovered"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld shares recovered"
+                }
+              }
+            }
+          }
+        },
+        "es": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld recurso recuperado"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld recursos recuperados"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "192.168.1.1 or server.local": {
       "localizations": {
         "es": {
@@ -147,6 +227,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Todo"
+          }
+        }
+      }
+    },
+    "All saved shares are already in the list.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Todos los recursos guardados ya están en la lista."
           }
         }
       }
@@ -654,6 +744,16 @@
         }
       }
     },
+    "Keychain": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Llavero"
+          }
+        }
+      }
+    },
     "Launch at Login": {
       "localizations": {
         "es": {
@@ -780,6 +880,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Sin red"
+          }
+        }
+      }
+    },
+    "No saved shares found in the Keychain.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No hay recursos guardados en el llavero."
           }
         }
       }
@@ -954,6 +1064,36 @@
         }
       }
     },
+    "Recover from Keychain": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recuperar del llavero"
+          }
+        }
+      }
+    },
+    "Recover shares": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recuperar recursos"
+          }
+        }
+      }
+    },
+    "Recover…": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recuperar…"
+          }
+        }
+      }
+    },
     "Red": {
       "localizations": {
         "es": {
@@ -1010,6 +1150,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Reiniciar NetAuth…"
+          }
+        }
+      }
+    },
+    "Restore the shares whose passwords are saved in your Keychain": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restaura los recursos cuya contraseña está guardada en tu llavero"
           }
         }
       }
@@ -1094,6 +1244,16 @@
         }
       }
     },
+    "Shares saved with a password can be restored from the macOS Keychain, also on another Mac with iCloud Keychain.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los recursos guardados con contraseña se pueden restaurar desde el llavero de macOS, también en otro Mac con el llavero de iCloud."
+          }
+        }
+      }
+    },
     "Show on Launch": {
       "localizations": {
         "es": {
@@ -1130,6 +1290,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "La versión de Connecter de la App Store no puede reiniciar servicios de macOS. Ejecuta este comando en Terminal, o cierra «NetAuthSysAgent» desde Monitor de Actividad, y pulsa Reintentar ahora:\n\n%@"
+          }
+        }
+      }
+    },
+    "The saved password could not be read from the Keychain. Enter it again to replace it.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se ha podido leer la contraseña guardada en el llavero. Escríbela de nuevo para reemplazarla."
           }
         }
       }

@@ -12,6 +12,9 @@ struct ShareConfig: Codable, Identifiable {
     /// Runtime connection state — not persisted to disk.
     /// Always resets to `.disconnected` when the app loads.
     var connectionStatus: ConnectionStatus = .disconnected
+    /// Runtime only: the Keychain holds a password for this share but it could
+    /// not be read (locked keychain or denied access). `password` is empty then.
+    var passwordUnavailable = false
 
     enum ConnectionStatus: String, Codable {
         case disconnected
@@ -54,6 +57,16 @@ struct ShareConfig: Codable, Identifiable {
     }
 }
 
+// MARK: - Derived values
+
+extension ShareConfig {
+    /// Share path without surrounding slashes or whitespace ("/video/" → "video").
+    var normalizedPath: String { MountManager.normalizedSharePath(path) }
+
+    /// Identifies the share's Keychain item; changes when host, path or user change.
+    var credentialKey: String { "\(host.lowercased())|\(normalizedPath)|\(username)" }
+}
+
 // MARK: - Persistence
 
 extension ShareConfig {
@@ -78,37 +91,35 @@ extension ShareConfig {
         var needsMigration = false
         for i in configs.indices {
             if !configs[i].password.isEmpty {
-                KeychainManager.save(configs[i].password, forID: configs[i].id)
+                // Plaintext password left by a very old build: move it to the Keychain.
+                KeychainManager.save(configs[i])
                 configs[i].password = ""
                 needsMigration = true
             }
-            configs[i].password = KeychainManager.load(forID: configs[i].id) ?? ""
+            switch KeychainManager.load(for: configs[i]) {
+            case .found(let password):
+                configs[i].password = password
+            case .notFound:
+                configs[i].password = ""
+            case .unavailable:
+                configs[i].password = ""
+                configs[i].passwordUnavailable = true
+            }
         }
 
         if needsMigration { _persist(configs) }
         return configs
     }
 
-    static func saveAll(_ configs: [ShareConfig]) {
-        for config in configs {
-            KeychainManager.save(config.password, forID: config.id)
-        }
+    /// Persists the share list (passwords stripped). Keychain items are
+    /// written only where a password actually changed — `KeychainManager.save`
+    /// for that share — so a stale in-memory value never overwrites an item
+    /// edited in Keychain Access or on another Mac. Removal is explicit too:
+    /// `KeychainManager.delete(for:)` when the user deletes a share or clears
+    /// its password, `removeSuperseded` when host/path/user changed.
+    static func saveList(_ configs: [ShareConfig]) {
         _persist(configs)
     }
-
-    // TODO: iCloud — descomentar cuando haya cuenta de desarrollador con iCloud habilitado
-    // static func migrateStorage(toCloud: Bool) {
-    //     if toCloud {
-    //         if let data = UserDefaults.standard.data(forKey: storeKey) {
-    //             NSUbiquitousKeyValueStore.default.set(data, forKey: storeKey)
-    //             NSUbiquitousKeyValueStore.default.synchronize()
-    //         }
-    //     } else {
-    //         if let data = NSUbiquitousKeyValueStore.default.data(forKey: storeKey) {
-    //             UserDefaults.standard.set(data, forKey: storeKey)
-    //         }
-    //     }
-    // }
 
     private static func _persist(_ configs: [ShareConfig]) {
         var stripped = configs

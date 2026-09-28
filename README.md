@@ -6,7 +6,7 @@ A macOS menu bar utility for managing SMB network share connections. Connecter m
 
 - **Automatic mounting** — shares connect on launch and reconnect after sleep, network changes and interruptions
 - **Menu bar status** — at-a-glance connection state with per-share quick actions
-- **Secure credentials** — passwords stored exclusively in the macOS Keychain, never on disk
+- **Secure credentials** — passwords stored exclusively in the macOS Keychain, never on disk; the share list can be rebuilt from the Keychain (“Recover from Keychain”)
 - **Smart retry** — exponential backoff (×2, ×4, then 5 min) with configurable auto-disable after repeated failures, and a notification when a share is switched off
 - **Network-aware** — pauses checks while offline (`NWPathMonitor`) and re-checks every share as soon as connectivity returns
 - **Launch at login** — via `SMAppService`, off by default
@@ -71,6 +71,16 @@ Views/
 Localizable.xcstrings    — String Catalog (en, es)
 PrivacyInfo.xcprivacy    — privacy manifest
 ```
+
+## Where data lives
+
+| Data | Location |
+|---|---|
+| Share list and settings | `UserDefaults` (`es.guzman.connecter`), inside the app container when sandboxed |
+| Passwords | Keychain internet-password items (protocol SMB, security domain `es.guzman.connecter`) whose attributes carry host, share path, user name and display name |
+| Activity log | `Library/Logs/Connecter/connecter.log` |
+
+Because each Keychain item describes its share, **Recover from Keychain** (empty list, or Settings → Keychain) rebuilds the list for every share that has a stored password — for example after moving to the sandboxed build, whose container starts empty. Items are created as synchronizable so that, once the app is signed with the Keychain Sharing capability, they also follow the user to other Macs through iCloud Keychain; without that entitlement macOS refuses synchronizable items (`errSecMissingEntitlement`) and Connecter stores them locally. Shares that rely on a password saved by Finder have no item of their own and cannot be recovered this way.
 
 ## Privacy
 

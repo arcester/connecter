@@ -25,10 +25,17 @@ Estado del proyecto tras la revisión de septiembre de 2026. Lo que ya está hec
    defaults export es.guzman.connecter - | defaults import ~/Library/Containers/es.guzman.connecter/Data/Library/Preferences/es.guzman.connecter -
    ```
 
-   Las contraseñas guardadas por el Finder siguen funcionando: macOS pedirá permiso ("Connecter quiere usar tu información confidencial…") una vez por servidor; elige *Permitir siempre*. Las que hayas escrito en la app se leen del llavero igual que antes.
+   Alternativa sin comando: si los recursos tienen la contraseña escrita en la app, la lista vacía ofrece **Recuperar del llavero** (también en Ajustes → Llavero) y los vuelve a crear a partir de los ítems del llavero.
+
+   Las contraseñas guardadas por el Finder siguen funcionando: macOS pedirá permiso ("Connecter quiere usar tu información confidencial…") una vez por servidor; elige *Permitir siempre*. Los recursos que dependen de esa contraseña no tienen ítem propio y no se recuperan con el botón; conviene escribir la contraseña en el formulario del recurso.
 4. **LuLu**: la app ahora abre conexiones TCP directamente (comprobación del puerto 445). LuLu preguntará la primera vez; permite Connecter.
 5. **Prueba de montaje** con la build sandboxed: montar, desmontar, "Abrir en el Finder", "Probar conexión" y el aviso de NetAuth (`CONNECTER_SIMULATE_NETAUTH_HANG=1` como variable de entorno en el esquema).
 6. **Icono Liquid Glass (opcional pero recomendable en macOS 26/27)**: abrir `AppIcon-512@2x.png` en *Icon Composer* (Xcode → Open Developer Tool), separar carpeta y puntos en capas y guardar `AppIcon.icon` en el catálogo. El PNG actual es válido; el sistema le aplica el contorno automáticamente.
+
+## Cuando haya cuenta de pago: sincronización por iCloud
+
+- Los ítems del llavero se crean como sincronizables, pero macOS lo rechaza (`-34018`, falta entitlement) si la app no lleva identificador de aplicación; hoy se guardan en local. Al activar la capability **Keychain Sharing** en *Signing & Capabilities* (Xcode genera el perfil y añade `keychain-access-groups`), las contraseñas nuevas pasan a sincronizarse con el llavero de iCloud y "Recuperar del llavero" funciona en otro Mac. Las guardadas antes siguen en local hasta que se vuelvan a guardar.
+- Para sincronizar también la lista con sus estados (activado/desactivado) está esbozado el uso de `NSUbiquitousKeyValueStore` en `ShareConfig`/`AppSettings` (capability iCloud → Key-value storage).
 
 ## En App Store Connect
 
