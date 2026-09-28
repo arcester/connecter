@@ -4,6 +4,7 @@ struct ContentView: View {
     @EnvironmentObject private var mountManager: MountManager
     @EnvironmentObject private var loginItemManager: LoginItemManager
     @Environment(\.openWindow) private var openWindow
+    @Environment(\.openSettings) private var openSettings
     @ObservedObject private var settings = AppSettings.shared
     @State private var showAddSheet = false
     @State private var editingConfig: ShareConfig?
@@ -46,11 +47,10 @@ struct ContentView: View {
                     .accessibilityLabel(Text("Refresh shares"))
                     .keyboardShortcut("r", modifiers: .command)
 
-                    Button { openWindow(id: "settings") } label: {
+                    Button { openSettings() } label: {
                         Label("Settings", systemImage: "gear")
                     }
                     .help("Settings")
-                    .keyboardShortcut(",", modifiers: .command)
 
                     Button { openWindow(id: "activity-log") } label: {
                         Label("Log", systemImage: "terminal")
@@ -61,6 +61,7 @@ struct ContentView: View {
         }
         .frame(width: 440)
         .background(WindowResizer(width: 440, height: desiredContentHeight))
+        .escapeClosesWindow()
         .sheet(isPresented: $showAddSheet) {
             ShareFormSheet(existing: nil) { newConfig in
                 var configs = mountManager.configs
@@ -76,15 +77,12 @@ struct ContentView: View {
                 if let idx = configs.firstIndex(where: { $0.id == updated.id }) {
                     configs[idx] = updated
                 }
-                KeychainManager.save(updated)
+                KeychainManager.save(updated)   // also records a cleared password (empty secret)
                 ShareConfig.saveList(configs)
                 if updated.credentialKey != config.credentialKey {
                     // Item is keyed by host/path/user: the new one is written above,
                     // the old one goes only once the new one is confirmed.
                     KeychainManager.removeSuperseded(config, replacedBy: updated)
-                } else if !config.password.isEmpty && updated.password.isEmpty {
-                    // The user cleared the password field on purpose.
-                    KeychainManager.delete(for: updated)
                 }
                 mountManager.reloadConfigs()
             } onDelete: {

@@ -3,7 +3,8 @@ import Security
 
 /// Stores and retrieves SMB share passwords in the macOS Keychain.
 ///
-/// Each share with a password is an *internet password* item whose attributes
+/// Every share is an *internet password* item (secret empty when the share
+/// has no password of its own) whose attributes
 /// carry the host, share path, user name and display name, under a private
 /// security domain so it never collides with the entries Finder saves for the
 /// same server. Because the attributes describe the share, the share list can
@@ -26,11 +27,23 @@ import Security
 enum KeychainManager {
 
     /// A share described by one of Connecter's Keychain items (attributes only).
-    struct StoredShare {
+    struct StoredShare: Identifiable {
         let host: String
         let sharePath: String
         let username: String
         let name: String
+        /// Whether the item carries a password (recorded in its "kind" attribute).
+        let hasPassword: Bool
+
+        var id: String { "\(host.lowercased())|\(sharePath.lowercased())|\(username)" }
+        var displayName: String { name.isEmpty ? host : name }
+        var smbURLString: String { "smb://\(host)/\(sharePath)" }
+
+        /// Same share as `config` (host and path, case-insensitive)?
+        func matches(_ config: ShareConfig) -> Bool {
+            config.host.caseInsensitiveCompare(host) == .orderedSame
+                && config.normalizedPath.caseInsensitiveCompare(sharePath) == .orderedSame
+        }
     }
 
     /// Outcome of looking up a share's password.
@@ -50,6 +63,11 @@ enum KeychainManager {
     /// items apart from the ones Finder and other apps create.
     private static let securityDomain = "es.guzman.connecter"
 
+    /// "Kind" attribute (shown in Keychain Access); also records whether the
+    /// item carries a password, so listings don't need to read the secret.
+    private static let kindWithPassword = "Connecter SMB share"
+    private static let kindWithoutPassword = "Connecter SMB share (no password)"
+
     /// Service name of the legacy generic-password items (keyed by share UUID).
     private static let legacyService = Bundle.main.bundleIdentifier ?? "es.guzman.connecter"
 
@@ -65,39 +83,47 @@ enum KeychainManager {
 
     // MARK: - App items (one per share)
 
-    /// Stores the share's password. Does nothing when the password is empty —
-    /// clearing a password is an explicit action, see `delete(for:)`.
+    /// Backs the share up in the Keychain: name, server, path, user and the
+    /// password if there is one (the secret is empty otherwise, so the share
+    /// list itself can always be rebuilt). Returns `true` if an item was added
+    /// or changed.
     ///
     /// An existing item is updated in place, and only when something changed,
     /// so iCloud Keychain is not churned on every save. If the existing item
-    /// cannot be read (access denied), it is replaced: the caller has a
-    /// password the user just provided, which is the authoritative value.
-    static func save(_ config: ShareConfig) {
-        guard !config.password.isEmpty else { return }
+    /// cannot be read (access denied) it is left alone, unless the caller
+    /// provides a password — the value the user just typed is authoritative —
+    /// in which case it is replaced. Nothing here ever removes an item; see
+    /// `delete(for:)` and `removeSuperseded`.
+    @discardableResult
+    static func save(_ config: ShareConfig) -> Bool {
         let data = Data(config.password.utf8)
         let label = "Connecter: \(config.displayName)"
+        let kind = config.password.isEmpty ? kindWithoutPassword : kindWithPassword
 
         switch fetchItem(for: config) {
         case .found(let item):
-            let unchanged = (item[kSecValueData as String] as? Data) == data
+            let unchanged = (item[kSecValueData as String] as? Data ?? Data()) == data
                 && (item[kSecAttrLabel as String] as? String) == label
                 && (item[kSecAttrComment as String] as? String ?? "") == config.name
-            if unchanged { return }
-            let status = update(config, data: data, label: label)
+                && (item[kSecAttrDescription as String] as? String) == kind
+            if unchanged { return false }
+            let status = update(config, data: data, label: label, kind: kind)
             if status != errSecSuccess {
-                LogManager.shared.error("[Keychain] Could not update the password for \(config.displayName): \(message(status))")
+                LogManager.shared.error("[Keychain] Could not update the item for \(config.displayName): \(message(status))")
+                return false
             }
+            return true
 
         case .notFound:
-            add(config, data: data, label: label)
+            return add(config, data: data, label: label, kind: kind)
 
         case .unavailable(let readStatus):
-            // The item is there but this build may not read it. Try to update it;
-            // if that is refused too, replace it with a fresh item.
-            if update(config, data: data, label: label) == errSecSuccess { return }
+            // Never overwrite a secret we cannot read with nothing.
+            guard !config.password.isEmpty else { return false }
+            if update(config, data: data, label: label, kind: kind) == errSecSuccess { return true }
             LogManager.shared.warning("[Keychain] Replacing the unreadable item for \(config.displayName) (\(message(readStatus)))")
             SecItemDelete(keyQuery(for: config, synchronizable: kSecAttrSynchronizableAny) as CFDictionary)
-            add(config, data: data, label: label)
+            return add(config, data: data, label: label, kind: kind)
         }
     }
 
@@ -146,15 +172,13 @@ enum KeychainManager {
     /// readable, the old one is kept as a safety net.
     static func removeSuperseded(_ old: ShareConfig, replacedBy new: ShareConfig) {
         guard old.credentialKey != new.credentialKey else { return }
-        if new.password.isEmpty {
-            // An empty field is only a deliberate "no password" when the old
-            // value was readable; an unreadable item still holds the real secret.
-            if old.passwordUnavailable {
-                LogManager.shared.warning("[Keychain] Kept the previous item for \(old.displayName): its password could not be read, so it was not cleared")
-            } else {
-                delete(for: old)
-            }
-        } else if load(for: new).password == new.password {
+        if old.passwordUnavailable && new.password.isEmpty {
+            // The old item still holds a secret this build could not read; the
+            // new one has none, so keep the old copy rather than lose it.
+            LogManager.shared.warning("[Keychain] Kept the previous item for \(old.displayName): its password could not be read, so it was not cleared")
+            return
+        }
+        if load(for: new).password == new.password {
             delete(for: old)
         } else {
             LogManager.shared.warning("[Keychain] Kept the previous item for \(old.displayName): the new one could not be verified")
@@ -188,7 +212,8 @@ enum KeychainManager {
                 host: host,
                 sharePath: path,
                 username: username,
-                name: item[kSecAttrComment as String] as? String ?? ""
+                name: item[kSecAttrComment as String] as? String ?? "",
+                hasPassword: (item[kSecAttrDescription as String] as? String) != kindWithoutPassword
             )
         }
     }
@@ -264,40 +289,43 @@ enum KeychainManager {
 
     /// Adds a new item, preferring a synchronizable one. A duplicate (item
     /// present but not returned by the read) is updated instead.
-    private static func add(_ config: ShareConfig, data: Data, label: String) {
+    private static func add(_ config: ShareConfig, data: Data, label: String, kind: String) -> Bool {
         let variants: [Bool] = synchronizableUnavailable ? [false] : [true, false]
         for synchronizable in variants {
             var attributes = keyQuery(for: config, synchronizable: synchronizable)
             attributes[kSecValueData as String] = data
             attributes[kSecAttrLabel as String] = label
             attributes[kSecAttrComment as String] = config.name
-            attributes[kSecAttrDescription as String] = "Connecter SMB share"
+            attributes[kSecAttrDescription as String] = kind
             let status = SecItemAdd(attributes as CFDictionary, nil)
             switch status {
             case errSecSuccess:
-                return
+                return true
             case errSecDuplicateItem:
-                let updated = update(config, data: data, label: label)
+                let updated = update(config, data: data, label: label, kind: kind)
                 if updated != errSecSuccess {
-                    LogManager.shared.error("[Keychain] Could not replace the password for \(config.displayName): \(message(updated))")
+                    LogManager.shared.error("[Keychain] Could not replace the item for \(config.displayName): \(message(updated))")
+                    return false
                 }
-                return
+                return true
             case errSecMissingEntitlement where synchronizable:
                 // Expected without the Keychain Sharing capability: fall back to a local item.
                 synchronizableUnavailable = true
-                LogManager.shared.info("[Keychain] iCloud Keychain sync is not available for this build — passwords are stored on this Mac only")
+                LogManager.shared.info("[Keychain] iCloud Keychain sync is not available for this build — items are stored on this Mac only")
             default:
-                LogManager.shared.error("[Keychain] Could not save the password for \(config.displayName): \(message(status))")
-                return
+                LogManager.shared.error("[Keychain] Could not save the item for \(config.displayName): \(message(status))")
+                return false
             }
         }
+        return false
     }
 
-    private static func update(_ config: ShareConfig, data: Data, label: String) -> OSStatus {
+    private static func update(_ config: ShareConfig, data: Data, label: String, kind: String) -> OSStatus {
         let changes: [String: Any] = [
             kSecValueData as String: data,
             kSecAttrLabel as String: label,
             kSecAttrComment as String: config.name,
+            kSecAttrDescription as String: kind,
         ]
         return SecItemUpdate(
             keyQuery(for: config, synchronizable: kSecAttrSynchronizableAny) as CFDictionary,

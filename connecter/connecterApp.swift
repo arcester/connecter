@@ -49,11 +49,10 @@ struct connecterApp: App {
         }
         .windowResizability(.contentMinSize)
 
-        Window("Settings", id: "settings") {
-            SettingsTab()
+        Settings {
+            SettingsView()
                 .environmentObject(loginItemManager)
         }
-        .windowResizability(.contentSize)
 
         Window("Activity Log", id: "activity-log") {
             LogView()

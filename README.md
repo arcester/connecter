@@ -80,7 +80,7 @@ PrivacyInfo.xcprivacy    — privacy manifest
 | Passwords | Keychain internet-password items (protocol SMB, security domain `es.guzman.connecter`) whose attributes carry host, share path, user name and display name |
 | Activity log | `Library/Logs/Connecter/connecter.log` |
 
-Because each Keychain item describes its share, **Recover from Keychain** (empty list, or Settings → Keychain) rebuilds the list for every share that has a stored password — for example after moving to the sandboxed build, whose container starts empty. Items are created as synchronizable so that, once the app is signed with the Keychain Sharing capability, they also follow the user to other Macs through iCloud Keychain; without that entitlement macOS refuses synchronizable items (`errSecMissingEntitlement`) and Connecter stores them locally. Shares that rely on a password saved by Finder have no item of their own and cannot be recovered this way.
+Every share gets a Keychain item at launch and whenever it is saved (the secret is empty for shares that rely on a password saved by Finder), so **Settings → Keychain** lists what is stored and **Recover** rebuilds the list — for example after moving to the sandboxed build, whose container starts empty. Items are created as synchronizable so that, once the app is signed with the Keychain Sharing capability, they also follow the user to other Macs through iCloud Keychain; without that entitlement macOS refuses synchronizable items (`errSecMissingEntitlement`) and Connecter stores them locally.
 
 ## Privacy
 

@@ -1,16 +1,21 @@
 import SwiftUI
 import AppKit
 
-/// Applies modal-like chrome to a secondary window:
-/// hides minimize and zoom buttons, and centers over the main Connecter window
-/// every time the window is freshly opened (not on every focus change).
+/// Applies modal-like chrome to a secondary window (Settings, Activity Log):
+/// hides the minimize and zoom buttons, and centers the window over the main
+/// Connecter window every time it is (re)opened.
+///
+/// AppKit shows a window at its remembered position before SwiftUI code gets
+/// a chance to move it, which reads as a jump. To avoid that the window is
+/// kept fully transparent from the moment it closes (or is created) until it
+/// has been positioned on its next show, and only then made visible.
 struct ModalWindowStyle: NSViewRepresentable {
     func makeNSView(context: Context) -> StyleView { StyleView() }
     func updateNSView(_ nsView: StyleView, context: Context) {}
 
     final class StyleView: NSView {
-        // Set to true when the window closes so the next show re-centers.
-        private var shouldCenterOnNextShow = true
+        /// True while the window still has to be repositioned before it is shown.
+        private var pendingReposition = true
         private var observers: [NSObjectProtocol] = []
 
         override func viewDidMoveToWindow() {
@@ -20,38 +25,46 @@ struct ModalWindowStyle: NSViewRepresentable {
             window.standardWindowButton(.miniaturizeButton)?.isHidden = true
             window.standardWindowButton(.zoomButton)?.isHidden = true
 
-            // Avoid registering twice if view moves to a different window.
+            // Avoid registering twice if the view moves to a different window.
             observers.forEach { NotificationCenter.default.removeObserver($0) }
             observers = []
 
-            // When window closes, mark that the next show should re-center.
-            observers.append(NotificationCenter.default.addObserver(
-                forName: NSWindow.willCloseNotification,
-                object: window, queue: .main
-            ) { [weak self] _ in
-                self?.shouldCenterOnNextShow = true
-            })
+            let center = NotificationCenter.default
 
-            // When window becomes key, center if it was just (re)opened.
-            observers.append(NotificationCenter.default.addObserver(
-                forName: NSWindow.didBecomeKeyNotification,
-                object: window, queue: .main
+            // Closing: the next show must reposition again; go transparent right
+            // away so a reopened window cannot flash at its old place.
+            observers.append(center.addObserver(
+                forName: NSWindow.willCloseNotification, object: window, queue: .main
             ) { [weak self, weak window] _ in
-                guard let self, let window, self.shouldCenterOnNextShow else { return }
-                self.shouldCenterOnNextShow = false
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
-                    Self.centerWindow(window)
-                }
+                guard let self, let window else { return }
+                self.pendingReposition = true
+                window.alphaValue = 0
             })
 
-            // First show.
-            if shouldCenterOnNextShow {
-                shouldCenterOnNextShow = false
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) { [weak window] in
-                    guard let window else { return }
-                    Self.centerWindow(window)
-                }
+            // Shown (visible or key): layout is done, so the size is final —
+            // center now and reveal.
+            for name in [NSWindow.didBecomeKeyNotification, NSWindow.didChangeOcclusionStateNotification] {
+                observers.append(center.addObserver(forName: name, object: window, queue: .main) { [weak self, weak window] _ in
+                    guard let self, let window, window.isVisible else { return }
+                    self.revealCentered(window)
+                })
             }
+
+            // First show: the view is attached before the window is ordered front.
+            window.alphaValue = 0
+            // Safety net so the window can never stay invisible if no
+            // notification arrives (only acts on a window that is on screen).
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self, weak window] in
+                guard let self, let window, window.isVisible else { return }
+                self.revealCentered(window)
+            }
+        }
+
+        private func revealCentered(_ window: NSWindow) {
+            guard pendingReposition else { return }
+            pendingReposition = false
+            Self.centerWindow(window)
+            window.alphaValue = 1
         }
 
         private static func centerWindow(_ window: NSWindow) {
@@ -62,14 +75,19 @@ struct ModalWindowStyle: NSViewRepresentable {
                 && $0.level == .normal
                 && $0.styleMask.contains(.titled)
             }
-            var f = window.frame
-            if let main {
-                f.origin.x = main.frame.midX - f.width / 2
-                f.origin.y = main.frame.midY - f.height / 2
-            } else {
-                window.center(); return
+            guard let main else {
+                window.center()
+                return
             }
-            window.setFrameOrigin(f.origin)
+            var frame = window.frame
+            frame.origin.x = main.frame.midX - frame.width / 2
+            frame.origin.y = main.frame.midY - frame.height / 2
+            // Keep it on the same screen as the main window.
+            if let visible = main.screen?.visibleFrame ?? NSScreen.main?.visibleFrame {
+                frame.origin.x = min(max(frame.origin.x, visible.minX), visible.maxX - frame.width)
+                frame.origin.y = min(max(frame.origin.y, visible.minY), visible.maxY - frame.height)
+            }
+            window.setFrameOrigin(frame.origin)
         }
 
         deinit {
@@ -79,7 +97,9 @@ struct ModalWindowStyle: NSViewRepresentable {
 }
 
 extension View {
+    /// Modal-like chrome, centered presentation and Esc to close.
     func modalWindowStyle() -> some View {
         background(ModalWindowStyle())
+            .escapeClosesWindow()
     }
 }

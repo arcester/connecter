@@ -25,9 +25,9 @@ Estado del proyecto tras la revisión de septiembre de 2026. Lo que ya está hec
    defaults export es.guzman.connecter - | defaults import ~/Library/Containers/es.guzman.connecter/Data/Library/Preferences/es.guzman.connecter -
    ```
 
-   Alternativa sin comando: si los recursos tienen la contraseña escrita en la app, la lista vacía ofrece **Recuperar del llavero** (también en Ajustes → Llavero) y los vuelve a crear a partir de los ítems del llavero.
+   Alternativa sin comando: la app guarda cada recurso en el llavero al arrancar (con o sin contraseña), así que la build nueva ofrece **Recuperar del llavero** en la lista vacía y en Ajustes → Llavero, donde además se ve lo que hay guardado.
 
-   Las contraseñas guardadas por el Finder siguen funcionando: macOS pedirá permiso ("Connecter quiere usar tu información confidencial…") una vez por servidor; elige *Permitir siempre*. Los recursos que dependen de esa contraseña no tienen ítem propio y no se recuperan con el botón; conviene escribir la contraseña en el formulario del recurso.
+   Las contraseñas guardadas por el Finder siguen funcionando: macOS pedirá permiso ("Connecter quiere usar tu información confidencial…") una vez por servidor; elige *Permitir siempre*. Los recursos que dependen de esa contraseña se recuperan igualmente (su ítem no lleva secreto).
 4. **LuLu**: la app ahora abre conexiones TCP directamente (comprobación del puerto 445). LuLu preguntará la primera vez; permite Connecter.
 5. **Prueba de montaje** con la build sandboxed: montar, desmontar, "Abrir en el Finder", "Probar conexión" y el aviso de NetAuth (`CONNECTER_SIMULATE_NETAUTH_HANG=1` como variable de entorno en el esquema).
 6. **Icono Liquid Glass (opcional pero recomendable en macOS 26/27)**: abrir `AppIcon-512@2x.png` en *Icon Composer* (Xcode → Open Developer Tool), separar carpeta y puntos en capas y guardar `AppIcon.icon` en el catálogo. El PNG actual es válido; el sistema le aplica el contorno automáticamente.
