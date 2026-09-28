@@ -48,6 +48,21 @@ final class AppSettings: ObservableObject {
         ("graphite", Color(white: 0.55)),
     ]
 
+    /// User-facing name of one of `colorOptions`.
+    static func localizedColorName(_ name: String) -> String {
+        switch name {
+        case "blue":     String(localized: "Blue")
+        case "purple":   String(localized: "Purple")
+        case "pink":     String(localized: "Pink")
+        case "red":      String(localized: "Red")
+        case "orange":   String(localized: "Orange")
+        case "yellow":   String(localized: "Yellow")
+        case "green":    String(localized: "Green")
+        case "graphite": String(localized: "Graphite")
+        default:         name.capitalized
+        }
+    }
+
     // TODO: iCloud sync — descomentar cuando haya cuenta de desarrollador con iCloud habilitado
     // @Published var iCloudSync: Bool {
     //     didSet {

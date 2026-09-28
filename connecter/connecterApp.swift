@@ -84,5 +84,6 @@ struct connecterApp: App {
 private struct MenuBarIcon: View {
     var body: some View {
         Image(systemName: "folder")
+            .accessibilityLabel(Text("Connecter"))
     }
 }

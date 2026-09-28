@@ -1,5 +1,4 @@
 import SwiftUI
-import ServiceManagement
 
 // MARK: - Menu bar content view
 
@@ -7,11 +6,9 @@ struct MenuBarMenuView: View {
     @EnvironmentObject private var mountManager: MountManager
 
     var body: some View {
-        // One item per share — tap to mount/unmount
+        // One item per share — click to mount/unmount
         let sorted = mountManager.configs.sorted {
-            ($0.name.isEmpty ? $0.host : $0.name).localizedCaseInsensitiveCompare(
-                $1.name.isEmpty ? $1.host : $1.name
-            ) == .orderedAscending
+            $0.displayName.localizedCaseInsensitiveCompare($1.displayName) == .orderedAscending
         }
         if sorted.isEmpty {
             Text("No shares configured")
@@ -24,10 +21,19 @@ struct MenuBarMenuView: View {
 
         if mountManager.netAuthSuspected {
             Divider()
-            Button {
-                Task { try? await mountManager.restartNetAuth() }
-            } label: {
-                Label("Restart NetAuth…", systemImage: "exclamationmark.triangle.fill")
+            if AppEnvironment.isSandboxed {
+                // The sandboxed build can't restart NetAuth; the main window explains how.
+                Button {
+                    NotificationCenter.default.post(name: .showMainWindow, object: nil)
+                } label: {
+                    Label("Mount requests are stuck…", systemImage: "exclamationmark.triangle.fill")
+                }
+            } else {
+                Button {
+                    Task { try? await mountManager.restartNetAuth() }
+                } label: {
+                    Label("Restart NetAuth…", systemImage: "exclamationmark.triangle.fill")
+                }
             }
         }
 
@@ -65,51 +71,27 @@ private struct ShareMenuItem: View {
                     try? await mountManager.unmount(config)
                     mountManager.setEnabled(false, forID: config.id)
                 } else {
-                    try? await mountManager.mount(config)
-                    await mountManager.refreshShare(id: config.id)
+                    // Goes through the per-share guard, so it can't overlap a running attempt.
+                    await mountManager.retryShare(id: config.id)
                 }
             }
         } label: {
             Label {
                 VStack(alignment: .leading, spacing: 1) {
-                    Text(config.name.isEmpty ? config.host : config.name)
-                    Text("smb://\(config.host)/\(config.path)")
+                    Text(config.displayName)
+                    Text(config.smbURLString)
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
             } icon: {
                 Image(systemName: config.connectionStatus.menuIconName)
-                    .foregroundStyle(config.connectionStatus.menuColor)
+                    .foregroundStyle(config.connectionStatus.color)
             }
         }
         .disabled(config.isBusy)
-        .help(config.connectionStatus == .connected ? "Tap to unmount and disable"
+        .help(config.connectionStatus == .connected ? "Click to unmount and disable"
               : config.connectionStatus == .connecting ? "Connecting…"
-              : config.isEnabled ? "Tap to mount"
-              : "Tap to enable and mount")
-    }
-}
-
-// MARK: - ConnectionStatus display for menu
-
-extension ShareConfig.ConnectionStatus {
-    var menuIconName: String {
-        switch self {
-        case .disconnected:   "circle"
-        case .connecting:     "arrow.trianglehead.2.clockwise"
-        case .connected:      "checkmark.circle.fill"
-        case .disconnecting:  "arrow.trianglehead.2.clockwise"
-        case .error:          "xmark.circle.fill"
-        }
-    }
-
-    var menuColor: Color {
-        switch self {
-        case .disconnected:   .secondary
-        case .connecting:     .orange
-        case .connected:      .green
-        case .disconnecting:  .orange
-        case .error:          .red
-        }
+              : config.isEnabled ? "Click to mount"
+              : "Click to enable and mount")
     }
 }

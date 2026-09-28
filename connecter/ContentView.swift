@@ -10,6 +10,7 @@ struct ContentView: View {
     @State private var refreshRotation = 0.0
     @State private var isRestartingNetAuth = false
     @State private var netAuthError: String?
+    @State private var showNetAuthHelp = false
 
     var body: some View {
         NavigationStack {
@@ -17,7 +18,7 @@ struct ContentView: View {
                 if mountManager.netAuthSuspected {
                     NetAuthBanner(
                         isRestarting: isRestartingNetAuth,
-                        onRestart: restartNetAuth,
+                        onPrimaryAction: handleNetAuthAction,
                         onDismiss: { mountManager.dismissNetAuthWarning() }
                     )
                     .padding(.horizontal, 16)
@@ -25,43 +26,38 @@ struct ContentView: View {
                 }
                 SharesBody(editingConfig: $editingConfig)
             }
-                .navigationTitle("Connecter")
-                .toolbar {
-                    ToolbarItemGroup(placement: .automatic) {
-                        Button { showAddSheet = true } label: {
-                            Image(systemName: "plus.circle.fill")
-                                .foregroundStyle(settings.accentColor)
-                                .font(.title3)
-                        }
-                        .help("Add share")
-
-                        Button {
-                            withAnimation(.linear(duration: 0.5)) {
-                                refreshRotation += 360
-                            }
-                            let ids = mountManager.configs.filter(\.isEnabled).map(\.id)
-                            Task {
-                                await withTaskGroup(of: Void.self) { group in
-                                    for id in ids {
-                                        group.addTask { await mountManager.refreshShare(id: id) }
-                                    }
-                                }
-                            }
-                        } label: {
-                            Image(systemName: "arrow.clockwise")
-                                .rotationEffect(.degrees(refreshRotation))
-                        }
-                        .help("Refresh shares")
-
-                        Button { openWindow(id: "settings") } label: {
-                            Label("Settings", systemImage: "gear")
-                        }
-
-                        Button { openWindow(id: "activity-log") } label: {
-                            Label("Log", systemImage: "terminal")
-                        }
+            .navigationTitle("Connecter")
+            .toolbar {
+                ToolbarItemGroup(placement: .automatic) {
+                    Button { showAddSheet = true } label: {
+                        Image(systemName: "plus.circle.fill")
+                            .foregroundStyle(settings.accentColor)
+                            .font(.title3)
                     }
+                    .help("Add share")
+                    .accessibilityLabel(Text("Add share"))
+                    .keyboardShortcut("n", modifiers: .command)
+
+                    Button(action: refreshAll) {
+                        Image(systemName: "arrow.clockwise")
+                            .rotationEffect(.degrees(refreshRotation))
+                    }
+                    .help("Refresh shares")
+                    .accessibilityLabel(Text("Refresh shares"))
+                    .keyboardShortcut("r", modifiers: .command)
+
+                    Button { openWindow(id: "settings") } label: {
+                        Label("Settings", systemImage: "gear")
+                    }
+                    .help("Settings")
+                    .keyboardShortcut(",", modifiers: .command)
+
+                    Button { openWindow(id: "activity-log") } label: {
+                        Label("Log", systemImage: "terminal")
+                    }
+                    .help("Activity Log")
                 }
+            }
         }
         .frame(width: 440)
         .background(WindowResizer(width: 440, height: desiredContentHeight))
@@ -69,7 +65,8 @@ struct ContentView: View {
             ShareFormSheet(existing: nil) { newConfig in
                 var configs = mountManager.configs
                 configs.append(newConfig)
-                ShareConfig.saveAll(configs)
+                KeychainManager.save(newConfig)
+                ShareConfig.saveList(configs)
                 mountManager.reloadConfigs()
             }
         }
@@ -79,13 +76,22 @@ struct ContentView: View {
                 if let idx = configs.firstIndex(where: { $0.id == updated.id }) {
                     configs[idx] = updated
                 }
-                ShareConfig.saveAll(configs)
+                KeychainManager.save(updated)
+                ShareConfig.saveList(configs)
+                if updated.credentialKey != config.credentialKey {
+                    // Item is keyed by host/path/user: the new one is written above,
+                    // the old one goes only once the new one is confirmed.
+                    KeychainManager.removeSuperseded(config, replacedBy: updated)
+                } else if !config.password.isEmpty && updated.password.isEmpty {
+                    // The user cleared the password field on purpose.
+                    KeychainManager.delete(for: updated)
+                }
                 mountManager.reloadConfigs()
             } onDelete: {
                 var configs = mountManager.configs
                 configs.removeAll { $0.id == config.id }
-                ShareConfig.saveAll(configs)
-                mountManager.reloadConfigs()
+                ShareConfig.saveList(configs)
+                mountManager.reloadConfigs()   // also removes the share's Keychain item
             }
         }
         .alert(
@@ -99,7 +105,47 @@ struct ContentView: View {
         } message: {
             Text(netAuthError ?? "")
         }
+        .alert("Restart NetAuth manually", isPresented: $showNetAuthHelp) {
+            Button("Copy Command") {
+                NSPasteboard.general.clearContents()
+                NSPasteboard.general.setString(MountManager.netAuthRestartCommand, forType: .string)
+            }
+            Button("Open Activity Monitor") {
+                let url = URL(fileURLWithPath: "/System/Applications/Utilities/Activity Monitor.app")
+                NSWorkspace.shared.openApplication(at: url, configuration: .init())
+            }
+            Button("Retry Now") {
+                mountManager.retryAfterManualRecovery()
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("The App Store version of Connecter is not allowed to restart macOS services. Run this command in Terminal, or quit “NetAuthSysAgent” in Activity Monitor, then choose Retry Now:\n\n\(MountManager.netAuthRestartCommand)")
+        }
         .onAppear { mountManager.startMonitoring() }
+    }
+
+    // MARK: - Actions
+
+    private func refreshAll() {
+        withAnimation(.linear(duration: 0.5)) {
+            refreshRotation += 360
+        }
+        let ids = mountManager.configs.filter(\.isEnabled).map(\.id)
+        Task {
+            await withTaskGroup(of: Void.self) { group in
+                for id in ids {
+                    group.addTask { await mountManager.refreshShare(id: id) }
+                }
+            }
+        }
+    }
+
+    private func handleNetAuthAction() {
+        if AppEnvironment.isSandboxed {
+            showNetAuthHelp = true
+        } else {
+            restartNetAuth()
+        }
     }
 
     private func restartNetAuth() {
@@ -115,6 +161,8 @@ struct ContentView: View {
             isRestartingNetAuth = false
         }
     }
+
+    // MARK: - Window sizing
 
     private static let toolbarHeight: CGFloat = 55  // NavigationStack toolbar inside the frame
     private static let cardSpacing: CGFloat = 10

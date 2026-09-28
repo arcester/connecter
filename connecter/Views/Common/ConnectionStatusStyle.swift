@@ -8,6 +8,7 @@ extension ShareConfig.ConnectionStatus {
         case .connected:     .green
         case .disconnecting: .orange
         case .error:         .red
+        case .offline:       .secondary
         }
     }
 
@@ -18,6 +19,19 @@ extension ShareConfig.ConnectionStatus {
         case .connected:     String(localized: "Mounted")
         case .disconnecting: String(localized: "Disconnecting…")
         case .error:         String(localized: "Error")
+        case .offline:       String(localized: "No network")
+        }
+    }
+
+    /// SF Symbol used in the menu bar list.
+    var menuIconName: String {
+        switch self {
+        case .disconnected:   "circle"
+        case .connecting:     "arrow.trianglehead.2.clockwise"
+        case .connected:      "checkmark.circle.fill"
+        case .disconnecting:  "arrow.trianglehead.2.clockwise"
+        case .error:          "xmark.circle.fill"
+        case .offline:        "wifi.slash"
         }
     }
 }
