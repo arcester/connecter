@@ -121,6 +121,7 @@ final class MountManager: ObservableObject {
 
     /// Starts independent monitoring tasks for all enabled shares.
     func startMonitoring() {
+        backUpSharesToKeychain()
         syncTasks()
         log.info("Monitor started (\(shareTasks.count) task(s), interval: \(Int(AppSettings.shared.monitorInterval))s)")
     }
@@ -381,19 +382,30 @@ final class MountManager: ObservableObject {
         }
     }
 
-    /// Adds every share that has a readable password in the Keychain but is
-    /// missing from the list (e.g. after moving to the sandboxed build, or
-    /// shares added on another Mac with iCloud Keychain). Items whose secret
-    /// cannot be read are left untouched and reported.
+    /// Makes sure every share in the list has its Keychain item (name, server,
+    /// path, user and password if any). Runs at launch and on demand from
+    /// Settings; returns how many items were added or updated.
     @discardableResult
-    func recoverSharesFromKeychain() -> KeychainRecovery {
+    func backUpSharesToKeychain() -> Int {
+        var written = 0
+        for config in configs where !config.passwordUnavailable {
+            if KeychainManager.save(config) { written += 1 }
+        }
+        if written > 0 { log.info("Backed up \(written) share(s) to the Keychain") }
+        return written
+    }
+
+    /// Adds shares that exist in the Keychain but are missing from the list
+    /// (e.g. after moving to the sandboxed build, or shares added on another
+    /// Mac with iCloud Keychain). Pass `only` to restore specific items. Items
+    /// whose secret cannot be read are left untouched and reported.
+    @discardableResult
+    func recoverSharesFromKeychain(only selected: Set<String>? = nil) -> KeychainRecovery {
         var current = configs
         var result = KeychainRecovery()
         for stored in KeychainManager.storedShares() {
-            let alreadyConfigured = current.contains {
-                $0.host.caseInsensitiveCompare(stored.host) == .orderedSame
-                    && $0.normalizedPath.caseInsensitiveCompare(stored.sharePath) == .orderedSame
-            }
+            if let selected, !selected.contains(stored.id) { continue }
+            let alreadyConfigured = current.contains { stored.matches($0) }
             if alreadyConfigured {
                 result.alreadyConfigured += 1
                 continue

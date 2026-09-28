@@ -3,7 +3,9 @@ import SwiftUI
 struct SettingsTab: View {
     @EnvironmentObject private var loginItemManager: LoginItemManager
     @ObservedObject private var settings = AppSettings.shared
-    @State private var recoveryMessage: String?
+    @State private var keychainMessage: String?
+    @State private var storedShares: [KeychainManager.StoredShare] = []
+    @ObservedObject private var mountManager = MountManager.shared
 
     var body: some View {
         NavigationStack {
@@ -60,20 +62,43 @@ struct SettingsTab: View {
                 }
 
                 Section {
-                    HStack(alignment: .top) {
-                        VStack(alignment: .leading, spacing: 3) {
-                            Text("Recover shares")
-                                .font(.body)
-                            Text("Shares saved with a password can be restored from the macOS Keychain, also on another Mac with iCloud Keychain.")
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
+                    Text("Every share is backed up in the macOS Keychain: name, server, path, user and password. Use it to restore the list on this Mac or, with iCloud Keychain, on another one.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+
+                    if storedShares.isEmpty {
+                        Text("No shares saved in the Keychain yet.")
+                            .font(.caption)
+                            .foregroundStyle(.tertiary)
+                    } else {
+                        ScrollView {
+                            VStack(spacing: 6) {
+                                ForEach(storedShares) { stored in
+                                    storedShareRow(stored)
+                                }
+                            }
                         }
-                        Spacer()
-                        Button("Recover…") {
-                            recoveryMessage = MountManager.shared.recoverSharesFromKeychain().message
-                        }
-                        .controlSize(.small)
+                        .frame(maxHeight: 200)
                     }
+
+                    HStack {
+                        Button("Save Now") {
+                            let written = mountManager.backUpSharesToKeychain()
+                            keychainMessage = written > 0
+                                ? String(localized: "\(written) shares saved to the Keychain")
+                                : String(localized: "All shares were already saved in the Keychain.")
+                            refreshStoredShares()
+                        }
+                        .help("Write every share in the list to the Keychain now")
+                        Spacer()
+                        Button("Recover All") {
+                            keychainMessage = mountManager.recoverSharesFromKeychain().message
+                            refreshStoredShares()
+                        }
+                        .disabled(!storedShares.contains { !isInList($0) })
+                        .help("Add every saved share that is missing from the list")
+                    }
+                    .controlSize(.small)
                 } header: {
                     Text("Keychain")
                 }
@@ -164,16 +189,69 @@ struct SettingsTab: View {
         .frame(width: 420)
         .fixedSize(horizontal: false, vertical: true)
         .modalWindowStyle()
+        .onAppear(perform: refreshStoredShares)
+        .onChange(of: mountManager.configs.count) { _, _ in refreshStoredShares() }
         .alert(
-            "Recover from Keychain",
+            "Keychain",
             isPresented: Binding(
-                get: { recoveryMessage != nil },
-                set: { if !$0 { recoveryMessage = nil } }
+                get: { keychainMessage != nil },
+                set: { if !$0 { keychainMessage = nil } }
             )
         ) {
             Button("OK") {}
         } message: {
-            Text(recoveryMessage ?? "")
+            Text(keychainMessage ?? "")
         }
+    }
+
+    // MARK: - Keychain list
+
+    private func refreshStoredShares() {
+        storedShares = KeychainManager.storedShares()
+            .sorted { $0.displayName.localizedCaseInsensitiveCompare($1.displayName) == .orderedAscending }
+    }
+
+    private func isInList(_ stored: KeychainManager.StoredShare) -> Bool {
+        mountManager.configs.contains { stored.matches($0) }
+    }
+
+    @ViewBuilder
+    private func storedShareRow(_ stored: KeychainManager.StoredShare) -> some View {
+        let inList = isInList(stored)
+        HStack(spacing: 10) {
+            Image(systemName: inList ? "checkmark.circle.fill" : "circle.dashed")
+                .foregroundStyle(inList ? Color.green : Color.secondary)
+                .accessibilityHidden(true)
+            VStack(alignment: .leading, spacing: 1) {
+                Text(stored.displayName)
+                    .font(.callout.weight(.medium))
+                Text(stored.username.isEmpty ? stored.smbURLString : "\(stored.smbURLString) · \(stored.username)")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                    .truncationMode(.middle)
+            }
+            Spacer()
+            if !stored.hasPassword {
+                Text("No password")
+                    .font(.caption2)
+                    .foregroundStyle(.tertiary)
+            }
+            if inList {
+                Text("In list")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            } else {
+                Button("Add") {
+                    keychainMessage = mountManager.recoverSharesFromKeychain(only: [stored.id]).message
+                    refreshStoredShares()
+                }
+                .controlSize(.small)
+                .help("Add this saved share to the list")
+            }
+        }
+        .padding(.vertical, 2)
+        .accessibilityElement(children: .combine)
+        .accessibilityValue(Text(inList ? "In list" : "Not in list"))
     }
 }

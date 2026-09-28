@@ -76,15 +76,12 @@ struct ContentView: View {
                 if let idx = configs.firstIndex(where: { $0.id == updated.id }) {
                     configs[idx] = updated
                 }
-                KeychainManager.save(updated)
+                KeychainManager.save(updated)   // also records a cleared password (empty secret)
                 ShareConfig.saveList(configs)
                 if updated.credentialKey != config.credentialKey {
                     // Item is keyed by host/path/user: the new one is written above,
                     // the old one goes only once the new one is confirmed.
                     KeychainManager.removeSuperseded(config, replacedBy: updated)
-                } else if !config.password.isEmpty && updated.password.isEmpty {
-                    // The user cleared the password field on purpose.
-                    KeychainManager.delete(for: updated)
                 }
                 mountManager.reloadConfigs()
             } onDelete: {

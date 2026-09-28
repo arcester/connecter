@@ -171,6 +171,46 @@
         }
       }
     },
+    "%lld shares saved to the Keychain": {
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld share saved to the Keychain"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld shares saved to the Keychain"
+                }
+              }
+            }
+          }
+        },
+        "es": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld recurso guardado en el llavero"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld recursos guardados en el llavero"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "192.168.1.1 or server.local": {
       "localizations": {
         "es": {
@@ -211,12 +251,32 @@
         }
       }
     },
+    "Add every saved share that is missing from the list": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Añade a la lista todos los recursos guardados que falten"
+          }
+        }
+      }
+    },
     "Add share": {
       "localizations": {
         "es": {
           "stringUnit": {
             "state": "translated",
             "value": "Añadir recurso"
+          }
+        }
+      }
+    },
+    "Add this saved share to the list": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Añade este recurso guardado a la lista"
           }
         }
       }
@@ -237,6 +297,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Todos los recursos guardados ya están en la lista."
+          }
+        }
+      }
+    },
+    "All shares were already saved in the Keychain.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Todos los recursos ya estaban guardados en el llavero."
           }
         }
       }
@@ -664,6 +734,16 @@
         }
       }
     },
+    "Every share is backed up in the macOS Keychain: name, server, path, user and password. Use it to restore the list on this Mac or, with iCloud Keychain, on another one.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cada recurso se guarda en el llavero de macOS: nombre, servidor, ruta, usuario y contraseña. Sirve para restaurar la lista en este Mac o, con el llavero de iCloud, en otro."
+          }
+        }
+      }
+    },
     "Filter": {
       "localizations": {
         "es": {
@@ -740,6 +820,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Identificación"
+          }
+        }
+      }
+    },
+    "In list": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En la lista"
           }
         }
       }
@@ -834,6 +924,16 @@
         }
       }
     },
+    "Mounted at %@": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Montado en %@"
+          }
+        }
+      }
+    },
     "Mounted in Finder": {
       "localizations": {
         "es": {
@@ -884,6 +984,16 @@
         }
       }
     },
+    "No password": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sin contraseña"
+          }
+        }
+      }
+    },
     "No saved shares found in the Keychain.": {
       "localizations": {
         "es": {
@@ -900,6 +1010,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Sin recursos configurados"
+          }
+        }
+      }
+    },
+    "No shares saved in the Keychain yet.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aún no hay recursos guardados en el llavero."
+          }
+        }
+      }
+    },
+    "Not in list": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No está en la lista"
           }
         }
       }
@@ -1064,32 +1194,22 @@
         }
       }
     },
+    "Recover All": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recuperar todos"
+          }
+        }
+      }
+    },
     "Recover from Keychain": {
       "localizations": {
         "es": {
           "stringUnit": {
             "state": "translated",
             "value": "Recuperar del llavero"
-          }
-        }
-      }
-    },
-    "Recover shares": {
-      "localizations": {
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Recuperar recursos"
-          }
-        }
-      }
-    },
-    "Recover…": {
-      "localizations": {
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Recuperar…"
           }
         }
       }
@@ -1204,6 +1324,16 @@
         }
       }
     },
+    "Save Now": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guardar ahora"
+          }
+        }
+      }
+    },
     "Settings": {
       "localizations": {
         "es": {
@@ -1240,16 +1370,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Recurso montado"
-          }
-        }
-      }
-    },
-    "Shares saved with a password can be restored from the macOS Keychain, also on another Mac with iCloud Keychain.": {
-      "localizations": {
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Los recursos guardados con contraseña se pueden restaurar desde el llavero de macOS, también en otro Mac con el llavero de iCloud."
           }
         }
       }
@@ -1350,6 +1470,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Avisos"
+          }
+        }
+      }
+    },
+    "Write every share in the list to the Keychain now": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guarda ahora en el llavero todos los recursos de la lista"
           }
         }
       }

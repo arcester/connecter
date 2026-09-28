@@ -51,12 +51,26 @@ struct SharesBody: View {
 
     @ViewBuilder
     private func contextMenu(for config: ShareConfig) -> some View {
+        // Status line: mounted (with its path) or the current state
+        let mountPoint = mountManager.mountPoint(for: config)
+        Button {} label: {
+            if let mountPoint {
+                Label("Mounted at \(mountPoint)", systemImage: "checkmark.circle.fill")
+            } else if config.isEnabled {
+                Label(config.connectionStatus.label, systemImage: config.connectionStatus.menuIconName)
+            } else {
+                Label("Disabled", systemImage: "circle.slash")
+            }
+        }
+        .disabled(true)
+        Divider()
+
         Button {
             editingConfig = config
         } label: {
             Label("Edit…", systemImage: "pencil")
         }
-        if let mountPoint = mountManager.mountPoint(for: config) {
+        if let mountPoint {
             Button {
                 openInFinder(config, mountPoint: mountPoint)
             } label: {
