@@ -6,6 +6,21 @@ struct MenuBarMenuView: View {
     @EnvironmentObject private var mountManager: MountManager
 
     var body: some View {
+        // Summary line: how many enabled shares are mounted, or what is wrong
+        let enabled = mountManager.configs.filter(\.isEnabled)
+        let mounted = enabled.filter { $0.connectionStatus == .connected }.count
+        Button {} label: {
+            if mountManager.netAuthSuspected {
+                Label("Mount requests are stuck", systemImage: "exclamationmark.triangle.fill")
+            } else if enabled.isEmpty {
+                Label(mountManager.overallStatus.summary, systemImage: "folder")
+            } else {
+                Label("\(mounted) of \(enabled.count) mounted", systemImage: mountManager.overallStatus.menuSymbol)
+            }
+        }
+        .disabled(true)
+        Divider()
+
         // One item per share — click to mount/unmount
         let sorted = mountManager.configs.sorted {
             $0.displayName.localizedCaseInsensitiveCompare($1.displayName) == .orderedAscending
@@ -93,5 +108,16 @@ private struct ShareMenuItem: View {
               : config.connectionStatus == .connecting ? "Connecting…"
               : config.isEnabled ? "Click to mount"
               : "Click to enable and mount")
+    }
+}
+
+private extension MountManager.OverallStatus {
+    var menuSymbol: String {
+        switch self {
+        case .idle:       "folder"
+        case .allMounted: "checkmark.circle.fill"
+        case .partial:    "circle.lefthalf.filled"
+        case .error:      "xmark.circle.fill"
+        }
     }
 }

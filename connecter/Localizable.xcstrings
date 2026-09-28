@@ -81,6 +81,16 @@
         }
       }
     },
+    "%lld of %lld mounted": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld de %lld montados"
+          }
+        }
+      }
+    },
     "%lld s": {
       "localizations": {
         "es": {

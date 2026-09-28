@@ -80,43 +80,15 @@ struct connecterApp: App {
 
 // MARK: - Menu bar icon
 
-/// Folder glyph with a small colour dot summarising every enabled share:
-/// green = all mounted, orange = some connecting or partially mounted,
-/// red = an error or a stuck NetAuth. No dot when nothing is enabled.
+/// Menu bar label: folder plus a colour dot summarising every enabled share
+/// (see `StatusBarIcon`). The image is a single `Image(nsImage:)`, which is
+/// the one form of label whose colours `MenuBarExtra` preserves.
 private struct MenuBarIcon: View {
     let status: MountManager.OverallStatus
 
     var body: some View {
-        ZStack(alignment: .bottomTrailing) {
-            Image(systemName: "folder")
-                .foregroundStyle(.primary)
-            if let color = dotColor {
-                Circle()
-                    .fill(color)
-                    .frame(width: 6, height: 6)
-                    .overlay(Circle().strokeBorder(.background, lineWidth: 1))
-                    .offset(x: 1, y: 1)
-            }
-        }
-        .accessibilityLabel(Text("Connecter"))
-        .accessibilityValue(Text(statusDescription))
-    }
-
-    private var dotColor: Color? {
-        switch status {
-        case .idle:      nil
-        case .allMounted: .green
-        case .partial:   .orange
-        case .error:     .red
-        }
-    }
-
-    private var statusDescription: String {
-        switch status {
-        case .idle:       String(localized: "No active shares")
-        case .allMounted: String(localized: "All connected")
-        case .partial:    String(localized: "Partial connection")
-        case .error:      String(localized: "Not connected")
-        }
+        Image(nsImage: StatusBarIcon.image(for: status))
+            .accessibilityLabel(Text("Connecter"))
+            .accessibilityValue(Text(status.summary))
     }
 }
