@@ -214,13 +214,16 @@ struct ShareFormSheet: View {
         .frame(width: 420)
         .fixedSize(horizontal: false, vertical: true)
         .onAppear {
-            allConfigs = ShareConfig.loadAll()
+            allConfigs = MountManager.shared.configs
             if !isEditing {
-                discoveredShares = MountManager.mountedSMBVolumes().filter { volume in
-                    !allConfigs.contains {
-                        $0.host.caseInsensitiveCompare(volume.host) == .orderedSame
-                            && MountManager.normalizedSharePath($0.path)
-                                .caseInsensitiveCompare(volume.sharePath) == .orderedSame
+                Task {
+                    // Scan off the main actor: a slow SMB mount must not freeze the sheet.
+                    let volumes = await MountManager.shared.refreshMountedVolumes()
+                    discoveredShares = volumes.filter { volume in
+                        !allConfigs.contains {
+                            $0.host.caseInsensitiveCompare(volume.host) == .orderedSame
+                                && $0.normalizedPath.caseInsensitiveCompare(volume.sharePath) == .orderedSame
+                        }
                     }
                 }
             }

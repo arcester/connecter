@@ -63,6 +63,13 @@ final class MountManager: ObservableObject {
 
     @Published private(set) var configs: [ShareConfig] = ShareConfig.loadAll()
 
+    /// Last snapshot of the SMB volumes mounted on this Mac. Refreshed off the
+    /// main actor by every share check and by mount/unmount notifications, so
+    /// UI code can answer "is it mounted?" instantly. Stat-ing a stale SMB
+    /// mount can block for seconds, which must never happen on the main thread.
+    @Published private(set) var mountedVolumes: [MountedSMBVolume] = []
+    private var volumeObservers: [NSObjectProtocol] = []
+
     /// One task per share ID. Each task checks and mounts its share independently.
     private var shareTasks: [UUID: Task<Void, Never>] = [:]
 
@@ -106,6 +113,8 @@ final class MountManager: ObservableObject {
         log.info("MountManager started\(AppEnvironment.isSandboxed ? " (App Sandbox)" : "")")
         startWakeObserver()
         startNetworkObserver()
+        startVolumeObserver()
+        Task { await refreshMountedVolumes() }
     }
 
     // MARK: - Monitoring lifecycle
@@ -120,6 +129,31 @@ final class MountManager: ObservableObject {
         for task in shareTasks.values { task.cancel() }
         shareTasks.removeAll()
         log.info("Monitor stopped")
+    }
+
+    // MARK: - Mounted volume snapshot
+
+    private func startVolumeObserver() {
+        let center = NSWorkspace.shared.notificationCenter
+        for name in [NSWorkspace.didMountNotification,
+                     NSWorkspace.didUnmountNotification,
+                     NSWorkspace.didRenameVolumeNotification] {
+            volumeObservers.append(center.addObserver(forName: name, object: nil, queue: .main) { [weak self] _ in
+                Task { @MainActor [weak self] in
+                    await self?.refreshMountedVolumes()
+                }
+            })
+        }
+    }
+
+    /// Rescans the mounted volumes off the main actor and updates `mountedVolumes`.
+    @discardableResult
+    func refreshMountedVolumes() async -> [MountedSMBVolume] {
+        let volumes = await Task.detached(priority: .utility) {
+            Self.mountedSMBVolumes()
+        }.value
+        mountedVolumes = volumes
+        return volumes
     }
 
     // MARK: - Sleep / wake handling
@@ -353,7 +387,7 @@ final class MountManager: ObservableObject {
     /// cannot be read are left untouched and reported.
     @discardableResult
     func recoverSharesFromKeychain() -> KeychainRecovery {
-        var current = ShareConfig.loadAll()
+        var current = configs
         var result = KeychainRecovery()
         for stored in KeychainManager.storedShares() {
             let alreadyConfigured = current.contains {
@@ -386,14 +420,10 @@ final class MountManager: ObservableObject {
 
     /// Enables or disables a single share. Starts or stops its task accordingly.
     func setEnabled(_ enabled: Bool, forID id: UUID) {
-        var stored = ShareConfig.loadAll()
-        guard let index = stored.firstIndex(where: { $0.id == id }) else { return }
-        stored[index].isEnabled = enabled
-        ShareConfig.saveList(stored)
-
         guard let i = configs.firstIndex(where: { $0.id == id }) else { return }
         let name = configs[i].displayName
         configs[i].isEnabled = enabled
+        ShareConfig.saveList(configs)   // list only — no Keychain round trips
         log.info("Share \"\(name)\" \(enabled ? "enabled" : "disabled")")
 
         if enabled {
@@ -584,25 +614,20 @@ final class MountManager: ObservableObject {
 
     // MARK: - Mount status
 
-    /// Synchronous check for UI code paths (user-initiated, infrequent).
+    /// Instant answer from the cached snapshot (UI code paths).
     func isMounted(_ config: ShareConfig) -> Bool {
-        Self.findMountPoint(host: config.host, path: config.path) != nil
+        mountPoint(for: config) != nil
     }
 
-    /// Local path where the share is currently mounted, or `nil` if it isn't.
+    /// Local path where the share is currently mounted according to the
+    /// cached snapshot, or `nil` if it isn't.
     func mountPoint(for config: ShareConfig) -> String? {
-        Self.findMountPoint(host: config.host, path: config.path)
+        Self.findMountPoint(host: config.host, path: config.path, in: mountedVolumes)
     }
 
-    /// Same as `mountPoint(for:)` but runs the volume scan off the main actor:
-    /// stat-ing a dead SMB mount can block for a long time, and the periodic
-    /// checks must never freeze the UI.
+    /// Fresh answer: rescans the volumes off the main actor first.
     private func mountPointOffMain(for config: ShareConfig) async -> String? {
-        let host = config.host
-        let path = config.path
-        return await Task.detached(priority: .utility) {
-            Self.findMountPoint(host: host, path: path)
-        }.value
+        Self.findMountPoint(host: config.host, path: config.path, in: await refreshMountedVolumes())
     }
 
     /// Every browsable SMB volume currently mounted, as seen by the system.
@@ -629,10 +654,12 @@ final class MountManager: ObservableObject {
         }
     }
 
-    private nonisolated static func findMountPoint(host: String, path: String) -> String? {
+    private nonisolated static func findMountPoint(
+        host: String, path: String, in volumes: [MountedSMBVolume]
+    ) -> String? {
         let targetHost = host.lowercased()
         let targetPath = normalizedSharePath(path).lowercased()
-        return mountedSMBVolumes().first {
+        return volumes.first {
             $0.host.lowercased() == targetHost && $0.sharePath.lowercased() == targetPath
         }?.mountPoint
     }
