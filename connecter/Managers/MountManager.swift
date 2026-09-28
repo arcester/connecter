@@ -119,7 +119,19 @@ final class MountManager: ObservableObject {
 
     // MARK: - Overall status (menu bar dot)
 
-    enum OverallStatus { case idle, allMounted, partial, error }
+    enum OverallStatus {
+        case idle, allMounted, partial, error
+
+        /// Short user-facing description, used by the menu header and accessibility.
+        var summary: String {
+            switch self {
+            case .idle:       String(localized: "No active shares")
+            case .allMounted: String(localized: "All connected")
+            case .partial:    String(localized: "Partial connection")
+            case .error:      String(localized: "Not connected")
+            }
+        }
+    }
 
     /// One-glance summary of every enabled share.
     var overallStatus: OverallStatus {
