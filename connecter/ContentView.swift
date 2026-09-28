@@ -4,6 +4,7 @@ struct ContentView: View {
     @EnvironmentObject private var mountManager: MountManager
     @EnvironmentObject private var loginItemManager: LoginItemManager
     @Environment(\.openWindow) private var openWindow
+    @Environment(\.openSettings) private var openSettings
     @ObservedObject private var settings = AppSettings.shared
     @State private var showAddSheet = false
     @State private var editingConfig: ShareConfig?
@@ -46,11 +47,10 @@ struct ContentView: View {
                     .accessibilityLabel(Text("Refresh shares"))
                     .keyboardShortcut("r", modifiers: .command)
 
-                    Button { openWindow(id: "settings") } label: {
+                    Button { openSettings() } label: {
                         Label("Settings", systemImage: "gear")
                     }
                     .help("Settings")
-                    .keyboardShortcut(",", modifiers: .command)
 
                     Button { openWindow(id: "activity-log") } label: {
                         Label("Log", systemImage: "terminal")
