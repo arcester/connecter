@@ -3,7 +3,6 @@ import SwiftUI
 struct ShareCard: View {
     static let cardHeight: CGFloat = 56
 
-    let index: Int
     let config: ShareConfig
     let onEnable: (Bool) -> Void
     let onTap: () -> Void
@@ -14,6 +13,16 @@ struct ShareCard: View {
 
     private var isConnected: Bool {
         config.isEnabled && config.connectionStatus == .connected
+    }
+
+    private var glyphColor: Color {
+        guard config.isEnabled else { return .secondary }
+        switch config.connectionStatus {
+        case .connected:                 return .green
+        case .connecting, .disconnecting: return .orange
+        case .error:                     return .red
+        case .disconnected, .offline:    return .secondary
+        }
     }
 
     /// States that get a status capsule; `.disconnected` shows nothing and
@@ -27,23 +36,19 @@ struct ShareCard: View {
 
     var body: some View {
         HStack(spacing: 14) {
-            // Numbered circle badge
-            ZStack {
-                Circle()
-                    .fill(Color.primary.opacity(0.07))
-                    .frame(width: 30, height: 30)
-                Text(verbatim: "\(index + 1)")
-                    .font(.system(size: 13, weight: .semibold, design: .rounded))
-                    .foregroundStyle(config.isEnabled ? accent : Color.secondary)
-            }
-            .accessibilityHidden(true)
+            // Folder glyph tinted by state — a quick scan of the list shows what is mounted
+            Image(systemName: isConnected ? "folder.fill" : "folder")
+                .font(.system(size: 18, weight: .medium))
+                .foregroundStyle(glyphColor)
+                .frame(width: 30, height: 30)
+                .accessibilityHidden(true)
 
             // Name + URL — click to edit
             Button(action: onTap) {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(config.displayName)
                         .font(.body.weight(.semibold))
-                        .foregroundStyle(config.isEnabled ? accent : Color.secondary)
+                        .foregroundStyle(config.isEnabled ? Color.primary : Color.secondary)
                     Text(config.smbURLString)
                         .font(.caption)
                         .foregroundStyle(.tertiary)

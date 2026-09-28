@@ -117,6 +117,19 @@ final class MountManager: ObservableObject {
         Task { await refreshMountedVolumes() }
     }
 
+    // MARK: - Overall status (menu bar dot)
+
+    enum OverallStatus { case idle, allMounted, partial, error }
+
+    /// One-glance summary of every enabled share.
+    var overallStatus: OverallStatus {
+        let enabled = configs.filter(\.isEnabled)
+        guard !enabled.isEmpty else { return .idle }
+        if netAuthSuspected || enabled.contains(where: { $0.connectionStatus == .error }) { return .error }
+        if enabled.allSatisfy({ $0.connectionStatus == .connected }) { return .allMounted }
+        return .partial
+    }
+
     // MARK: - Monitoring lifecycle
 
     /// Starts independent monitoring tasks for all enabled shares.

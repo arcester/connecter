@@ -19,8 +19,8 @@ struct SharesBody: View {
         } else {
             ScrollView {
                 VStack(spacing: 10) {
-                    ForEach(Array(sortedConfigs.enumerated()), id: \.element.id) { index, config in
-                        ShareCard(index: index, config: config) { enabled in
+                    ForEach(sortedConfigs) { config in
+                        ShareCard(config: config) { enabled in
                             setEnabled(enabled, for: config)
                         } onTap: {
                             editingConfig = config

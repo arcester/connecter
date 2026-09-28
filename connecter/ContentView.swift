@@ -5,7 +5,6 @@ struct ContentView: View {
     @EnvironmentObject private var loginItemManager: LoginItemManager
     @Environment(\.openWindow) private var openWindow
     @Environment(\.openSettings) private var openSettings
-    @ObservedObject private var settings = AppSettings.shared
     @State private var showAddSheet = false
     @State private var editingConfig: ShareConfig?
     @State private var refreshRotation = 0.0
@@ -31,9 +30,7 @@ struct ContentView: View {
             .toolbar {
                 ToolbarItemGroup(placement: .automatic) {
                     Button { showAddSheet = true } label: {
-                        Image(systemName: "plus.circle.fill")
-                            .foregroundStyle(settings.accentColor)
-                            .font(.title3)
+                        Label("Add share", systemImage: "plus")
                     }
                     .help("Add share")
                     .accessibilityLabel(Text("Add share"))
@@ -53,7 +50,7 @@ struct ContentView: View {
                     .help("Settings")
 
                     Button { openWindow(id: "activity-log") } label: {
-                        Label("Log", systemImage: "terminal")
+                        Label("Log", systemImage: "list.bullet.rectangle")
                     }
                     .help("Activity Log")
                 }
