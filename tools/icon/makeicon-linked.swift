@@ -3,8 +3,10 @@
 //   A  badge   — circular badge at the bottom-right with a two-ring link glyph
 //   B  cutout  — large link glyph cut out of the folder body (shows the background)
 //   C  nodes   — three dots joined by a line under the folder (evolves the current dots)
+// Installed: variant C (AppIcon-C.png for 64 px and up, AppIcon-Cs.png — thicker
+// nodes — for the 16 and 32 px slots).
 // Usage:  swift tools/icon/makeicon-linked.swift <outputDir>
-//         → <outputDir>/AppIcon-A.png, -B.png, -C.png (1024 px) and sheet.png
+//         → <outputDir>/AppIcon-A.png, -B.png, -C.png, -Cs.png (1024 px) and sheet.png
 
 import AppKit
 
@@ -129,15 +131,16 @@ func render(_ variant: String) -> NSBitmapImageRep {
             bg.draw(in: NSRect(x: 0, y: 0, width: S, height: S), angle: -55)
             ctx.restoreGState()
 
-        default:   // "C": folder + three nodes joined by a line
+        default:   // "C": folder + three nodes joined by a line ("Cs": thicker nodes for the 16/32 px slots)
+            let small = variant == "Cs"
             let fx: CGFloat = 212, fy: CGFloat = 400, fw: CGFloat = 600, fh: CGFloat = 440
             fillGlyph(ctx, folderPath(x: fx, y: fy, w: fw, h: fh), in: NSRect(x: fx, y: fy, width: fw, height: fh))
-            let cy: CGFloat = 262, gap: CGFloat = 150, rad: CGFloat = 36
+            let cy: CGFloat = 262, gap: CGFloat = small ? 170 : 150, rad: CGFloat = small ? 56 : 36
             ctx.saveGState()
             ctx.setShadow(offset: CGSize(width: 0, height: -8), blur: 16, color: NSColor.black.withAlphaComponent(0.30).cgColor)
             let line = NSBezierPath()
             line.move(to: NSPoint(x: 512 - gap, y: cy)); line.line(to: NSPoint(x: 512 + gap, y: cy))
-            line.lineWidth = 22; line.lineCapStyle = .round
+            line.lineWidth = small ? 36 : 22; line.lineCapStyle = .round
             NSColor.white.setStroke(); line.stroke()
             for i in -1...1 {
                 let cx = 512 + CGFloat(i) * gap
@@ -151,7 +154,7 @@ func render(_ variant: String) -> NSBitmapImageRep {
     return rep
 }
 
-let variants = ["A", "B", "C"]
+let variants = ["A", "B", "C", "Cs"]
 let reps = variants.map(render)
 
 func masked(_ src: NSBitmapImageRep, size: CGFloat) -> NSImage {
