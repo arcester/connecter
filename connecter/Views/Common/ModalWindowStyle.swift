@@ -97,7 +97,9 @@ struct ModalWindowStyle: NSViewRepresentable {
 }
 
 extension View {
+    /// Modal-like chrome, centered presentation and Esc to close.
     func modalWindowStyle() -> some View {
         background(ModalWindowStyle())
+            .escapeClosesWindow()
     }
 }

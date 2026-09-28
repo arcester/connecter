@@ -61,6 +61,7 @@ struct ContentView: View {
         }
         .frame(width: 440)
         .background(WindowResizer(width: 440, height: desiredContentHeight))
+        .escapeClosesWindow()
         .sheet(isPresented: $showAddSheet) {
             ShareFormSheet(existing: nil) { newConfig in
                 var configs = mountManager.configs
