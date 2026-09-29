@@ -10,9 +10,13 @@ import AppKit
 enum MenuDot {
     /// Circle diameter — about half the height of the menu text.
     static let diameter: CGFloat = 7
-    /// Room around the circle for the shadow. Rows shift the image down by this
-    /// much so the circle's bottom sits exactly on the text baseline.
+    /// Room around the circle for the shadow.
     static let padding: CGFloat = 1.5
+
+    /// Vertical offset applied to the dot in the row text. Shifting down by the
+    /// padding puts the circle's bottom exactly on the baseline, but a round
+    /// shape there reads as sitting too low, so it's lifted one Retina pixel.
+    static let baselineOffset: CGFloat = -padding + 0.5
 
     static let mounted = make(.systemGreen)
     static let busy = make(.systemOrange)

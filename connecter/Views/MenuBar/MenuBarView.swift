@@ -95,7 +95,7 @@ private struct ShareMenuItem: View {
             // text, and no icon (label images aren't drawn in these rows). So the
             // status goes into the text itself — see ConnectionStatusStyle.menuDot.
             let row = self.row
-            Text(Image(nsImage: row.dot)).baselineOffset(-MenuDot.padding) + Text(" \(row.text)")
+            Text(Image(nsImage: row.dot)).baselineOffset(MenuDot.baselineOffset) + Text(" \(row.text)")
         }
         .disabled(config.isBusy)
         .help("\(config.smbURLString) — \(clickHint)")
