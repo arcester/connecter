@@ -1,3 +1,4 @@
+import AppKit
 import SwiftUI
 
 extension ShareConfig.ConnectionStatus {
@@ -33,5 +34,29 @@ extension ShareConfig.ConnectionStatus {
         case .error:          "xmark.circle.fill"
         case .offline:        "wifi.slash"
         }
+    }
+
+    /// Coloured, non-template version of `menuIconName` for use as a menu item
+    /// image. A `MenuBarExtra` menu bridges each row to a plain `NSMenuItem`,
+    /// which only supports a single-line title plus one image — a SwiftUI
+    /// `Label` with `.foregroundStyle(color)` on its icon gets rasterised as a
+    /// monochrome template image and loses its colour (same limitation worked
+    /// around for the top-level icon in StatusBarIcon.swift). Baking the colour
+    /// into the image itself and marking it non-template preserves it.
+    var menuStatusImage: NSImage {
+        let symbol = NSImage(
+            systemSymbolName: menuIconName,
+            accessibilityDescription: label
+        )!.withSymbolConfiguration(.init(pointSize: 12, weight: .semibold))!
+
+        let image = NSImage(size: symbol.size, flipped: false) { rect in
+            symbol.draw(in: rect, from: .zero, operation: .sourceOver, fraction: 1)
+            NSColor(color).set()
+            rect.fill(using: .sourceAtop)
+            return true
+        }
+        image.isTemplate = false
+        image.accessibilityDescription = label
+        return image
     }
 }

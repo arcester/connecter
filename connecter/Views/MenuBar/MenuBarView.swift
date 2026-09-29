@@ -91,23 +91,30 @@ private struct ShareMenuItem: View {
                 }
             }
         } label: {
+            // A MenuBarExtra menu bridges this to a plain NSMenuItem, which only
+            // supports a single-line title — a second Text line here would be
+            // silently dropped. The status shows as a coloured icon instead
+            // (see ConnectionStatusStyle.menuStatusImage) and in the tooltip.
             Label {
-                VStack(alignment: .leading, spacing: 1) {
-                    Text(config.displayName)
-                    Text(config.smbURLString)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
+                Text(config.displayName)
             } icon: {
-                Image(systemName: config.connectionStatus.menuIconName)
-                    .foregroundStyle(config.connectionStatus.color)
+                Image(nsImage: config.connectionStatus.menuStatusImage)
             }
         }
         .disabled(config.isBusy)
-        .help(config.connectionStatus == .connected ? "Click to unmount and disable"
-              : config.connectionStatus == .connecting ? "Connecting…"
-              : config.isEnabled ? "Click to mount"
-              : "Click to enable and mount")
+        .help("\(config.smbURLString) — \(clickHint)")
+    }
+
+    private var clickHint: String {
+        if config.connectionStatus == .connected {
+            String(localized: "Click to unmount and disable")
+        } else if config.connectionStatus == .connecting {
+            String(localized: "Connecting…")
+        } else if config.isEnabled {
+            String(localized: "Click to mount")
+        } else {
+            String(localized: "Click to enable and mount")
+        }
     }
 }
 
