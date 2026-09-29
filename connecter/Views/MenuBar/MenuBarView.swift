@@ -100,17 +100,18 @@ private struct ShareMenuItem: View {
         .help("\(config.smbURLString) — \(clickHint)")
     }
 
-    /// "🟢 video" when mounted; otherwise the dot plus the state, e.g.
-    /// "🔴 video — Error" or "⚫️ video — Disabled".
+    /// "🟢 video" when mounted, "⚪️ video" when disabled or idle; any other
+    /// state adds its label, e.g. "🔴 video — Error".
     private var rowTitle: String {
+        let name = config.displayName
         if mountManager.mountPoint(for: config) != nil {
-            return "🟢 \(config.displayName)"
-        }
-        if !config.isEnabled {
-            return "⚫️ \(config.displayName) — \(String(localized: "Disabled"))"
+            return "🟢 \(name)"
         }
         let status = config.connectionStatus
-        return "\(status.menuDot) \(config.displayName) — \(status.label)"
+        if !config.isEnabled || status == .disconnected {
+            return "⚪️ \(name)"
+        }
+        return "\(status.menuDot) \(name) — \(status.label)"
     }
 
     private var clickHint: String {
