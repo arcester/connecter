@@ -91,18 +91,26 @@ private struct ShareMenuItem: View {
                 }
             }
         } label: {
-            // A MenuBarExtra menu bridges this to a plain NSMenuItem, which only
-            // supports a single-line title — a second Text line here would be
-            // silently dropped. The status shows as a coloured icon instead
-            // (see ConnectionStatusStyle.menuStatusImage) and in the tooltip.
-            Label {
-                Text(config.displayName)
-            } icon: {
-                Image(nsImage: config.connectionStatus.menuStatusImage)
-            }
+            // A MenuBarExtra menu bridges this to a plain NSMenuItem: one line of
+            // text, and no icon (label images aren't drawn in these rows). So the
+            // status goes into the text itself — see ConnectionStatusStyle.menuDot.
+            Text(rowTitle)
         }
         .disabled(config.isBusy)
         .help("\(config.smbURLString) — \(clickHint)")
+    }
+
+    /// "🟢 video" when mounted; otherwise the dot plus the state, e.g.
+    /// "🔴 video — Error" or "⚫️ video — Disabled".
+    private var rowTitle: String {
+        if mountManager.mountPoint(for: config) != nil {
+            return "🟢 \(config.displayName)"
+        }
+        if !config.isEnabled {
+            return "⚫️ \(config.displayName) — \(String(localized: "Disabled"))"
+        }
+        let status = config.connectionStatus
+        return "\(status.menuDot) \(config.displayName) — \(status.label)"
     }
 
     private var clickHint: String {
