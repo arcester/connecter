@@ -94,24 +94,25 @@ private struct ShareMenuItem: View {
             // A MenuBarExtra menu bridges this to a plain NSMenuItem: one line of
             // text, and no icon (label images aren't drawn in these rows). So the
             // status goes into the text itself — see ConnectionStatusStyle.menuDot.
-            Text(rowTitle)
+            let row = self.row
+            Text(Image(nsImage: row.dot)).baselineOffset(-MenuDot.padding) + Text(" \(row.text)")
         }
         .disabled(config.isBusy)
         .help("\(config.smbURLString) — \(clickHint)")
     }
 
-    /// "🟢 video" when mounted, "⚪️ video" when disabled or idle; any other
-    /// state adds its label, e.g. "🔴 video — Error".
-    private var rowTitle: String {
+    /// Green dot + name when mounted, light grey dot + name when disabled or
+    /// idle; any other state adds its label, e.g. "(red dot) video — Error".
+    private var row: (dot: NSImage, text: String) {
         let name = config.displayName
         if mountManager.mountPoint(for: config) != nil {
-            return "🟢 \(name)"
+            return (MenuDot.mounted, name)
         }
         let status = config.connectionStatus
         if !config.isEnabled || status == .disconnected {
-            return "⚪️ \(name)"
+            return (MenuDot.idle, name)
         }
-        return "\(status.menuDot) \(name) — \(status.label)"
+        return (MenuDot.image(for: status), "\(name) — \(status.label)")
     }
 
     private var clickHint: String {

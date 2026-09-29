@@ -34,18 +34,4 @@ extension ShareConfig.ConnectionStatus {
         case .offline:        "wifi.slash"
         }
     }
-
-    /// Coloured dot for the menu bar list. Rows of a `MenuBarExtra` menu are
-    /// bridged to plain `NSMenuItem`s that don't draw SwiftUI label icons at
-    /// all (neither SF Symbols nor custom `NSImage`s — only the status item's
-    /// own label supports images, see StatusBarIcon.swift). Emoji are text, so
-    /// they always render and keep their colour.
-    var menuDot: String {
-        switch self {
-        case .connected:                  "🟢"
-        case .connecting, .disconnecting: "🟠"
-        case .error:                      "🔴"
-        case .disconnected, .offline:     "⚪️"
-        }
-    }
 }
