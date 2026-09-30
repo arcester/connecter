@@ -12,7 +12,20 @@ extension Notification.Name {
 }
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
+    /// Set when another copy of Connecter is already running: this process
+    /// only hands over to it and quits, without touching shares or windows.
+    private var isHandingOver = false
+
+    func applicationWillFinishLaunching(_ notification: Notification) {
+        deferToRunningInstanceIfNeeded()
+    }
+
     func applicationDidFinishLaunching(_ notification: Notification) {
+        if isHandingOver {
+            NSApp.windows.forEach { $0.orderOut(nil) }
+            return
+        }
+
         // Start share monitoring unconditionally — must not depend on the main
         // window's onAppear, which never fires if the window starts hidden.
         MountManager.shared.startMonitoring()
@@ -26,6 +39,39 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             DispatchQueue.main.async {
                 NSApp.windows.forEach { $0.orderOut(nil) }
             }
+        }
+    }
+
+    /// Reopen (Finder double-click, Launchpad, `open -a`, or a second copy
+    /// handing over): show the main window instead of doing nothing.
+    func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
+        NotificationCenter.default.post(name: .showMainWindow, object: nil)
+        return false
+    }
+
+    /// Only one Connecter at a time. If another copy is running (for example an
+    /// installed build while a new one is launched from Xcode), ask Launch
+    /// Services to activate it — which delivers a reopen event, so it shows its
+    /// window — and quit this process.
+    private func deferToRunningInstanceIfNeeded() {
+        guard let bundleID = Bundle.main.bundleIdentifier else { return }
+        let me = ProcessInfo.processInfo.processIdentifier
+        let others = NSRunningApplication.runningApplications(withBundleIdentifier: bundleID)
+            .filter { $0.processIdentifier != me && !$0.isTerminated }
+        guard let other = others.first else { return }
+
+        isHandingOver = true
+        LogManager.shared.warning("Another instance is already running (pid \(other.processIdentifier)) — showing it and quitting this one")
+
+        if let url = other.bundleURL {
+            let configuration = NSWorkspace.OpenConfiguration()
+            configuration.activates = true
+            NSWorkspace.shared.openApplication(at: url, configuration: configuration) { _, _ in
+                DispatchQueue.main.async { NSApp.terminate(nil) }
+            }
+        } else {
+            other.activate()
+            NSApp.terminate(nil)
         }
     }
 }
