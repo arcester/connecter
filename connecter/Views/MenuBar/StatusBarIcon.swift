@@ -1,9 +1,9 @@
 import AppKit
 import SwiftUI
 
-/// Builds the menu bar image: the folder symbol plus a small colour dot that
-/// summarises the shares (green = all mounted, orange = partial or connecting,
-/// red = error or stuck NetAuth). Drawn with AppKit because `MenuBarExtra`
+/// Builds the menu bar image: the folder symbol plus a small colour dot only
+/// when something needs attention (orange = partial or connecting, red = error
+/// or stuck NetAuth). All mounted, or nothing enabled, shows the plain folder. Drawn with AppKit because `MenuBarExtra`
 /// rasterises composite SwiftUI labels as monochrome template images.
 ///
 /// The image uses a drawing handler, so AppKit re-renders it with the menu
@@ -16,7 +16,7 @@ enum StatusBarIcon {
 
     static func image(for status: MountManager.OverallStatus) -> NSImage {
         guard let dot = dotColor(for: status) else {
-            // No shares enabled: a plain template symbol, exactly like the system's.
+            // Nothing to report: a plain template symbol, exactly like the system's.
             let plain = NSImage(systemSymbolName: "folder", accessibilityDescription: nil)!
                 .withSymbolConfiguration(.init(pointSize: symbolSize, weight: .regular))!
             plain.isTemplate = true
@@ -56,7 +56,7 @@ enum StatusBarIcon {
     private static func dotColor(for status: MountManager.OverallStatus) -> NSColor? {
         switch status {
         case .idle:       nil
-        case .allMounted: .systemGreen
+        case .allMounted: nil
         case .partial:    .systemOrange
         case .error:      .systemRed
         }
