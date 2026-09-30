@@ -97,7 +97,10 @@ private struct ShareMenuItem: View {
             // inside the text is drawn as a vector glyph, crisp at any scale, and
             // takes the colour of its text run.
             let row = self.row
-            let dot = Text(Image(systemName: "circle.fill")).foregroundStyle(row.color)
+            // The symbol follows its text's font: 9 pt makes the dot about 7 pt wide.
+            let dot = Text(Image(systemName: "circle.fill"))
+                .font(.system(size: 9))
+                .foregroundStyle(row.color)
             Text("\(dot)  \(row.text)")
         }
         .disabled(config.isBusy)
