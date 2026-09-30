@@ -1,27 +1,25 @@
 import AppKit
 
-/// Small flat-colour status dot with a soft shadow, drawn inline in the text
-/// of each menu bar row.
+/// Flat status dot drawn inline in the text of each menu bar row, in the style
+/// of Finder's sidebar tags: crisp fill, a hairline darker rim, no shadow.
 ///
 /// Rows of a `MenuBarExtra` menu are bridged to `NSMenuItem`s whose separate
 /// icon images aren't shown, but their attributed title is drawn as-is — so the
-/// dot travels inside the text as an inline image. Emoji would also render
-/// there, but they can't be flat-coloured or shadowed, nor sized precisely.
+/// dot travels inside the text as an inline image.
 enum MenuDot {
-    /// Circle diameter — about half the height of the menu text.
-    static let diameter: CGFloat = 7
-    /// Room around the circle for the shadow.
-    static let padding: CGFloat = 1.5
+    /// Circle diameter, like Finder's tag dots next to 13 pt text.
+    static let diameter: CGFloat = 9
+    /// Space between the dot and the text (part of the image so the gap is stable).
+    static let trailingGap: CGFloat = 6
 
-    /// Vertical offset applied to the dot in the row text. Shifting down by the
-    /// padding puts the circle's bottom exactly on the baseline, but a round
-    /// shape there reads as sitting too low, so it's lifted one Retina pixel.
-    static let baselineOffset: CGFloat = -padding + 0.5
+    /// The image's bottom sits on the text baseline; with a 9 pt circle that
+    /// centres it on the cap height of the menu font, as Finder does.
+    static let baselineOffset: CGFloat = 0
 
     static let mounted = make(.systemGreen)
     static let busy = make(.systemOrange)
     static let error = make(.systemRed)
-    static let idle = make(NSColor(srgbRed: 0.80, green: 0.80, blue: 0.82, alpha: 1))
+    static let idle = make(.systemGray)
 
     static func image(for status: ShareConfig.ConnectionStatus) -> NSImage {
         switch status {
@@ -33,15 +31,16 @@ enum MenuDot {
     }
 
     private static func make(_ color: NSColor) -> NSImage {
-        let side = diameter + padding * 2
-        let image = NSImage(size: NSSize(width: side, height: side), flipped: false) { _ in
-            let shadow = NSShadow()
-            shadow.shadowColor = NSColor.black.withAlphaComponent(0.35)
-            shadow.shadowOffset = NSSize(width: 0, height: -0.5)
-            shadow.shadowBlurRadius = 1
-            shadow.set()
+        let size = NSSize(width: diameter + trailingGap, height: diameter)
+        let image = NSImage(size: size, flipped: false) { _ in
+            let circle = NSBezierPath(ovalIn: NSRect(x: 0, y: 0, width: diameter, height: diameter))
             color.setFill()
-            NSBezierPath(ovalIn: NSRect(x: padding, y: padding, width: diameter, height: diameter)).fill()
+            circle.fill()
+            // Hairline rim, slightly darker than the fill, keeps the edge crisp on light backgrounds.
+            let rim = NSBezierPath(ovalIn: NSRect(x: 0.25, y: 0.25, width: diameter - 0.5, height: diameter - 0.5))
+            rim.lineWidth = 0.5
+            color.blended(withFraction: 0.25, of: .black)?.setStroke()
+            rim.stroke()
             return true
         }
         image.isTemplate = false   // keep the colour; template images get tinted

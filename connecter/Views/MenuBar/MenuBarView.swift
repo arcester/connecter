@@ -96,7 +96,7 @@ private struct ShareMenuItem: View {
             // status goes into the text itself — see ConnectionStatusStyle.menuDot.
             let row = self.row
             let dot = Text(Image(nsImage: row.dot)).baselineOffset(MenuDot.baselineOffset)
-            Text("\(dot) \(row.text)")
+            Text("\(dot)\(row.text)")   // the gap is built into the dot image
         }
         .disabled(config.isBusy)
         .help("\(config.smbURLString) — \(clickHint)")
