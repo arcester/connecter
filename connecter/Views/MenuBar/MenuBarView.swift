@@ -92,11 +92,16 @@ private struct ShareMenuItem: View {
             }
         } label: {
             // A MenuBarExtra menu bridges this to a plain NSMenuItem: one line of
-            // text, and no icon (label images aren't drawn in these rows). So the
-            // status goes into the text itself — see ConnectionStatusStyle.menuDot.
+            // text, and no icon (label images aren't drawn in these rows, and an
+            // inline bitmap is rasterised at 1x and looks blurry). An SF Symbol
+            // inside the text is drawn as a vector glyph, crisp at any scale, and
+            // takes the colour of its text run.
             let row = self.row
-            let dot = Text(Image(nsImage: row.dot)).baselineOffset(MenuDot.baselineOffset)
-            Text("\(dot) \(row.text)")
+            // The symbol follows its text's font: 9 pt makes the dot about 7 pt wide.
+            let dot = Text(Image(systemName: "circle.fill"))
+                .font(.system(size: 9))
+                .foregroundStyle(row.color)
+            Text("\(dot)  \(row.text)")
         }
         .disabled(config.isBusy)
         .help("\(config.smbURLString) — \(clickHint)")
@@ -104,16 +109,22 @@ private struct ShareMenuItem: View {
 
     /// Green dot + name when mounted, light grey dot + name when disabled or
     /// idle; any other state adds its label, e.g. "(red dot) video — Error".
-    private var row: (dot: NSImage, text: String) {
+    private var row: (color: Color, text: String) {
         let name = config.displayName
         if mountManager.mountPoint(for: config) != nil {
-            return (MenuDot.mounted, name)
+            return (Color(nsColor: .systemGreen), name)
+        }
+        if !config.isEnabled {
+            return (Color(nsColor: .systemGray), name)
         }
         let status = config.connectionStatus
-        if !config.isEnabled || status == .disconnected {
-            return (MenuDot.idle, name)
+        let color: Color = switch status {
+        case .connected:                  Color(nsColor: .systemGreen)
+        case .connecting, .disconnecting: Color(nsColor: .systemOrange)
+        case .error:                      Color(nsColor: .systemRed)
+        case .disconnected, .offline:     Color(nsColor: .systemGray)
         }
-        return (MenuDot.image(for: status), "\(name) — \(status.label)")
+        return (color, "\(name) — \(status.label)")
     }
 
     private var clickHint: String {
