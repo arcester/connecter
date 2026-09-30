@@ -15,10 +15,12 @@ struct ShareCard: View {
         config.isEnabled && config.connectionStatus == .connected
     }
 
+    /// Mounted shares take the accent colour; orange and red are reserved for
+    /// transitions and errors, so anything that isn't the accent needs a look.
     private var glyphColor: Color {
         guard config.isEnabled else { return .secondary }
         switch config.connectionStatus {
-        case .connected:                 return .green
+        case .connected:                 return accent
         case .connecting, .disconnecting: return .orange
         case .error:                     return .red
         case .disconnected, .offline:    return .secondary
@@ -36,7 +38,7 @@ struct ShareCard: View {
 
     var body: some View {
         HStack(spacing: 14) {
-            // Folder glyph tinted by state — a quick scan of the list shows what is mounted
+            // Folder glyph tinted by state — accent when mounted, orange/red when not
             Image(systemName: isConnected ? "folder.fill" : "folder")
                 .font(.system(size: 18, weight: .medium))
                 .foregroundStyle(glyphColor)
