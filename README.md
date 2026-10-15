@@ -9,6 +9,8 @@ A macOS menu bar utility for managing SMB network share connections. Connecter m
 - **Secure credentials** — passwords stored exclusively in the macOS Keychain, never on disk; the share list can be rebuilt from the Keychain (“Recover from Keychain”)
 - **Smart retry** — exponential backoff (×2, ×4, then 5 min) with configurable auto-disable after repeated failures, and a notification when a share is switched off
 - **Network-aware** — pauses checks while offline (`NWPathMonitor`) and re-checks every share as soon as connectivity returns
+- **Server-aware** — probes the SMB port before every mount attempt, so an unreachable NAS costs nothing (no NetFS calls, no failure count) and shares come back within one check interval of the server returning
+- **Stable mount points** — reuses a stale `/Volumes/<share>` left by an interrupted mount instead of ending up at `/Volumes/<share>-1`, so saved paths keep working
 - **Launch at login** — via `SMAppService`, off by default
 - **Activity log** — filterable log of all mount/unmount/error events, also written to a rotating file
 - **Notifications** — optional macOS notifications for connection events

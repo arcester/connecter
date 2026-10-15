@@ -122,7 +122,7 @@ private struct ShareMenuItem: View {
         case .connected:                  Color(nsColor: .systemGreen)
         case .connecting, .disconnecting: Color(nsColor: .systemOrange)
         case .error:                      Color(nsColor: .systemRed)
-        case .disconnected, .offline:     Color(nsColor: .systemGray)
+        case .disconnected, .offline, .unreachable: Color(nsColor: .systemGray)
         }
         return (color, "\(name) — \(status.label)")
     }

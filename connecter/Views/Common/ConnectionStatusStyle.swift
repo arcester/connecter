@@ -9,6 +9,7 @@ extension ShareConfig.ConnectionStatus {
         case .disconnecting: .orange
         case .error:         .red
         case .offline:       .secondary
+        case .unreachable:   .secondary
         }
     }
 
@@ -20,6 +21,7 @@ extension ShareConfig.ConnectionStatus {
         case .disconnecting: String(localized: "Disconnecting…")
         case .error:         String(localized: "Error")
         case .offline:       String(localized: "No network")
+        case .unreachable:   String(localized: "Server unreachable")
         }
     }
 
@@ -32,6 +34,7 @@ extension ShareConfig.ConnectionStatus {
         case .disconnecting:  "arrow.trianglehead.2.clockwise"
         case .error:          "xmark.circle.fill"
         case .offline:        "wifi.slash"
+        case .unreachable:    "wifi.exclamationmark"
         }
     }
 }
