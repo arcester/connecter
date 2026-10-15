@@ -534,11 +534,42 @@ final class MountManager: ObservableObject {
             throw MountError.mountTimedOut(Self.mountTimeout)
         }
 
-        let result = await Self.netFSMount(
-            url: url as CFURL, user: user, pass: pass,
-            openOptions: openOpts, mountOptions: mountOpts,
-            timeout: Self.mountTimeout
-        )
+        // A mount attempt that never completed (hung NetAuth, lost network) leaves
+        // an empty /Volumes/<share> behind, and macOS then mounts the next time at
+        // /Volumes/<share>-1, which breaks saved paths (a Lightroom catalogue, a
+        // Time Machine destination…). If that stale directory is there, ask NetFS
+        // to mount exactly on it. Should that be refused, fall back to the default.
+        let volumeName = Self.volumeName(forSharePath: sharePath)
+        let staleMountPoint = await Task.detached(priority: .utility) {
+            Self.staleMountPoint(forVolumeName: volumeName)
+        }.value
+
+        var result: (status: Int32, timedOut: Bool)
+        if let staleMountPoint {
+            log.info("[\(config.displayName)] Reusing the stale mount point \(staleMountPoint)")
+            let pinnedOpts = NSMutableDictionary(dictionary: mountOpts)
+            pinnedOpts["MountAtMountDir"] = true   // kNetFSMountAtMountDirKey
+            result = await Self.netFSMount(
+                url: url as CFURL, mountPath: URL(fileURLWithPath: staleMountPoint) as CFURL,
+                user: user, pass: pass,
+                openOptions: openOpts, mountOptions: pinnedOpts,
+                timeout: Self.mountTimeout
+            )
+            if result.status != 0, !result.timedOut {
+                log.warning("[\(config.displayName)] Could not mount on \(staleMountPoint) (\(netFSError(result.status))) — letting macOS pick the mount point")
+                result = await Self.netFSMount(
+                    url: url as CFURL, mountPath: nil, user: user, pass: pass,
+                    openOptions: openOpts, mountOptions: mountOpts,
+                    timeout: Self.mountTimeout
+                )
+            }
+        } else {
+            result = await Self.netFSMount(
+                url: url as CFURL, mountPath: nil, user: user, pass: pass,
+                openOptions: openOpts, mountOptions: mountOpts,
+                timeout: Self.mountTimeout
+            )
+        }
 
         if result.timedOut {
             log.error("NetFS mount timed out after \(Int(Self.mountTimeout)) s (NetAuth did not answer): \(urlString)")
@@ -549,7 +580,53 @@ final class MountManager: ObservableObject {
             log.error("NetFS mount failed (\(result.status)): \(msg)")
             throw MountError.mountFailed(msg)
         }
-        // NetFS only completes after the volume is confirmed mounted
+
+        // NetFS only completes after the volume is confirmed mounted: report where.
+        if let mountPoint = await mountPointOffMain(for: config) {
+            log.info("[\(config.displayName)] Mounted at \(mountPoint)")
+            if mountPoint != "/Volumes/\(volumeName)" {
+                let stale = await Task.detached(priority: .utility) {
+                    Self.staleMountPointDirectories(forVolumeName: volumeName)
+                }.value
+                if !stale.isEmpty {
+                    let quoted = stale.map { "\"\($0)\"" }.joined(separator: " ")
+                    log.warning("[\(config.displayName)] /Volumes/\(volumeName) is taken by a stale directory. To get the original path back, remove the empty leftovers in Terminal: sudo rmdir \(quoted)")
+                }
+            }
+        }
+    }
+
+    // MARK: - Mount point helpers
+
+    /// Name macOS gives the volume: the last component of the share path.
+    nonisolated static func volumeName(forSharePath sharePath: String) -> String {
+        sharePath.split(separator: "/").last.map(String.init) ?? sharePath
+    }
+
+    /// `/Volumes/<name>` when it exists as a plain directory that nothing is
+    /// mounted on (a leftover of an interrupted mount), otherwise `nil`.
+    nonisolated static func staleMountPoint(forVolumeName name: String) -> String? {
+        let path = "/Volumes/\(name)"
+        return isStaleDirectory(path) ? path : nil
+    }
+
+    /// Every empty leftover for the volume: `/Volumes/<name>` and `/Volumes/<name>-N`.
+    nonisolated static func staleMountPointDirectories(forVolumeName name: String) -> [String] {
+        guard let entries = try? FileManager.default.contentsOfDirectory(atPath: "/Volumes") else { return [] }
+        return entries
+            .filter { $0 == name || ($0.hasPrefix(name + "-") && Int($0.dropFirst(name.count + 1)) != nil) }
+            .map { "/Volumes/\($0)" }
+            .filter(isStaleDirectory)
+            .sorted()
+    }
+
+    /// A directory that is not itself a mount point (same device as /Volumes).
+    private nonisolated static func isStaleDirectory(_ path: String) -> Bool {
+        var info = stat(), parent = stat()
+        guard stat(path, &info) == 0, (info.st_mode & S_IFMT) == S_IFDIR,
+              stat("/Volumes", &parent) == 0
+        else { return false }
+        return info.st_dev == parent.st_dev
     }
 
     /// Runs `NetFSMountURLAsync` and waits for its completion, but never longer
@@ -561,6 +638,7 @@ final class MountManager: ObservableObject {
     /// resume-once guard.
     private nonisolated static func netFSMount(
         url: CFURL,
+        mountPath: CFURL?,
         user: CFString?,
         pass: CFString?,
         openOptions: NSMutableDictionary,
@@ -588,7 +666,7 @@ final class MountManager: ObservableObject {
             var requestID: AsyncRequestID?
             let launchStatus = NetFSMountURLAsync(
                 url,
-                nil,        // mountpath: nil → macOS picks /Volumes/…
+                mountPath,  // nil → macOS picks /Volumes/<share> (or <share>-1 if that exists)
                 user,
                 pass,
                 openOptions,
@@ -793,6 +871,17 @@ final class MountManager: ObservableObject {
             guard !Task.isCancelled else { return }
         } else if (failureCounts[id] ?? 0) == 0 {
             log.info("[\(name)] Not mounted, attempting to mount…")
+        }
+
+        // Server down? Don't knock on NetFS (that is what leaves NetAuth hanging
+        // and stale mount points behind) and don't count a failure: keep probing
+        // the SMB port at the normal interval and mount as soon as it answers.
+        guard await PortProbe.isOpen(host: config.host) else {
+            if config.connectionStatus != .unreachable {
+                log.info("[\(name)] Server does not answer on port \(PortProbe.smbPort) — will mount when it is back")
+            }
+            setStatus(.unreachable, forID: id)
+            return
         }
 
         do {

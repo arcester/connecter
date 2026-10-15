@@ -23,7 +23,7 @@ struct ShareCard: View {
         case .connected:                 return accent
         case .connecting, .disconnecting: return .orange
         case .error:                     return .red
-        case .disconnected, .offline:    return .secondary
+        case .disconnected, .offline, .unreachable: return .secondary
         }
     }
 
@@ -31,7 +31,7 @@ struct ShareCard: View {
     /// `.error` shows the retry button instead.
     private var showsStatusBadge: Bool {
         switch config.connectionStatus {
-        case .connecting, .connected, .disconnecting, .offline: true
+        case .connecting, .connected, .disconnecting, .offline, .unreachable: true
         case .disconnected, .error: false
         }
     }

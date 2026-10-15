@@ -24,6 +24,9 @@ struct ShareConfig: Codable, Identifiable {
         case error
         /// Enabled, not mounted, and the Mac has no network connection.
         case offline
+        /// Enabled, not mounted, and the server does not answer on the SMB
+        /// port; the app keeps checking and mounts as soon as it is back.
+        case unreachable
     }
 
     /// True while a transition is in progress and the UI should block interaction.
