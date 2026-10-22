@@ -105,6 +105,16 @@ final class MountManager: ObservableObject {
     /// "connecting" forever. Healthy mounts complete in 1–15 s.
     private static let mountTimeout: TimeInterval = 30
 
+    /// NetFS requests are issued one at a time. Two simultaneous mounts against
+    /// the same server (both shares at launch, after a wake, or after they drop
+    /// together) is the pattern seen right before NetAuth stops answering: one
+    /// completes and the other never does. Serialising them, with a short gap,
+    /// keeps the agent to the one-request-at-a-time flow Finder uses.
+    private var mountInProgress = false
+    private var mountWaiters: [CheckedContinuation<Void, Never>] = []
+    private var lastMountFinished: Date?
+    private static let gapBetweenMounts: TimeInterval = 2
+
     /// QA-only: simulate a hung NetAuth (see `mount()`); cleared by `restartNetAuth()`.
     private static var simulateNetAuthHang =
         ProcessInfo.processInfo.environment["CONNECTER_SIMULATE_NETAUTH_HANG"] != nil
@@ -491,6 +501,10 @@ final class MountManager: ObservableObject {
     // MARK: - Public: mount / unmount
 
     func mount(_ config: ShareConfig) async throws {
+        await acquireMountSlot()
+        defer { releaseMountSlot() }
+        // The share may have been mounted while we waited for the slot
+        // (e.g. by Finder, or by the system's own reconnection).
         guard await mountPointOffMain(for: config) == nil else { throw MountError.alreadyMounted }
 
         let sharePath = Self.normalizedSharePath(config.path)
@@ -593,6 +607,32 @@ final class MountManager: ObservableObject {
                     log.warning("[\(config.displayName)] /Volumes/\(volumeName) is taken by a stale directory. To get the original path back, remove the empty leftovers in Terminal: sudo rmdir \(quoted)")
                 }
             }
+        }
+    }
+
+    // MARK: - One NetFS request at a time
+
+    private func acquireMountSlot() async {
+        if mountInProgress {
+            await withCheckedContinuation { continuation in
+                mountWaiters.append(continuation)
+            }
+        } else {
+            mountInProgress = true
+        }
+        if let finished = lastMountFinished {
+            let wait = Self.gapBetweenMounts - Date().timeIntervalSince(finished)
+            if wait > 0 { try? await Task.sleep(for: .seconds(wait)) }
+        }
+    }
+
+    private func releaseMountSlot() {
+        lastMountFinished = Date()
+        if mountWaiters.isEmpty {
+            mountInProgress = false
+        } else {
+            // Hand the slot straight to the next waiter (it stays "in progress").
+            mountWaiters.removeFirst().resume()
         }
     }
 
