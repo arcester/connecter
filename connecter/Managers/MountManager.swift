@@ -503,8 +503,9 @@ final class MountManager: ObservableObject {
     func mount(_ config: ShareConfig) async throws {
         await acquireMountSlot()
         defer { releaseMountSlot() }
-        // The share may have been mounted while we waited for the slot
-        // (e.g. by Finder, or by the system's own reconnection).
+        // The share may have been disabled, or mounted by Finder or the system's
+        // own reconnection, while we waited for the slot.
+        try Task.checkCancellation()
         guard await mountPointOffMain(for: config) == nil else { throw MountError.alreadyMounted }
 
         let sharePath = Self.normalizedSharePath(config.path)
@@ -935,6 +936,9 @@ final class MountManager: ObservableObject {
             // Mounted by a concurrent action between our check and mount attempt
             failureCounts[id] = 0
             setStatus(.connected, forID: id)
+        } catch is CancellationError {
+            // Task cancelled (share disabled, monitors restarted): nothing to record.
+            return
         } catch {
             let failures = (failureCounts[id] ?? 0) + 1
             failureCounts[id] = failures
