@@ -90,6 +90,19 @@ Every share gets a Keychain item at launch and whenever it is saved (the secret 
 - No analytics, telemetry, or network requests (other than your configured SMB shares)
 - No data leaves the device
 
+## Feedback
+
+Bug reports, questions and ideas are welcome, in English or Spanish:
+
+| I want to… | Where |
+|---|---|
+| Report something that doesn't work | [New issue → Bug report](https://github.com/arcester/connecter/issues/new/choose) |
+| Suggest a feature or vote on ideas | [Discussions → Ideas](https://github.com/arcester/connecter/discussions/categories/ideas) |
+| Ask how something works | [Discussions → Q&A](https://github.com/arcester/connecter/discussions/categories/q-a) |
+| Report a security problem | Privately, see [SECURITY.md](SECURITY.md) |
+
+> **Before posting:** this repository is public. Remove passwords, user names, server names, IP addresses and Tailscale or VPN host names from anything you paste, including activity log entries.
+
 ## License
 
 Connecter is open source under the [Apache License 2.0](LICENSE). You may use, modify and redistribute the code under its terms, which include keeping the copyright notice and the [NOTICE](NOTICE) file.

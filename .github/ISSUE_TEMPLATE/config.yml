@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 💡 Suggest a feature / Proponer una función
+    url: https://github.com/arcester/connecter/discussions/new?category=ideas
+    about: Ideas live in Discussions, where other users can vote for them.
+  - name: ❓ Ask a question / Hacer una pregunta
+    url: https://github.com/arcester/connecter/discussions/new?category=q-a
+    about: How-to questions and help with your setup.
+  - name: 🔒 Report a security problem / Informar de un problema de seguridad
+    url: https://github.com/arcester/connecter/security/advisories/new
+    about: Please report security problems privately, never in a public issue.

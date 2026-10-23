@@ -1,0 +1,91 @@
+name: 🐞 Bug report / Informar de un fallo
+description: Something in Connecter doesn't work as expected.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report this. You can write in English or Spanish.
+        **This issue will be public:** remove passwords, user names, server names, IP addresses and Tailscale/VPN host names from everything you paste.
+
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: Describe the problem and what you expected to happen instead.
+      placeholder: "The “video” share is not mounted again after waking my Mac from sleep…"
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Mount a share
+        2. Put the Mac to sleep for 10 minutes
+        3. Wake it up
+    validations:
+      required: true
+
+  - type: input
+    id: app-version
+    attributes:
+      label: Connecter version
+      description: Shown at the bottom of Settings → General, for example “Connecter 1.0 (1)”.
+    validations:
+      required: true
+
+  - type: input
+    id: macos-version
+    attributes:
+      label: macOS version
+      description: Apple menu → About This Mac.
+      placeholder: macOS 26.1
+    validations:
+      required: true
+
+  - type: dropdown
+    id: server
+    attributes:
+      label: Server type
+      options:
+        - Synology
+        - QNAP
+        - TrueNAS
+        - Unraid
+        - Windows
+        - macOS File Sharing
+        - Samba on Linux
+        - Other / I don't know
+    validations:
+      required: true
+
+  - type: dropdown
+    id: network
+    attributes:
+      label: How do you reach the server?
+      options:
+        - Same local network
+        - VPN (Tailscale, WireGuard, ZeroTier…)
+        - Over the internet
+        - It varies
+    validations:
+      required: true
+
+  - type: textarea
+    id: log
+    attributes:
+      label: Activity log
+      description: |
+        Open Connecter → Activity Log, right-click the list and choose **Copy log**, then paste the relevant lines here.
+        Replace server names and addresses with placeholders such as `nas` or `192.168.x.x`.
+      render: text
+
+  - type: checkboxes
+    id: privacy
+    attributes:
+      label: Privacy check
+      options:
+        - label: I removed passwords, user names, server names and IP addresses from this report.
+          required: true
