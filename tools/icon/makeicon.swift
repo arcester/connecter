@@ -1,6 +1,5 @@
 // Genera el icono de la app: carpeta plana blanca→azul (degradado) con sombra suave
-// y una cola de puntos (con su propia sombra), sobre fondo azul casi plano calcado
-// del icono de referencia (estilo PayPal).
+// y una cola de puntos (con su propia sombra), sobre fondo azul casi plano.
 // Uso:  swift tools/icon/makeicon.swift   → AppIcon-shadow-1/2/3.png y sheet9.png
 // Variante instalada: shadow-2 (carpeta + puntos verticales debajo, con sombra).
 

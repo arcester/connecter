@@ -89,3 +89,11 @@ Every share gets a Keychain item at launch and whenever it is saved (the secret 
 - Passwords are stored in the macOS Keychain and never written to disk in plaintext
 - No analytics, telemetry, or network requests (other than your configured SMB shares)
 - No data leaves the device
+
+## License
+
+Connecter is open source under the [Apache License 2.0](LICENSE). You may use, modify and redistribute the code under its terms, which include keeping the copyright notice and the [NOTICE](NOTICE) file.
+
+### Name and icon
+
+The license covers the source code only, not the name “Connecter” or the app icon. If you publish your own build or a fork, please give it a different name and icon so it isn't mistaken for the official app.
