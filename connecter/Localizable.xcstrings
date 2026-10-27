@@ -586,6 +586,16 @@
         }
       }
     },
+    "Dark": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Oscuro"
+          }
+        }
+      }
+    },
     "Delete": {
       "localizations": {
         "es": {
@@ -912,6 +922,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Deja la contraseña vacía para usar la que el Finder guardó para este servidor."
+          }
+        }
+      }
+    },
+    "Light": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Claro"
           }
         }
       }
@@ -1432,16 +1452,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Reanudar este servidor"
-          }
-        }
-      }
-    },
-    "Retry": {
-      "localizations": {
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Reintentar"
           }
         }
       }

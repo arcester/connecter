@@ -26,6 +26,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             return
         }
 
+        AppSettings.apply(appearance: AppSettings.shared.appearance)
+
         // Start share monitoring unconditionally — must not depend on the main
         // window's onAppear, which never fires if the window starts hidden.
         MountManager.shared.startMonitoring()

@@ -106,6 +106,13 @@ private struct AppearanceSettingsPane: View {
     var body: some View {
         Form {
             Section {
+                Picker("Appearance", selection: $settings.appearance) {
+                    Text("System").tag("system")
+                    Text("Light").tag("light")
+                    Text("Dark").tag("dark")
+                }
+                .pickerStyle(.segmented)
+
                 VStack(alignment: .leading, spacing: 10) {
                     VStack(alignment: .leading, spacing: 3) {
                         Text("Accent Color")

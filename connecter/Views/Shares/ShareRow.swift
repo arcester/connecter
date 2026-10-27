@@ -13,49 +13,38 @@ struct ShareCard: View {
     @ObservedObject private var settings = AppSettings.shared
     private var accent: Color { settings.accentColor }
 
-    private var isConnected: Bool {
-        config.isEnabled && !isPaused && config.connectionStatus == .connected
-    }
-
-    /// Mounted shares take the accent colour; orange and red are reserved for
-    /// transitions and errors, so anything that isn't the accent needs a look.
-    private var glyphColor: Color {
-        guard config.isEnabled, !isPaused else { return .secondary }
-        switch config.connectionStatus {
-        case .connected:                 return accent
-        case .connecting, .disconnecting: return .orange
-        case .error:                     return .red
-        case .disconnected, .offline, .unreachable: return .secondary
-        }
-    }
-
-    /// States that get a status capsule; `.disconnected` shows nothing and
-    /// `.error` shows the retry button instead.
-    private var showsStatusBadge: Bool {
-        switch config.connectionStatus {
-        case .connecting, .connected, .disconnecting, .offline, .unreachable: true
-        case .disconnected, .error: false
-        }
+    /// The state shown as a tag next to the name: paused, or any state other
+    /// than `.disconnected`. Disabled shares show none.
+    private var statusTag: (text: String, color: Color)? {
+        guard config.isEnabled else { return nil }
+        if isPaused { return (String(localized: "Paused"), .secondary) }
+        if config.connectionStatus == .disconnected { return nil }
+        return (config.connectionStatus.label, config.connectionStatus.color)
     }
 
     var body: some View {
         HStack(spacing: 10) {
-            // Network-drive glyph tinted by state — accent when mounted, orange/red when not
             Image(systemName: "externaldrive.connected.to.line.below")
                 .font(.system(size: 15))
-                .foregroundStyle(glyphColor)
+                .foregroundStyle(.secondary)
                 .frame(width: 22)
                 .accessibilityHidden(true)
 
-            // Name + URL — click to edit
+            // Name + state tag over the URL — click to edit
             Button(action: onTap) {
                 VStack(alignment: .leading, spacing: 1) {
-                    Text(config.displayName)
-                        .font(.body.weight(.medium))
-                        .foregroundStyle(config.isEnabled ? Color.primary : Color.secondary)
+                    HStack(spacing: 6) {
+                        Text(config.displayName)
+                            .font(.body.weight(.bold))
+                            .foregroundStyle(config.isEnabled ? Color.primary : Color.secondary)
+                        if let tag = statusTag {
+                            StatusTag(text: tag.text, color: tag.color)
+                                .symbolEffect(.pulse, options: .repeating, isActive: config.isBusy)
+                        }
+                    }
                     Text(config.smbURLString)
                         .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.tertiary)
                         .lineLimit(1)
                         .truncationMode(.middle)
                 }
@@ -71,23 +60,15 @@ struct ShareCard: View {
             ))
             .accessibilityHint(Text("Click to edit"))
 
-            // Status (dot + label) or retry button
-            if config.isEnabled {
-                if isPaused {
-                    StatusLabel(text: String(localized: "Paused"), color: .secondary)
-                } else if config.connectionStatus == .error {
-                    Button(action: onRetry) {
-                        Label("Retry", systemImage: "arrow.clockwise")
-                            .font(.caption)
-                            .foregroundStyle(Color.red)
-                    }
-                    .buttonStyle(.plain)
-                    .help("Retry connection")
-                    .accessibilityLabel(Text("Retry connection"))
-                } else if showsStatusBadge {
-                    StatusLabel(text: config.connectionStatus.label, color: config.connectionStatus.color)
-                        .symbolEffect(.pulse, options: .repeating, isActive: config.isBusy)
+            if config.isEnabled && !isPaused && config.connectionStatus == .error {
+                Button(action: onRetry) {
+                    Image(systemName: "arrow.clockwise")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(.secondary)
                 }
+                .buttonStyle(.plain)
+                .help("Retry connection")
+                .accessibilityLabel(Text("Retry connection"))
             }
 
             // Enable / disable toggle
@@ -108,19 +89,17 @@ struct ShareCard: View {
     }
 }
 
-/// Small coloured dot followed by a state label.
-private struct StatusLabel: View {
+/// State label on a pale capsule of its colour, e.g. a green "Mounted".
+private struct StatusTag: View {
     let text: String
     let color: Color
 
     var body: some View {
-        HStack(spacing: 5) {
-            Circle()
-                .fill(color)
-                .frame(width: 6, height: 6)
-            Text(text)
-                .font(.caption)
-                .foregroundStyle(.secondary)
-        }
+        Text(text)
+            .font(.caption2.weight(.semibold))
+            .foregroundStyle(color)
+            .padding(.horizontal, 6)
+            .padding(.vertical, 1)
+            .background(color.opacity(0.15), in: Capsule())
     }
 }

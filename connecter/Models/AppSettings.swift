@@ -1,6 +1,7 @@
 import Foundation
 import Combine
 import SwiftUI
+import AppKit
 
 /// Persisted user-configurable settings.
 /// Singleton — access via AppSettings.shared.
@@ -31,6 +32,23 @@ final class AppSettings: ObservableObject {
     /// Name of the accent color used across the share list UI.
     @Published var accentColorName: String {
         didSet { UserDefaults.standard.set(accentColorName, forKey: Keys.accentColorName) }
+    }
+
+    /// "system", "light" or "dark" — the app's colour scheme.
+    @Published var appearance: String {
+        didSet {
+            UserDefaults.standard.set(appearance, forKey: Keys.appearance)
+            Self.apply(appearance: appearance)
+        }
+    }
+
+    /// Sets the appearance of every window and menu; `nil` follows the system.
+    static func apply(appearance: String) {
+        NSApp.appearance = switch appearance {
+        case "light": NSAppearance(named: .aqua)
+        case "dark":  NSAppearance(named: .darkAqua)
+        default:      nil
+        }
     }
 
     var accentColor: Color {
@@ -87,6 +105,7 @@ final class AppSettings: ObservableObject {
         static let showOnLaunch          = "app.showOnLaunch"
         static let iCloudSync            = "app.iCloudSync"
         static let accentColorName       = "app.accentColorName"
+        static let appearance            = "app.appearance"
     }
 
     private init() {
@@ -111,6 +130,7 @@ final class AppSettings: ObservableObject {
         }
 
         accentColorName = d.string(forKey: Keys.accentColorName) ?? "system"
+        appearance = d.string(forKey: Keys.appearance) ?? "system"
 
         // iCloudSync = d.bool(forKey: Keys.iCloudSync)
     }
