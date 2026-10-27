@@ -42,7 +42,7 @@ Before submitting, check the note on "same mount point" in [app-store-checklist.
 > • No account, no analytics, no tracking: nothing leaves your Mac
 > • Runs inside the App Sandbox
 >
-> Free and open source. Available in English and Spanish.
+> Free and open source. Available in English, Spanish, German, French, Italian, Brazilian Portuguese, Japanese and Simplified Chinese.
 
 **Keywords** (100, comma-separated, no spaces; the app name and category are already indexed):
 
@@ -96,7 +96,7 @@ smb,nas,network drive,mount,samba,synology,qnap,truenas,file sharing,auto mount,
 > • Sin cuenta, sin analítica, sin seguimiento: nada sale de tu Mac
 > • Funciona dentro del App Sandbox
 >
-> Gratuita y de código abierto. Disponible en inglés y en español.
+> Gratuita y de código abierto. Disponible en español, inglés, alemán, francés, italiano, portugués de Brasil, japonés y chino simplificado.
 
 **Palabras clave** (100):
 

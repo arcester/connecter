@@ -9,6 +9,14 @@ enum AppEnvironment {
     nonisolated static let isSandboxed: Bool =
         ProcessInfo.processInfo.environment["APP_SANDBOX_CONTAINER_ID"] != nil
 
+    /// Screenshots/QA: `CONNECTER_DEMO=1` shows `DemoData` instead of the
+    /// real shares, which are neither read nor written (Debug builds only).
+    #if DEBUG
+    nonisolated static let isDemo = ProcessInfo.processInfo.environment["CONNECTER_DEMO"] != nil
+    #else
+    nonisolated static let isDemo = false
+    #endif
+
     /// Marketing version, e.g. "1.0".
     nonisolated static var shortVersion: String {
         Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "?"

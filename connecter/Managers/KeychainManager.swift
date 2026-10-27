@@ -199,6 +199,7 @@ enum KeychainManager {
     /// Every share Connecter has a password for, described by the item
     /// attributes only — no secret is read. Used to rebuild the share list.
     static func storedShares() -> [StoredShare] {
+        if AppEnvironment.isDemo { return DemoData.storedShares }
         let query: [String: Any] = [
             kSecClass as String: kSecClassInternetPassword,
             kSecAttrSecurityDomain as String: securityDomain,

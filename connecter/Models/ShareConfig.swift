@@ -111,6 +111,7 @@ struct ServerSettings: Codable {
 
     /// Settings by `ShareConfig.serverKey`.
     static func loadAll() -> [String: ServerSettings] {
+        if AppEnvironment.isDemo { return DemoData.servers }
         guard let data = UserDefaults.standard.data(forKey: storeKey),
               let servers = try? JSONDecoder().decode([String: ServerSettings].self, from: data)
         else { return [:] }
@@ -118,6 +119,7 @@ struct ServerSettings: Codable {
     }
 
     static func saveAll(_ servers: [String: ServerSettings]) {
+        guard !AppEnvironment.isDemo else { return }
         guard let data = try? JSONEncoder().encode(servers) else { return }
         UserDefaults.standard.set(data, forKey: storeKey)
     }
@@ -129,6 +131,7 @@ extension ShareConfig {
     private static let storeKey = "shareConfigs"
 
     static func loadAll() -> [ShareConfig] {
+        if AppEnvironment.isDemo { return DemoData.shares }
         // TODO: iCloud — cuando se active el sync, leer de NSUbiquitousKeyValueStore
         // let useCloud = AppSettings.shared.iCloudSync
         // let rawData: Data?
@@ -178,6 +181,7 @@ extension ShareConfig {
     }
 
     private static func _persist(_ configs: [ShareConfig]) {
+        guard !AppEnvironment.isDemo else { return }
         var stripped = configs
         for i in stripped.indices { stripped[i].password = "" }
         guard let data = try? JSONEncoder().encode(stripped) else { return }

@@ -12,7 +12,7 @@ Estado a 23 de octubre de 2026. Los textos de la ficha (nombre, subtítulo, desc
 - [x] Copyright en `NSHumanReadableCopyright` (© 2026 J. Guzmán Arce Sáez).
 - [x] Icono con los 10 tamaños del catálogo (16 → 1024).
 - [x] Categoría `public.app-category.utilities`, `LSUIElement` (app de barra de menús); la ventana principal se abre al arrancar por defecto.
-- [x] Localización en String Catalog (en, es) con plurales.
+- [x] Localización en String Catalog (en, es, de, fr, it, ja, pt-BR, zh-Hans) con plurales. Las traducciones a de, fr, it, ja, pt-BR y zh-Hans no las ha revisado un nativo.
 - [x] Etiquetas de accesibilidad en botones de solo icono y conmutadores.
 - [x] Versión 1.0 (build 1).
 - [x] Nombre "Connecter" libre: no hay ninguna app con ese nombre en la App Store de Mac ni de iPhone (comprobado en EE. UU. y España el 23-10-2026).
@@ -42,7 +42,7 @@ Estado a 23 de octubre de 2026. Los textos de la ficha (nombre, subtítulo, desc
 
 5. **LuLu**: la app abre conexiones TCP directamente (comprobación del puerto 445). LuLu preguntará la primera vez; permite Connecter.
 
-6. **Capturas de pantalla** (16:10; 1280×800, 1440×900, 2560×1600 o 2880×1800). Lista sugerida en [app-store-metadata.md](app-store-metadata.md#screenshots-1610-at-least-one-up-to-ten). Usar nombres de servidor y direcciones inventados.
+6. **Capturas de pantalla** (16:10; 1280×800, 1440×900, 2560×1600 o 2880×1800). Lista sugerida en [app-store-metadata.md](app-store-metadata.md#screenshots-1610-at-least-one-up-to-ten). Usar nombres de servidor y direcciones inventados. Hechas: cuatro de 2880×1800 en inglés y en español, en [docs/app-store/screenshots/](app-store/screenshots/) (`en/` para el idioma principal; los demás idiomas usan esas). Se sacaron con la build de Debug en modo demo (`CONNECTER_DEMO=1`, datos inventados) y `-AppleLanguages`/`-app.appearance` al arrancar.
 
 7. **Vídeo corto para el revisor** (montar, ver el estado, expulsar en el Finder y ver cómo vuelve a montarse) publicado como vídeo oculto, y su enlace en lugar de `[VIDEO URL]` en las notas para el revisor. Sin servidor SMB el revisor no puede probar la app, y "no hemos podido revisar la app" es un motivo de rechazo habitual.
 

@@ -21,7 +21,7 @@ struct SettingsView: View {
                 KeychainSettingsPane()
             }
         }
-        .frame(width: 440)
+        .frame(width: 540)
         .modalWindowStyle()
     }
 }
@@ -160,19 +160,16 @@ private struct MonitoringSettingsPane: View {
     var body: some View {
         Form {
             Section {
-                VStack(alignment: .leading, spacing: 6) {
-                    HStack {
-                        Text("Check interval")
-                        Spacer()
-                        Text("\(Int(settings.monitorInterval)) s")
-                            .foregroundStyle(.secondary)
-                            .monospacedDigit()
+                Picker("Check interval", selection: $settings.monitorInterval) {
+                    ForEach(AppSettings.intervalOptions, id: \.self) { seconds in
+                        if seconds < 60 {
+                            Text("\(Int(seconds)) s").tag(seconds)
+                        } else {
+                            Text("\(Int(seconds / 60)) min").tag(seconds)
+                        }
                     }
-                    Slider(value: $settings.monitorInterval, in: 15...300, step: 15) {
-                        Text("Check interval")
-                    }
-                    .labelsHidden()
                 }
+                .pickerStyle(.segmented)
 
                 Stepper(
                     "Disable after \(settings.maxFailuresBeforeDisable) consecutive failure(s)",

@@ -14,7 +14,7 @@ A macOS menu bar utility for managing SMB network share connections. Connecter m
 - **Launch at login** — via `SMAppService`, off by default
 - **Activity log** — filterable log of all mount/unmount/error events, also written to a rotating file
 - **Notifications** — optional macOS notifications for connection events
-- **Localized** — English and Spanish (String Catalog)
+- **Localized** — English, Spanish, German, French, Italian, Brazilian Portuguese, Japanese and Simplified Chinese (String Catalog)
 
 ## Requirements
 
@@ -70,7 +70,7 @@ Views/
   Settings/              — preferences window
   Log/                   — activity log window
   Common/                — window sizing, styling utilities
-Localizable.xcstrings    — String Catalog (en, es)
+Localizable.xcstrings    — String Catalog (en, es, de, fr, it, ja, pt-BR, zh-Hans)
 PrivacyInfo.xcprivacy    — privacy manifest
 ```
 

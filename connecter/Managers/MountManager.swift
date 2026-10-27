@@ -159,6 +159,7 @@ final class MountManager: ObservableObject {
 
     /// Starts independent monitoring tasks for all enabled shares.
     func startMonitoring() {
+        guard !AppEnvironment.isDemo else { return }   // demo states stay as set
         backUpSharesToKeychain()
         syncTasks()
         log.info("Monitor started (\(shareTasks.count) task(s), interval: \(Int(AppSettings.shared.monitorInterval))s)")
@@ -873,6 +874,7 @@ final class MountManager: ObservableObject {
 
     /// Every browsable SMB volume currently mounted, as seen by the system.
     nonisolated static func mountedSMBVolumes() -> [MountedSMBVolume] {
+        guard !AppEnvironment.isDemo else { return [] }   // no real volumes in screenshots
         let keys: Set<URLResourceKey> = [.volumeURLForRemountingKey, .volumeLocalizedNameKey]
         guard let volumes = FileManager.default.mountedVolumeURLs(
             includingResourceValuesForKeys: Array(keys), options: [.skipHiddenVolumes]
@@ -956,7 +958,7 @@ final class MountManager: ObservableObject {
     private func checkShare(id: UUID) async {
         // One check at a time per share — a refresh while a mount is in progress
         // must not start a second (possibly hanging) NetFS request.
-        guard inFlight[id] == nil else { return }
+        guard inFlight[id] == nil, !AppEnvironment.isDemo else { return }
         let attempt = UUID()
         inFlight[id] = attempt
         defer { if inFlight[id] == attempt { inFlight.removeValue(forKey: id) } }

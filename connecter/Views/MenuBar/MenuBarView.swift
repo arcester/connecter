@@ -119,7 +119,7 @@ private struct ShareMenuItem: View {
     /// idle; any other state adds its label, e.g. "(red dot) video — Error".
     private var row: (color: Color, text: String) {
         let name = config.displayName
-        if mountManager.mountPoint(for: config) != nil {
+        if config.connectionStatus == .connected || mountManager.mountPoint(for: config) != nil {
             return (Color(nsColor: .systemGreen), name)
         }
         if !config.isEnabled {

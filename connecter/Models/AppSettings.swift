@@ -9,10 +9,13 @@ import AppKit
 final class AppSettings: ObservableObject {
     static let shared = AppSettings()
 
-    /// How often (in seconds) each share's mount state is checked.
+    /// How often (in seconds) each share's mount state is checked; one of `intervalOptions`.
     @Published var monitorInterval: Double {
         didSet { UserDefaults.standard.set(monitorInterval, forKey: Keys.monitorInterval) }
     }
+
+    /// The check intervals offered in Settings, in seconds.
+    static let intervalOptions: [Double] = [30, 60, 120, 300]
 
     /// Number of consecutive mount failures before the share is automatically disabled.
     @Published var maxFailuresBeforeDisable: Int {
@@ -111,8 +114,11 @@ final class AppSettings: ObservableObject {
     private init() {
         let d = UserDefaults.standard
 
+        // Older builds allowed any multiple of 15 s: snap to the nearest option.
         let interval = d.double(forKey: Keys.monitorInterval)
-        monitorInterval = interval >= 15 ? interval : 30
+        monitorInterval = interval > 0
+            ? Self.intervalOptions.min { abs($0 - interval) < abs($1 - interval) }!
+            : 30
 
         let failures = d.integer(forKey: Keys.maxFailures)
         maxFailuresBeforeDisable = failures > 0 ? failures : 5
