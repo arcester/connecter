@@ -63,6 +63,9 @@ final class MountManager: ObservableObject {
 
     @Published private(set) var configs: [ShareConfig] = ShareConfig.loadAll()
 
+    /// Per-server settings (shared credentials, pause) by `ShareConfig.serverKey`.
+    @Published private(set) var servers: [String: ServerSettings] = ServerSettings.loadAll()
+
     /// Last snapshot of the SMB volumes mounted on this Mac. Refreshed off the
     /// main actor by every share check and by mount/unmount notifications, so
     /// UI code can answer "is it mounted?" instantly. Stat-ing a stale SMB
@@ -143,9 +146,9 @@ final class MountManager: ObservableObject {
         }
     }
 
-    /// One-glance summary of every enabled share.
+    /// One-glance summary of every active share.
     var overallStatus: OverallStatus {
-        let enabled = configs.filter(\.isEnabled)
+        let enabled = configs.filter(isActive)
         guard !enabled.isEmpty else { return .idle }
         if netAuthSuspected || enabled.contains(where: { $0.connectionStatus == .error }) { return .error }
         if enabled.allSatisfy({ $0.connectionStatus == .connected }) { return .allMounted }
@@ -227,7 +230,7 @@ final class MountManager: ObservableObject {
         shareTasks.removeAll()
         failureCounts.removeAll()
         inFlight.removeAll()
-        for i in configs.indices where configs[i].isEnabled {
+        for i in configs.indices where isActive(configs[i]) {
             configs[i].connectionStatus = .connecting
         }
     }
@@ -248,7 +251,7 @@ final class MountManager: ObservableObject {
         guard available else {
             log.warning("Network unavailable — mount checks paused")
             for i in configs.indices
-            where configs[i].isEnabled && configs[i].connectionStatus != .connected {
+            where isActive(configs[i]) && configs[i].connectionStatus != .connected {
                 configs[i].connectionStatus = .offline
             }
             return
@@ -259,7 +262,7 @@ final class MountManager: ObservableObject {
             try? await Task.sleep(for: .seconds(3))
             guard !Task.isCancelled, let self else { return }
             self.failureCounts.removeAll()
-            let ids = self.configs.filter(\.isEnabled).map(\.id)
+            let ids = self.configs.filter(self.isActive).map(\.id)
             await withTaskGroup(of: Void.self) { group in
                 for id in ids {
                     group.addTask { await self.checkShare(id: id) }
@@ -447,7 +450,8 @@ final class MountManager: ObservableObject {
             }
             var config = ShareConfig(
                 name: stored.name, host: stored.host, path: stored.sharePath,
-                username: stored.username, isEnabled: true
+                username: stored.username, isEnabled: true,
+                usesServerCredentials: stored.usesServerCredentials
             )
             guard let password = KeychainManager.load(for: config).password else {
                 result.unreadable += 1
@@ -474,13 +478,88 @@ final class MountManager: ObservableObject {
         log.info("Share \"\(name)\" \(enabled ? "enabled" : "disabled")")
 
         if enabled {
-            startTask(for: configs[i])
+            if !isPaused(configs[i]) { startTask(for: configs[i]) }
         } else {
             configs[i].connectionStatus = .disconnected
             shareTasks[id]?.cancel()
             shareTasks.removeValue(forKey: id)
             failureCounts.removeValue(forKey: id)
         }
+    }
+
+    // MARK: - Servers
+
+    /// The shares on one server (same host, case-insensitive).
+    struct ServerGroup: Identifiable {
+        /// `ShareConfig.serverKey`.
+        let id: String
+        /// As typed in the first share.
+        let host: String
+        let shares: [ShareConfig]
+    }
+
+    /// Shares grouped by server; servers sorted by host, shares by name.
+    var serverGroups: [ServerGroup] {
+        Dictionary(grouping: configs, by: \.serverKey)
+            .map { key, shares in
+                ServerGroup(id: key, host: shares[0].host, shares: shares.sorted {
+                    $0.displayName.localizedCaseInsensitiveCompare($1.displayName) == .orderedAscending
+                })
+            }
+            .sorted { $0.host.localizedCaseInsensitiveCompare($1.host) == .orderedAscending }
+    }
+
+    func settings(forHost host: String) -> ServerSettings {
+        servers[host.lowercased()] ?? ServerSettings()
+    }
+
+    func isPaused(_ config: ShareConfig) -> Bool {
+        servers[config.serverKey]?.isPaused == true
+    }
+
+    /// Monitored and kept mounted: enabled, on a server that is not paused.
+    func isActive(_ config: ShareConfig) -> Bool {
+        config.isEnabled && !isPaused(config)
+    }
+
+    /// Pausing unmounts the server's shares and stops checking them; resuming
+    /// brings the enabled ones back. Each share's own switch is left as it is.
+    func setPaused(_ paused: Bool, host: String) async {
+        let key = host.lowercased()
+        servers[key, default: ServerSettings()].isPaused = paused
+        ServerSettings.saveAll(servers)
+        log.info("Server \(host) \(paused ? "paused" : "resumed")")
+
+        let shares = configs.filter { $0.serverKey == key && $0.isEnabled }
+        for share in shares { failureCounts.removeValue(forKey: share.id) }
+        syncTasks()   // stops or starts their tasks
+        guard paused else { return }
+        for share in shares {
+            if isMounted(share) {
+                markDisconnecting(id: share.id)
+                try? await unmount(share)
+            }
+            setStatus(.disconnected, forID: share.id)
+        }
+    }
+
+    /// Stores the user and password the server's inheriting shares mount with,
+    /// then retries those that are not mounted. The Keychain item is keyed by
+    /// user: after a user change the old item goes once the new one is readable.
+    func setServerCredentials(host: String, username: String, password: String) {
+        let key = host.lowercased()
+        let old = ShareConfig.serverCredentials(host: key, username: settings(forHost: key).username)
+        let new = ShareConfig.serverCredentials(host: key, username: username, password: password)
+        KeychainManager.save(new)
+        KeychainManager.removeSuperseded(old, replacedBy: new)
+        servers[key, default: ServerSettings()].username = username
+        ServerSettings.saveAll(servers)
+        log.info("Credentials saved for server \(host) — user=\(username.isEmpty ? "(guest)" : username)")
+
+        let ids = configs
+            .filter { $0.serverKey == key && $0.usesServerCredentials && isActive($0) && $0.connectionStatus != .connected }
+            .map(\.id)
+        Task { for id in ids { await retryShare(id: id) } }
     }
 
     // MARK: - Public: immediate actions
@@ -515,26 +594,32 @@ final class MountManager: ObservableObject {
             throw MountError.invalidURL
         }
 
-        // Prefer password from config; fall back to system Keychain (Finder-saved entries)
+        // The share's own credentials, or its server's; with no stored password,
+        // fall back to the system Keychain (Finder-saved entries)
+        var username = config.username
         var password = config.password
         var passwordSource = "app keychain"
+        if config.usesServerCredentials {
+            username = settings(forHost: config.host).username
+            password = KeychainManager.load(
+                for: .serverCredentials(host: config.host, username: username)
+            ).password ?? ""
+            passwordSource = "server credentials"
+        } else if config.passwordUnavailable {
+            log.warning("[\(config.displayName)] The stored password could not be read from the Keychain")
+        }
         if password.isEmpty {
-            password = KeychainManager.findSystemPassword(
-                server: config.host, username: config.username
-            ) ?? ""
+            password = KeychainManager.findSystemPassword(server: config.host, username: username) ?? ""
             passwordSource = password.isEmpty ? "none" : "system keychain"
         }
 
-        let userLabel = config.username.isEmpty ? "(guest)" : config.username
+        let userLabel = username.isEmpty ? "(guest)" : username
         log.info("Mounting via NetFS: \(urlString) — user=\(userLabel), password from \(passwordSource)")
-        if config.passwordUnavailable {
-            log.warning("[\(config.displayName)] The stored password could not be read from the Keychain; using \(passwordSource)")
-        }
-        if !config.username.isEmpty && password.isEmpty {
-            log.warning("[\(config.displayName)] No stored password — on macOS 27 NetAuth will not answer; re-enter the password in the share settings")
+        if !username.isEmpty && password.isEmpty {
+            log.warning("[\(config.displayName)] No stored password — on macOS 27 NetAuth will not answer; re-enter the password in the share or server settings")
         }
 
-        let user: CFString? = config.username.isEmpty ? nil : (config.username as CFString)
+        let user: CFString? = username.isEmpty ? nil : (username as CFString)
         let pass: CFString? = password.isEmpty ? nil : (password as CFString)
 
         // "UIOption" = "NoUI" suppresses the NetAuth credential dialog
@@ -828,11 +913,14 @@ final class MountManager: ObservableObject {
 
     // MARK: - Private: task management
 
-    /// Ensures every enabled share has a running task; does not restart existing ones.
+    /// Ensures every active share has a running task and no other share has
+    /// one (paused servers); does not restart existing ones.
     private func syncTasks() {
-        for config in configs where config.isEnabled {
-            if shareTasks[config.id] == nil {
-                startTask(for: config)
+        for config in configs {
+            if isActive(config) {
+                if shareTasks[config.id] == nil { startTask(for: config) }
+            } else if let task = shareTasks.removeValue(forKey: config.id) {
+                task.cancel()
             }
         }
     }
@@ -875,7 +963,7 @@ final class MountManager: ObservableObject {
 
         // Re-read the current config from the live array (may have changed since task started)
         guard let config = configs.first(where: { $0.id == id }),
-              config.isEnabled
+              isActive(config)
         else { return }
 
         let name         = config.displayName

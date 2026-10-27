@@ -7,7 +7,7 @@ struct MenuBarMenuView: View {
 
     var body: some View {
         // Summary line: how many enabled shares are mounted, or what is wrong
-        let enabled = mountManager.configs.filter(\.isEnabled)
+        let enabled = mountManager.configs.filter(mountManager.isActive)
         let mounted = enabled.filter { $0.connectionStatus == .connected }.count
         Button {} label: {
             if mountManager.netAuthSuspected {
@@ -21,16 +21,22 @@ struct MenuBarMenuView: View {
         .disabled(true)
         Divider()
 
-        // One item per share — click to mount/unmount
-        let sorted = mountManager.configs.sorted {
-            $0.displayName.localizedCaseInsensitiveCompare($1.displayName) == .orderedAscending
-        }
-        if sorted.isEmpty {
+        // One section per server, one item per share — click to mount/unmount
+        let groups = mountManager.serverGroups
+        if groups.isEmpty {
             Text("No shares configured")
                 .foregroundStyle(.secondary)
         } else {
-            ForEach(sorted) { config in
-                ShareMenuItem(config: config)
+            ForEach(groups) { group in
+                let isPaused = mountManager.settings(forHost: group.host).isPaused
+                Section(group.host) {
+                    ForEach(group.shares) { config in
+                        ShareMenuItem(config: config, isPaused: isPaused)
+                    }
+                    Button(isPaused ? "Resume \(group.host)" : "Pause \(group.host)") {
+                        Task { await mountManager.setPaused(!isPaused, host: group.host) }
+                    }
+                }
             }
         }
 
@@ -73,6 +79,8 @@ struct MenuBarMenuView: View {
 private struct ShareMenuItem: View {
     @EnvironmentObject private var mountManager: MountManager
     let config: ShareConfig
+    /// Its server is paused: shown grey, and not clickable until resumed.
+    let isPaused: Bool
 
     var body: some View {
         Button {
@@ -103,7 +111,7 @@ private struct ShareMenuItem: View {
                 .foregroundStyle(row.color)
             Text("\(dot)  \(row.text)")
         }
-        .disabled(config.isBusy)
+        .disabled(config.isBusy || isPaused)
         .help("\(config.smbURLString) — \(clickHint)")
     }
 
@@ -116,6 +124,9 @@ private struct ShareMenuItem: View {
         }
         if !config.isEnabled {
             return (Color(nsColor: .systemGray), name)
+        }
+        if isPaused {
+            return (Color(nsColor: .systemGray), "\(name) — \(String(localized: "Paused"))")
         }
         let status = config.connectionStatus
         let color: Color = switch status {

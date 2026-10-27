@@ -3,34 +3,54 @@ import SwiftUI
 struct SharesBody: View {
     @EnvironmentObject private var mountManager: MountManager
     @Binding var editingConfig: ShareConfig?
+    /// Opens the new-share sheet with the given host filled in.
+    let onAddShare: (String) -> Void
     /// Shares that have a password in the Keychain and could be restored.
     @State private var recoverableShares = 0
     @State private var recoveryMessage: String?
+    @State private var editingServer: MountManager.ServerGroup?
 
-    private var sortedConfigs: [ShareConfig] {
-        mountManager.configs.sorted {
-            $0.displayName.localizedCaseInsensitiveCompare($1.displayName) == .orderedAscending
-        }
-    }
+    /// Layout constants shared with the window-height calculation in ContentView.
+    static let groupSpacing: CGFloat = 16
+    static let headerSpacing: CGFloat = 4
 
     var body: some View {
         if mountManager.configs.isEmpty {
             emptyState
         } else {
             ScrollView {
-                VStack(spacing: 10) {
-                    ForEach(sortedConfigs) { config in
-                        ShareCard(config: config) { enabled in
-                            setEnabled(enabled, for: config)
-                        } onTap: {
-                            editingConfig = config
-                        } onRetry: {
-                            Task { await mountManager.retryShare(id: config.id) }
+                VStack(spacing: Self.groupSpacing) {
+                    ForEach(mountManager.serverGroups) { group in
+                        VStack(spacing: Self.headerSpacing) {
+                            ServerHeader(group: group) {
+                                editingServer = group
+                            } onAddShare: {
+                                onAddShare(group.host)
+                            }
+                            // The server's shares in one outlined box, separated by hairlines
+                            VStack(spacing: 0) {
+                                ForEach(group.shares) { config in
+                                    if config.id != group.shares.first?.id {
+                                        Divider().padding(.leading, 44)
+                                    }
+                                    ShareCard(config: config, isPaused: mountManager.isPaused(config)) { enabled in
+                                        setEnabled(enabled, for: config)
+                                    } onTap: {
+                                        editingConfig = config
+                                    } onRetry: {
+                                        Task { await mountManager.retryShare(id: config.id) }
+                                    }
+                                    .contextMenu { contextMenu(for: config) }
+                                }
+                            }
+                            .outlinedBox()
                         }
-                        .contextMenu { contextMenu(for: config) }
                     }
                 }
                 .padding(16)
+            }
+            .sheet(item: $editingServer) { group in
+                ServerCredentialsSheet(host: group.host)
             }
         }
     }
@@ -56,6 +76,8 @@ struct SharesBody: View {
         Button {} label: {
             if let mountPoint {
                 Label("Mounted at \(mountPoint)", systemImage: "checkmark.circle.fill")
+            } else if config.isEnabled && mountManager.isPaused(config) {
+                Label("Paused", systemImage: "pause.circle")
             } else if config.isEnabled {
                 Label(config.connectionStatus.label, systemImage: config.connectionStatus.menuIconName)
             } else {
@@ -103,7 +125,6 @@ struct SharesBody: View {
                 .font(.system(size: 48))
                 .foregroundStyle(.secondary)
                 .padding(24)
-                .glassEffect(in: Circle())
                 .accessibilityHidden(true)
             Text("No shares configured")
                 .font(.headline)
@@ -117,7 +138,7 @@ struct SharesBody: View {
                 } label: {
                     Label("Recover from Keychain", systemImage: "key")
                 }
-                .buttonStyle(.glassProminent)
+                .buttonStyle(.borderedProminent)
                 .help("Restore the shares whose passwords are saved in your Keychain")
             }
         }
@@ -135,5 +156,74 @@ struct SharesBody: View {
         } message: {
             Text(recoveryMessage ?? "")
         }
+    }
+}
+
+// MARK: - Server header
+
+/// Title of a server's group: host, how many of its shares are mounted, and
+/// the pause / credentials / add-share actions that apply to all of them.
+struct ServerHeader: View {
+    static let height: CGFloat = 28
+
+    @EnvironmentObject private var mountManager: MountManager
+    let group: MountManager.ServerGroup
+    let onEditCredentials: () -> Void
+    let onAddShare: () -> Void
+
+    private var isPaused: Bool { mountManager.settings(forHost: group.host).isPaused }
+
+    var body: some View {
+        let enabled = group.shares.filter(\.isEnabled)
+        let mounted = enabled.filter { $0.connectionStatus == .connected }.count
+        HStack(spacing: 8) {
+            Circle()
+                .fill(statusColor(mounted: mounted, enabled: enabled.count))
+                .frame(width: 7, height: 7)
+                .accessibilityHidden(true)
+            Text(group.host)
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
+                .truncationMode(.middle)
+            if isPaused || !enabled.isEmpty {
+                Text(isPaused ? String(localized: "Paused") : String(localized: "\(mounted) of \(enabled.count) mounted"))
+                    .font(.caption)
+                    .foregroundStyle(.tertiary)
+            }
+            Spacer()
+            Button {
+                Task { await mountManager.setPaused(!isPaused, host: group.host) }
+            } label: {
+                Image(systemName: isPaused ? "play.circle" : "pause.circle")
+            }
+            .buttonStyle(.plain)
+            .foregroundStyle(.secondary)
+            .help(isPaused ? "Resume this server" : "Pause this server: unmount its shares and stop reconnecting them")
+            .accessibilityLabel(Text(isPaused ? "Resume this server" : "Pause this server"))
+            Menu {
+                Button("Server Credentials…", systemImage: "key", action: onEditCredentials)
+                Button("Add Share on This Server…", systemImage: "plus", action: onAddShare)
+            } label: {
+                Image(systemName: "ellipsis.circle")
+            }
+            .menuStyle(.button)
+            .buttonStyle(.plain)
+            .menuIndicator(.hidden)
+            .foregroundStyle(.secondary)
+            .fixedSize()
+            .accessibilityLabel(Text("Server actions"))
+        }
+        .padding(.horizontal, 4)
+        .frame(height: Self.height)
+    }
+
+    /// Green when every active share is mounted, orange when some are, red on
+    /// an error, grey when paused or nothing is active.
+    private func statusColor(mounted: Int, enabled: Int) -> Color {
+        if isPaused || enabled == 0 { return .secondary }
+        if group.shares.contains(where: { $0.isEnabled && $0.connectionStatus == .error }) { return .red }
+        if mounted == enabled { return .green }
+        return mounted > 0 ? .orange : .secondary
     }
 }

@@ -3,7 +3,7 @@ import AppKit
 
 // MARK: - Section panel
 
-/// Glass-styled section container.
+/// Section container: caption label over flat content with a hairline border.
 struct GlassSection<Content: View>: View {
     let label: LocalizedStringKey
     @ViewBuilder let content: Content
@@ -17,16 +17,26 @@ struct GlassSection<Content: View>: View {
             content
         }
         .padding(12)
-        .glassEffect(in: .rect(cornerRadius: 12))
+        .outlinedBox()
+    }
+}
+
+// MARK: - Outlined box
+
+extension View {
+    /// Flat panel with a hairline border — the app's container style.
+    func outlinedBox(cornerRadius: CGFloat = 8) -> some View {
+        background(.background.secondary, in: .rect(cornerRadius: cornerRadius))
+            .overlay(RoundedRectangle(cornerRadius: cornerRadius).strokeBorder(.separator))
     }
 }
 
 // MARK: - Primary button
 
-/// Glass-prominent button style.
+/// Prominent button style.
 struct PrimaryButtonStyle: ViewModifier {
     func body(content: Content) -> some View {
-        content.buttonStyle(.glassProminent)
+        content.buttonStyle(.borderedProminent)
     }
 }
 
@@ -70,7 +80,7 @@ struct NetAuthBanner: View {
                     Text("Restart NetAuth")
                 }
             }
-            .buttonStyle(.glassProminent)
+            .buttonStyle(.borderedProminent)
             .disabled(isRestarting)
 
             Button(action: onDismiss) {
@@ -84,6 +94,7 @@ struct NetAuthBanner: View {
         }
         .padding(.horizontal, 14)
         .frame(height: Self.height)
-        .glassEffect(.regular.tint(.orange.opacity(0.18)), in: .rect(cornerRadius: 14))
+        .background(.orange.opacity(0.1), in: .rect(cornerRadius: 8))
+        .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(.orange.opacity(0.5)))
     }
 }

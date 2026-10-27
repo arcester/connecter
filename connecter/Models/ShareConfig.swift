@@ -9,6 +9,9 @@ struct ShareConfig: Codable, Identifiable {
     var username: String
     var password: String
     var isEnabled: Bool
+    /// Mount with the server's user and password (`ServerSettings` + its
+    /// Keychain item) instead of this share's own.
+    var usesServerCredentials: Bool
     /// Runtime connection state — not persisted to disk.
     /// Always resets to `.disconnected` when the app loads.
     var connectionStatus: ConnectionStatus = .disconnected
@@ -36,7 +39,20 @@ struct ShareConfig: Codable, Identifiable {
 
     /// Excludes `connectionStatus` from serialization — it is runtime-only.
     private enum CodingKeys: String, CodingKey {
-        case id, name, host, path, username, password, isEnabled
+        case id, name, host, path, username, password, isEnabled, usesServerCredentials
+    }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = try c.decode(UUID.self, forKey: .id)
+        name = try c.decode(String.self, forKey: .name)
+        host = try c.decode(String.self, forKey: .host)
+        path = try c.decode(String.self, forKey: .path)
+        username = try c.decode(String.self, forKey: .username)
+        password = try c.decode(String.self, forKey: .password)
+        isEnabled = try c.decode(Bool.self, forKey: .isEnabled)
+        // Lists saved before servers existed: every share keeps its own credentials.
+        usesServerCredentials = try c.decodeIfPresent(Bool.self, forKey: .usesServerCredentials) ?? false
     }
 
     init(
@@ -47,6 +63,7 @@ struct ShareConfig: Codable, Identifiable {
         username: String = "",
         password: String = "",
         isEnabled: Bool = true,
+        usesServerCredentials: Bool = false,
         connectionStatus: ConnectionStatus = .disconnected
     ) {
         self.id = id
@@ -56,6 +73,7 @@ struct ShareConfig: Codable, Identifiable {
         self.username = username
         self.password = password
         self.isEnabled = isEnabled
+        self.usesServerCredentials = usesServerCredentials
         self.connectionStatus = connectionStatus
     }
 }
@@ -68,6 +86,41 @@ extension ShareConfig {
 
     /// Identifies the share's Keychain item; changes when host, path or user change.
     var credentialKey: String { "\(host.lowercased())|\(normalizedPath)|\(username)" }
+
+    /// Groups shares by server: the host, case-insensitive.
+    var serverKey: String { host.lowercased() }
+
+    /// The Keychain item that holds a server's shared password: an entry with
+    /// no share path, so `KeychainManager.storedShares()` never lists it.
+    static func serverCredentials(host: String, username: String, password: String = "") -> ShareConfig {
+        ShareConfig(host: host.lowercased(), path: "", username: username, password: password)
+    }
+}
+
+// MARK: - Server settings
+
+/// Settings shared by every share on one server (shares are grouped by host).
+struct ServerSettings: Codable {
+    /// User for the shares that inherit the server's credentials; the password
+    /// lives in the Keychain (`ShareConfig.serverCredentials`).
+    var username = ""
+    /// A paused server's shares are unmounted and not checked until it is resumed.
+    var isPaused = false
+
+    private static let storeKey = "serverSettings"
+
+    /// Settings by `ShareConfig.serverKey`.
+    static func loadAll() -> [String: ServerSettings] {
+        guard let data = UserDefaults.standard.data(forKey: storeKey),
+              let servers = try? JSONDecoder().decode([String: ServerSettings].self, from: data)
+        else { return [:] }
+        return servers
+    }
+
+    static func saveAll(_ servers: [String: ServerSettings]) {
+        guard let data = try? JSONEncoder().encode(servers) else { return }
+        UserDefaults.standard.set(data, forKey: storeKey)
+    }
 }
 
 // MARK: - Persistence

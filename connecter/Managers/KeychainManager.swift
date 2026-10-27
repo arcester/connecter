@@ -34,6 +34,8 @@ enum KeychainManager {
         let name: String
         /// Whether the item carries a password (recorded in its "kind" attribute).
         let hasPassword: Bool
+        /// The share mounts with its server's credentials (also in "kind").
+        let usesServerCredentials: Bool
 
         var id: String { "\(host.lowercased())|\(sharePath.lowercased())|\(username)" }
         var displayName: String { name.isEmpty ? host : name }
@@ -67,6 +69,15 @@ enum KeychainManager {
     /// item carries a password, so listings don't need to read the secret.
     private static let kindWithPassword = "Connecter SMB share"
     private static let kindWithoutPassword = "Connecter SMB share (no password)"
+    private static let kindServerCredentials = "Connecter SMB share (server credentials)"
+    /// A server's shared credentials (`ShareConfig.serverCredentials`).
+    private static let kindServer = "Connecter SMB server"
+
+    private static func kind(for config: ShareConfig) -> String {
+        if config.normalizedPath.isEmpty { return kindServer }
+        if config.usesServerCredentials { return kindServerCredentials }
+        return config.password.isEmpty ? kindWithoutPassword : kindWithPassword
+    }
 
     /// Service name of the legacy generic-password items (keyed by share UUID).
     private static let legacyService = Bundle.main.bundleIdentifier ?? "es.guzman.connecter"
@@ -98,7 +109,7 @@ enum KeychainManager {
     static func save(_ config: ShareConfig) -> Bool {
         let data = Data(config.password.utf8)
         let label = "Connecter: \(config.displayName)"
-        let kind = config.password.isEmpty ? kindWithoutPassword : kindWithPassword
+        let kind = kind(for: config)
 
         switch fetchItem(for: config) {
         case .found(let item):
@@ -208,12 +219,14 @@ enum KeychainManager {
             let username = item[kSecAttrAccount as String] as? String ?? ""
             // A local and a synchronizable copy of the same share count once.
             guard seen.insert("\(host)|\(path)|\(username)").inserted else { return nil }
+            let kind = item[kSecAttrDescription as String] as? String
             return StoredShare(
                 host: host,
                 sharePath: path,
                 username: username,
                 name: item[kSecAttrComment as String] as? String ?? "",
-                hasPassword: (item[kSecAttrDescription as String] as? String) != kindWithoutPassword
+                hasPassword: kind != kindWithoutPassword && kind != kindServerCredentials,
+                usesServerCredentials: kind == kindServerCredentials
             )
         }
     }

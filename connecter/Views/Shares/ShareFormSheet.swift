@@ -11,21 +11,25 @@ struct ShareFormSheet: View {
     @State private var path: String
     @State private var username: String
     @State private var password: String
+    @State private var usesServerCredentials: Bool
     @State private var showDeleteConfirmation = false
     @State private var allConfigs: [ShareConfig] = []
     @State private var discoveredShares: [MountedSMBVolume] = []
     @State private var isTestingConnection = false
     @State private var connectionTestPassed: Bool? = nil
 
-    init(existing: ShareConfig?, onSave: @escaping (ShareConfig) -> Void, onDelete: (() -> Void)? = nil) {
+    /// `initialHost` pre-fills a new share (added from a server's menu).
+    init(existing: ShareConfig?, initialHost: String = "", onSave: @escaping (ShareConfig) -> Void, onDelete: (() -> Void)? = nil) {
         self.existing = existing
         self.onSave = onSave
         self.onDelete = onDelete
         _name     = State(initialValue: existing?.name ?? "")
-        _host     = State(initialValue: existing?.host ?? "")
+        _host     = State(initialValue: existing?.host ?? initialHost)
         _path     = State(initialValue: existing?.path ?? "")
         _username = State(initialValue: existing?.username ?? "")
         _password = State(initialValue: existing?.password ?? "")
+        _usesServerCredentials = State(initialValue: existing?.usesServerCredentials
+            ?? !MountManager.shared.settings(forHost: initialHost).username.isEmpty)
     }
 
     private var isEditing: Bool { existing != nil }
@@ -46,6 +50,9 @@ struct ShareFormSheet: View {
                 && MountManager.normalizedSharePath($0.path).caseInsensitiveCompare(cleanPath) == .orderedSame
         }
     }
+
+    /// User of the server's shared credentials; empty when it has none.
+    private var serverUsername: String { MountManager.shared.settings(forHost: cleanHost).username }
 
     private var isValid: Bool { !cleanHost.isEmpty && !cleanPath.isEmpty && !isDuplicate }
 
@@ -140,27 +147,46 @@ struct ShareFormSheet: View {
                         .foregroundStyle(.orange)
                 }
             }
-            .onChange(of: host) { connectionTestPassed = nil }
+            .onChange(of: host) {
+                connectionTestPassed = nil
+                // A new share inherits by default on a server that has credentials.
+                if !isEditing { usesServerCredentials = !serverUsername.isEmpty }
+            }
 
             GlassSection(label: "Credentials") {
-                Grid(alignment: .leadingFirstTextBaseline, horizontalSpacing: 12, verticalSpacing: 10) {
-                    GridRow {
-                        Text("Username").gridColumnAlignment(.trailing).foregroundStyle(.secondary)
-                        TextField("Optional", text: $username)
-                    }
-                    GridRow {
-                        Text("Password").gridColumnAlignment(.trailing).foregroundStyle(.secondary)
-                        SecureField("Optional", text: $password)
-                    }
+                if !cleanHost.isEmpty {
+                    Toggle("Use the server’s credentials", isOn: $usesServerCredentials)
                 }
-                if existing?.passwordUnavailable == true {
-                    Label("The saved password could not be read from the Keychain. Enter it again to replace it.", systemImage: "exclamationmark.triangle.fill")
+                if usesServerCredentials && !cleanHost.isEmpty {
+                    if serverUsername.isEmpty {
+                        Label("This server has no credentials yet. Set them with “Server Credentials…” in the server’s menu.", systemImage: "exclamationmark.triangle.fill")
+                            .font(.caption)
+                            .foregroundStyle(.orange)
+                    } else {
+                        Text("Mounts as \(serverUsername), the user set for \(cleanHost).")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                } else {
+                    Grid(alignment: .leadingFirstTextBaseline, horizontalSpacing: 12, verticalSpacing: 10) {
+                        GridRow {
+                            Text("Username").gridColumnAlignment(.trailing).foregroundStyle(.secondary)
+                            TextField("Optional", text: $username)
+                        }
+                        GridRow {
+                            Text("Password").gridColumnAlignment(.trailing).foregroundStyle(.secondary)
+                            SecureField("Optional", text: $password)
+                        }
+                    }
+                    if existing?.passwordUnavailable == true {
+                        Label("The saved password could not be read from the Keychain. Enter it again to replace it.", systemImage: "exclamationmark.triangle.fill")
+                            .font(.caption)
+                            .foregroundStyle(.orange)
+                    }
+                    Text("Leave the password empty to use the one Finder saved for this server.")
                         .font(.caption)
-                        .foregroundStyle(.orange)
+                        .foregroundStyle(.secondary)
                 }
-                Text("Leave the password empty to use the one Finder saved for this server.")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
             }
 
             HStack {
@@ -200,6 +226,7 @@ struct ShareFormSheet: View {
                         username: username.trimmingCharacters(in: .whitespacesAndNewlines),
                         password: password,
                         isEnabled: existing?.isEnabled ?? true,
+                        usesServerCredentials: usesServerCredentials && !cleanHost.isEmpty,
                         connectionStatus: existing?.connectionStatus ?? .disconnected
                     )
                     onSave(config)

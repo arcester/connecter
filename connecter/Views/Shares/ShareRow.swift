@@ -1,9 +1,11 @@
 import SwiftUI
 
 struct ShareCard: View {
-    static let cardHeight: CGFloat = 56
+    static let cardHeight: CGFloat = 44
 
     let config: ShareConfig
+    /// Its server is paused: the share is shown as such whatever its state.
+    var isPaused = false
     let onEnable: (Bool) -> Void
     let onTap: () -> Void
     let onRetry: () -> Void
@@ -12,13 +14,13 @@ struct ShareCard: View {
     private var accent: Color { settings.accentColor }
 
     private var isConnected: Bool {
-        config.isEnabled && config.connectionStatus == .connected
+        config.isEnabled && !isPaused && config.connectionStatus == .connected
     }
 
     /// Mounted shares take the accent colour; orange and red are reserved for
     /// transitions and errors, so anything that isn't the accent needs a look.
     private var glyphColor: Color {
-        guard config.isEnabled else { return .secondary }
+        guard config.isEnabled, !isPaused else { return .secondary }
         switch config.connectionStatus {
         case .connected:                 return accent
         case .connecting, .disconnecting: return .orange
@@ -37,23 +39,23 @@ struct ShareCard: View {
     }
 
     var body: some View {
-        HStack(spacing: 14) {
-            // Folder glyph tinted by state — accent when mounted, orange/red when not
-            Image(systemName: isConnected ? "folder.fill" : "folder")
-                .font(.system(size: 18, weight: .medium))
+        HStack(spacing: 10) {
+            // Network-drive glyph tinted by state — accent when mounted, orange/red when not
+            Image(systemName: "externaldrive.connected.to.line.below")
+                .font(.system(size: 15))
                 .foregroundStyle(glyphColor)
-                .frame(width: 30, height: 30)
+                .frame(width: 22)
                 .accessibilityHidden(true)
 
             // Name + URL — click to edit
             Button(action: onTap) {
-                VStack(alignment: .leading, spacing: 2) {
+                VStack(alignment: .leading, spacing: 1) {
                     Text(config.displayName)
-                        .font(.body.weight(.semibold))
+                        .font(.body.weight(.medium))
                         .foregroundStyle(config.isEnabled ? Color.primary : Color.secondary)
                     Text(config.smbURLString)
                         .font(.caption)
-                        .foregroundStyle(.tertiary)
+                        .foregroundStyle(.secondary)
                         .lineLimit(1)
                         .truncationMode(.middle)
                 }
@@ -63,30 +65,27 @@ struct ShareCard: View {
             .buttonStyle(.plain)
             .help("Click to edit")
             .accessibilityLabel(Text(config.displayName))
-            .accessibilityValue(Text(config.isEnabled ? config.connectionStatus.label : String(localized: "Disabled")))
+            .accessibilityValue(Text(
+                !config.isEnabled ? String(localized: "Disabled")
+                    : isPaused ? String(localized: "Paused") : config.connectionStatus.label
+            ))
             .accessibilityHint(Text("Click to edit"))
 
-            // Status badge or retry button
+            // Status (dot + label) or retry button
             if config.isEnabled {
-                if config.connectionStatus == .error {
+                if isPaused {
+                    StatusLabel(text: String(localized: "Paused"), color: .secondary)
+                } else if config.connectionStatus == .error {
                     Button(action: onRetry) {
-                        Image(systemName: "arrow.clockwise.circle.fill")
-                            .font(.system(size: 20))
+                        Label("Retry", systemImage: "arrow.clockwise")
+                            .font(.caption)
                             .foregroundStyle(Color.red)
                     }
                     .buttonStyle(.plain)
                     .help("Retry connection")
                     .accessibilityLabel(Text("Retry connection"))
                 } else if showsStatusBadge {
-                    Text(config.connectionStatus.label)
-                        .font(.caption)
-                        .foregroundStyle(config.connectionStatus.color)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
-                        .glassEffect(
-                            .regular.tint(config.connectionStatus.color.opacity(0.25)),
-                            in: Capsule()
-                        )
+                    StatusLabel(text: config.connectionStatus.label, color: config.connectionStatus.color)
                         .symbolEffect(.pulse, options: .repeating, isActive: config.isBusy)
                 }
             }
@@ -98,20 +97,30 @@ struct ShareCard: View {
             ))
             .toggleStyle(.switch)
             .tint(accent)
-            .controlSize(.small)
+            .controlSize(.mini)
             .disabled(config.isBusy)
             .labelsHidden()
             .help(config.isEnabled ? "Disable this share" : "Enable this share")
         }
-        .padding(.horizontal, 16)
+        .padding(.horizontal, 12)
         .frame(height: Self.cardHeight)
-        .glassEffect(.regular.interactive(), in: .rect(cornerRadius: 14))
-        .overlay(
-            RoundedRectangle(cornerRadius: 14)
-                .strokeBorder(
-                    isConnected ? accent.opacity(0.35) : Color.primary.opacity(0.06),
-                    lineWidth: 1
-                )
-        )
+        .contentShape(Rectangle())
+    }
+}
+
+/// Small coloured dot followed by a state label.
+private struct StatusLabel: View {
+    let text: String
+    let color: Color
+
+    var body: some View {
+        HStack(spacing: 5) {
+            Circle()
+                .fill(color)
+                .frame(width: 6, height: 6)
+            Text(text)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
     }
 }

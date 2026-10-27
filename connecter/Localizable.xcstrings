@@ -283,6 +283,16 @@
         }
       }
     },
+    "Add Share on This Server…": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Añadir recurso en este servidor…"
+          }
+        }
+      }
+    },
     "Add every saved share that is missing from the list": {
       "localizations": {
         "es": {
@@ -986,6 +996,16 @@
         }
       }
     },
+    "Mounts as %@, the user set for %@.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se monta como %1$@, el usuario configurado para %2$@."
+          }
+        }
+      }
+    },
     "Name": {
       "localizations": {
         "es": {
@@ -1206,6 +1226,46 @@
         }
       }
     },
+    "Pause %@": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pausar %@"
+          }
+        }
+      }
+    },
+    "Pause this server": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pausar este servidor"
+          }
+        }
+      }
+    },
+    "Pause this server: unmount its shares and stop reconnecting them": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pausar este servidor: desmonta sus recursos y deja de reconectarlos"
+          }
+        }
+      }
+    },
+    "Paused": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En pausa"
+          }
+        }
+      }
+    },
     "Pink": {
       "localizations": {
         "es": {
@@ -1356,6 +1416,36 @@
         }
       }
     },
+    "Resume %@": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reanudar %@"
+          }
+        }
+      }
+    },
+    "Resume this server": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reanudar este servidor"
+          }
+        }
+      }
+    },
+    "Retry": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reintentar"
+          }
+        }
+      }
+    },
     "Retry Now": {
       "localizations": {
         "es": {
@@ -1402,6 +1492,36 @@
           "stringUnit": {
             "state": "translated",
             "value": "Guardar ahora"
+          }
+        }
+      }
+    },
+    "Server Credentials": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Credenciales del servidor"
+          }
+        }
+      }
+    },
+    "Server Credentials…": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Credenciales del servidor…"
+          }
+        }
+      }
+    },
+    "Server actions": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Acciones del servidor"
           }
         }
       }
@@ -1526,6 +1646,16 @@
         }
       }
     },
+    "This server has no credentials yet. Set them with “Server Credentials…” in the server’s menu.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este servidor aún no tiene credenciales. Configúralas con «Credenciales del servidor…» en su menú."
+          }
+        }
+      }
+    },
     "This share is already configured.": {
       "localizations": {
         "es": {
@@ -1536,12 +1666,32 @@
         }
       }
     },
+    "Use the server’s credentials": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usar las credenciales del servidor"
+          }
+        }
+      }
+    },
     "Use this share": {
       "localizations": {
         "es": {
           "stringUnit": {
             "state": "translated",
             "value": "Usar este recurso"
+          }
+        }
+      }
+    },
+    "Used by the shares on this server that have “Use the server’s credentials” turned on.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Las usan los recursos de este servidor que tienen activado «Usar las credenciales del servidor»."
           }
         }
       }

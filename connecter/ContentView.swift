@@ -6,6 +6,8 @@ struct ContentView: View {
     @Environment(\.openWindow) private var openWindow
     @Environment(\.openSettings) private var openSettings
     @State private var showAddSheet = false
+    /// Host pre-filled in the new-share sheet (adding from a server's menu).
+    @State private var addSheetHost = ""
     @State private var editingConfig: ShareConfig?
     @State private var refreshRotation = 0.0
     @State private var isRestartingNetAuth = false
@@ -24,12 +26,18 @@ struct ContentView: View {
                     .padding(.horizontal, 16)
                     .padding(.top, 16)
                 }
-                SharesBody(editingConfig: $editingConfig)
+                SharesBody(editingConfig: $editingConfig) { host in
+                    addSheetHost = host
+                    showAddSheet = true
+                }
             }
             .navigationTitle("Connecter")
             .toolbar {
                 ToolbarItemGroup(placement: .automatic) {
-                    Button { showAddSheet = true } label: {
+                    Button {
+                        addSheetHost = ""
+                        showAddSheet = true
+                    } label: {
                         Label("Add share", systemImage: "plus")
                     }
                     .help("Add share")
@@ -60,7 +68,7 @@ struct ContentView: View {
         .background(WindowResizer(width: 440, height: desiredContentHeight))
         .escapeClosesWindow()
         .sheet(isPresented: $showAddSheet) {
-            ShareFormSheet(existing: nil) { newConfig in
+            ShareFormSheet(existing: nil, initialHost: addSheetHost) { newConfig in
                 var configs = mountManager.configs
                 configs.append(newConfig)
                 KeychainManager.save(newConfig)
@@ -125,7 +133,7 @@ struct ContentView: View {
         withAnimation(.linear(duration: 0.5)) {
             refreshRotation += 360
         }
-        let ids = mountManager.configs.filter(\.isEnabled).map(\.id)
+        let ids = mountManager.configs.filter(mountManager.isActive).map(\.id)
         Task {
             await withTaskGroup(of: Void.self) { group in
                 for id in ids {
@@ -160,26 +168,27 @@ struct ContentView: View {
     // MARK: - Window sizing
 
     private static let toolbarHeight: CGFloat = 55  // NavigationStack toolbar inside the frame
-    private static let cardSpacing: CGFloat = 10
     private static let listPadding: CGFloat = 32
     private static let minVisible = 2
 
     private var desiredContentHeight: CGFloat {
         let count = mountManager.configs.count
-        let cardH = ShareCard.cardHeight
+        let groups = CGFloat(mountManager.serverGroups.count)
+        let rowH = ShareCard.cardHeight + 1   // row + hairline
+        // One header per server, and the gaps between server groups
+        let headersH = groups * (ServerHeader.height + SharesBody.headerSpacing)
+            + max(groups - 1, 0) * SharesBody.groupSpacing
         // Banner sits above the list with its own top padding
         let bannerH: CGFloat = mountManager.netAuthSuspected ? NetAuthBanner.height + 16 : 0
 
         let screenH = NSScreen.main?.visibleFrame.height ?? 900
         let maxContentH = screenH - 40
         let maxVisible = max(Self.minVisible,
-            Int((maxContentH - Self.toolbarHeight - bannerH - Self.listPadding)
-                / (cardH + Self.cardSpacing)))
+            Int((maxContentH - Self.toolbarHeight - bannerH - Self.listPadding - headersH)
+                / rowH))
 
         let visible = max(Self.minVisible, min(count, maxVisible))
-        let listH = Self.listPadding
-            + CGFloat(visible) * cardH
-            + CGFloat(visible - 1) * Self.cardSpacing
+        let listH = Self.listPadding + headersH + CGFloat(visible) * rowH
         return min(Self.toolbarHeight + bannerH + listH, maxContentH)
     }
 }
