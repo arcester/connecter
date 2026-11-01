@@ -1,6 +1,6 @@
 # Connecter — checklist para la Mac App Store
 
-Estado a 23 de octubre de 2026. Los textos de la ficha (nombre, subtítulo, descripción, palabras clave, URLs y notas para el revisor, en inglés y español) están en [app-store-metadata.md](app-store-metadata.md).
+Estado a 1 de noviembre de 2026. Los textos de la ficha (nombre, subtítulo, descripción, palabras clave, URLs y notas para el revisor, en inglés y español) están en [app-store-metadata.md](app-store-metadata.md).
 
 ## Hecho
 
@@ -14,7 +14,8 @@ Estado a 23 de octubre de 2026. Los textos de la ficha (nombre, subtítulo, desc
 - [x] Categoría `public.app-category.utilities`, `LSUIElement` (app de barra de menús); la ventana principal se abre al arrancar por defecto.
 - [x] Localización en String Catalog (en, es, de, fr, it, ja, pt-BR, zh-Hans) con plurales. Las traducciones a de, fr, it, ja, pt-BR y zh-Hans no las ha revisado un nativo.
 - [x] Etiquetas de accesibilidad en botones de solo icono y conmutadores.
-- [x] Versión 1.0 (build 1).
+- [x] Versión 1.0 (build 1). La build de Release compila sin avisos del compilador con el SDK de macOS 27 (comprobado el 1-11-2026).
+- [x] Recursos agrupados por servidor, con credenciales compartidas (o propias por recurso) y pausa por servidor.
 - [x] Nombre "Connecter" libre: no hay ninguna app con ese nombre en la App Store de Mac ni de iPhone (comprobado en EE. UU. y España el 23-10-2026).
 - [x] Páginas de privacidad y soporte en la web (`#privacy`, `#support`, en inglés y español).
 - [x] Correo de contacto oficial: dev@arcesaez.com.
@@ -28,7 +29,7 @@ Estado a 23 de octubre de 2026. Los textos de la ficha (nombre, subtítulo, desc
 
    Las contraseñas guardadas por la build actual siguen en el llavero de inicio de sesión, pero pertenecen a una app firmada por otro equipo: la primera vez que la build nueva use cada una, macOS pedirá permiso ("Connecter quiere usar tu información confidencial…"). Elige *Permitir siempre*.
 
-3. **Probar la build con sandbox contra el NAS real**: montar, desmontar, "Abrir en el Finder", "Probar conexión" y el aviso de NetAuth (`CONNECTER_SIMULATE_NETAUTH_HANG=1` como variable de entorno en el esquema).
+3. **Probar la build con sandbox** (no hace falta esperar a la cuenta de pago: la build actual, firmada con el equipo personal, ya lleva el sandbox) contra el NAS real: montar, desmontar, "Abrir en el Finder", "Probar conexión" y el aviso de NetAuth (`CONNECTER_SIMULATE_NETAUTH_HANG=1` como variable de entorno en el esquema).
 
    Comprobar en concreto que, si existe un directorio huérfano `/Volumes/<recurso>`, el recurso se monta ahí y no en `/Volumes/<recurso>-1` (montaje con `mountpath` explícito desde el sandbox, aún sin confirmar). **Si no funciona, quitar de la descripción** la viñeta "Keeps the same mount point…" / "Mantiene el mismo punto de montaje…" en los dos idiomas.
 
@@ -65,7 +66,6 @@ Estado a 23 de octubre de 2026. Los textos de la ficha (nombre, subtítulo, desc
 
 ## Fuera de la 1.0
 
-- **Agrupación por servidor**, con credenciales compartidas y posibilidad de sobrescribirlas por recurso: candidata para la 1.1.
 - **Sincronización por iCloud** (requiere la cuenta de pago):
   - Los ítems del llavero se crean como sincronizables, pero macOS lo rechaza (`-34018`, falta entitlement) si la app no lleva identificador de aplicación; hoy se guardan en local. Al activar la capability **Keychain Sharing** en *Signing & Capabilities* (Xcode genera el perfil y añade `keychain-access-groups`), las contraseñas nuevas pasan a sincronizarse con el llavero de iCloud y "Recuperar del llavero" funciona en otro Mac. Las guardadas antes siguen en local hasta que se vuelvan a guardar.
   - Para sincronizar también la lista con sus estados (activado/desactivado) está esbozado el uso de `NSUbiquitousKeyValueStore` en `ShareConfig`/`AppSettings` (capability iCloud → Key-value storage).

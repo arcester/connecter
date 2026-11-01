@@ -31,6 +31,8 @@ Before submitting, check the note on "same mount point" in [app-store-checklist.
 > • Can open at login
 >
 > AT A GLANCE
+> • Shares grouped by server, with one set of credentials for the whole server or separate ones for each share
+> • Pause a server to unmount its shares and stop retrying until you resume it
 > • Menu bar icon with a colour dot that sums up all your shares
 > • Each share's status in the menu, with mount and unmount in one click
 > • Open in Finder, copy the share's address and test the connection to the server
@@ -85,6 +87,8 @@ smb,nas,network drive,mount,samba,synology,qnap,truenas,file sharing,auto mount,
 > • Puede abrirse al iniciar sesión
 >
 > DE UN VISTAZO
+> • Recursos agrupados por servidor, con las mismas credenciales para todo el servidor o unas propias para cada recurso
+> • Pausa un servidor para desmontar sus recursos y dejar de reintentar hasta que lo reanudes
 > • Icono en la barra de menús con un punto de color que resume el estado de todos tus recursos
 > • El estado de cada recurso en el menú, con montar y desmontar en un clic
 > • Abrir en el Finder, copiar la dirección del recurso y probar la conexión con el servidor
