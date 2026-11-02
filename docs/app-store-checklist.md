@@ -14,7 +14,7 @@ Estado a 2 de noviembre de 2026. Los textos de la ficha (nombre, subtítulo, des
 - [x] Categoría `public.app-category.utilities`, `LSUIElement` (app de barra de menús); la ventana principal se abre al arrancar por defecto.
 - [x] Localización en String Catalog (en, es, de, fr, it, ja, pt-BR, zh-Hans) con plurales. Las traducciones a de, fr, it, ja, pt-BR y zh-Hans no las ha revisado un nativo.
 - [x] Etiquetas de accesibilidad en botones de solo icono y conmutadores.
-- [x] Versión 1.0 (build 2; la 1 se rechazó por la firma, ver *Subida*). La build de Release compila sin avisos del compilador con el SDK de macOS 27 (comprobado el 1-11-2026).
+- [x] Versión 1.0 (build 3; la 1 se rechazó por la firma, ver *Subida*; la 2 mostraba "Montado" hasta 30 s después de expulsar un recurso en el Finder). La build de Release compila sin avisos del compilador con el SDK de macOS 27 (comprobado el 1-11-2026).
 - [x] Recursos agrupados por servidor, con credenciales compartidas (o propias por recurso) y pausa por servidor.
 - [x] Nombre en la tienda: **Connecter SMB** ("Connecter" a secas lo tiene reservado otra cuenta en App Store Connect, aunque no hay ninguna app publicada con ese nombre). En el Mac la app sigue llamándose Connecter (`CFBundleDisplayName`).
 - [x] Páginas de privacidad y soporte en la web (`#privacy`, `#support`, en inglés y español).

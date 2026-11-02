@@ -181,8 +181,21 @@ final class MountManager: ObservableObject {
             volumeObservers.append(center.addObserver(forName: name, object: nil, queue: .main) { [weak self] _ in
                 Task { @MainActor [weak self] in
                     await self?.refreshMountedVolumes()
+                    if name == NSWorkspace.didUnmountNotification { self?.recheckDroppedShares() }
                 }
             })
+        }
+    }
+
+    /// A volume went away outside the app (ejected in Finder, server dropped):
+    /// re-check the shares still shown as mounted now instead of at their next
+    /// interval. The app's own unmounts mark the share `.disconnecting` first.
+    private func recheckDroppedShares() {
+        let dropped = configs.filter {
+            $0.connectionStatus == .connected && isActive($0) && mountPoint(for: $0) == nil
+        }
+        for config in dropped {
+            Task { await checkShare(id: config.id) }
         }
     }
 
