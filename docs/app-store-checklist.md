@@ -16,7 +16,7 @@ Estado a 2 de noviembre de 2026. Los textos de la ficha (nombre, subtítulo, des
 - [x] Etiquetas de accesibilidad en botones de solo icono y conmutadores.
 - [x] Versión 1.0 (build 1). La build de Release compila sin avisos del compilador con el SDK de macOS 27 (comprobado el 1-11-2026).
 - [x] Recursos agrupados por servidor, con credenciales compartidas (o propias por recurso) y pausa por servidor.
-- [x] Nombre "Connecter" libre: no hay ninguna app con ese nombre en la App Store de Mac ni de iPhone (comprobado en EE. UU. y España el 23-10-2026).
+- [x] Nombre en la tienda: **Connecter SMB** ("Connecter" a secas lo tiene reservado otra cuenta en App Store Connect, aunque no hay ninguna app publicada con ese nombre). En el Mac la app sigue llamándose Connecter (`CFBundleDisplayName`).
 - [x] Páginas de privacidad y soporte en la web (`#privacy`, `#support`, en inglés y español).
 - [x] Correo de contacto oficial: dev@arcesaez.com.
 - [x] Código público en GitHub (Apache 2.0); feedback en issues y Discussions del repositorio.
@@ -48,7 +48,7 @@ Estado a 2 de noviembre de 2026. Los textos de la ficha (nombre, subtítulo, des
 
 ## En App Store Connect
 
-1. *Apps* → *+* → *New App*: plataforma macOS, nombre "Connecter", idioma principal English (U.S.), bundle ID `es.guzman.connecter`, SKU libre (por ejemplo `connecter-mac`).
+1. *Apps* → *+* → *New App*: plataforma macOS, nombre "Connecter SMB", idioma principal English (U.S.), bundle ID `es.guzman.connecter`, SKU libre (por ejemplo `connecter-mac`).
 2. Rellenar la versión 1.0 con los textos de [app-store-metadata.md](app-store-metadata.md) y añadir la localización Spanish (Spain).
 3. *App Privacy*: "Data Not Collected". *Pricing and Availability*: gratis, todos los países. *Age Rating*: 4+. Categoría: Utilities.
 4. *Business* / *Agreements*: declarar el estado de comerciante de la Ley de Servicios Digitales de la UE. Con una app gratuita y sin actividad comercial lo normal es *no comerciante*, y entonces Apple no publica datos de contacto en la ficha de la UE.

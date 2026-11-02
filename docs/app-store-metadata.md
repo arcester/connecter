@@ -8,9 +8,9 @@ Before submitting, check the note on "same mount point" in [app-store-checklist.
 
 ## English (U.S.) — primary
 
-**Name** (30): Connecter
+**Name** (30): Connecter SMB
 
-**Subtitle** (30): Keep your SMB shares mounted
+**Subtitle** (30): Keep your NAS shares mounted
 
 **Promotional text** (170):
 
@@ -46,10 +46,10 @@ Before submitting, check the note on "same mount point" in [app-store-checklist.
 >
 > Free and open source. Available in English, Spanish, German, French, Italian, Brazilian Portuguese, Japanese and Simplified Chinese.
 
-**Keywords** (100, comma-separated, no spaces; the app name and category are already indexed):
+**Keywords** (100, comma-separated, no spaces; the words in the name, "Connecter" and "SMB", and the category are already indexed):
 
 ```
-smb,nas,network drive,mount,samba,synology,qnap,truenas,file sharing,auto mount,reconnect,volumes
+nas,network drive,mount,samba,synology,qnap,truenas,file sharing,auto mount,reconnect,volumes,cifs
 ```
 
 **Support URL**: https://arcester.github.io/connecter/#support
@@ -64,9 +64,9 @@ smb,nas,network drive,mount,samba,synology,qnap,truenas,file sharing,auto mount,
 
 ## Spanish (Spain)
 
-**Nombre** (30): Connecter
+**Nombre** (30): Connecter SMB
 
-**Subtítulo** (30): Recursos SMB siempre montados
+**Subtítulo** (30): Tu NAS siempre montado
 
 **Texto promocional** (170):
 
@@ -105,7 +105,7 @@ smb,nas,network drive,mount,samba,synology,qnap,truenas,file sharing,auto mount,
 **Palabras clave** (100):
 
 ```
-smb,nas,unidad de red,montar,samba,synology,qnap,truenas,carpeta compartida,reconectar,volumen,red
+nas,unidad de red,montar,samba,synology,qnap,truenas,carpeta compartida,reconectar,volumen,red,cifs
 ```
 
 **URL de soporte**: https://arcester.github.io/connecter/es/#support
