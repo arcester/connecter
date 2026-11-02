@@ -2,7 +2,7 @@
 
 Texts ready to paste into App Store Connect for version 1.0. Primary language: **English (U.S.)**, plus a **Spanish (Spain)** localization. Character limits are App Store Connect's; the counts were checked when these texts were written.
 
-Before submitting, check the note on "same mount point" in [app-store-checklist.md](app-store-checklist.md) (step 3).
+Before submitting, check the note on "same mount point" in [app-store-checklist.md](app-store-checklist.md) (pending step 1).
 
 ---
 

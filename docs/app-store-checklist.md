@@ -1,6 +1,6 @@
 # Connecter — checklist para la Mac App Store
 
-Estado a 1 de noviembre de 2026. Los textos de la ficha (nombre, subtítulo, descripción, palabras clave, URLs y notas para el revisor, en inglés y español) están en [app-store-metadata.md](app-store-metadata.md).
+Estado a 2 de noviembre de 2026. Los textos de la ficha (nombre, subtítulo, descripción, palabras clave, URLs y notas para el revisor, en inglés y español) están en [app-store-metadata.md](app-store-metadata.md).
 
 ## Hecho
 
@@ -20,20 +20,17 @@ Estado a 1 de noviembre de 2026. Los textos de la ficha (nombre, subtítulo, des
 - [x] Páginas de privacidad y soporte en la web (`#privacy`, `#support`, en inglés y español).
 - [x] Correo de contacto oficial: dev@arcesaez.com.
 - [x] Código público en GitHub (Apache 2.0); feedback en issues y Discussions del repositorio.
+- [x] Apple Developer Program activo (2-11-2026), cuenta *Individual*. El Team ID es el mismo del equipo personal (`4XDZ484XHZ`), así que el proyecto no cambia. Archivo y exportación para App Store Connect comprobados con `xcodebuild -allowProvisioningUpdates`: Xcode creó los certificados *Apple Distribution* y *3rd Party Mac Developer Installer* y el perfil *Mac Team Store Provisioning Profile: es.guzman.connecter*; la app exportada lleva `application-identifier` y no `get-task-allow`.
 
 ## Pendiente, en orden
 
-1. **Cuenta de pago (bloqueo).** Xcode solo tiene el equipo personal gratuito ("J. Guzmán Arce Sáez (Personal Team)") y el único certificado instalado es *Apple Development*. Publicar en la Mac App Store exige el Apple Developer Program (99 €/año) aunque la app sea gratuita; también lo exige distribuirla fuera de la tienda firmada con Developer ID y notarizada. Inscripción en <https://developer.apple.com/programs/enroll/>. Como particular, el vendedor que aparece en la tienda es el nombre legal; para que figure una empresa hace falta una entidad legal con número D-U-N-S.
+1. **Probar la build con sandbox** contra el NAS real: montar, desmontar, "Abrir en el Finder", "Probar conexión" y el aviso de NetAuth (`CONNECTER_SIMULATE_NETAUTH_HANG=1` como variable de entorno en el esquema).
 
-2. **Cambiar de equipo en Xcode.** Settings → Accounts (aparecerá el equipo de pago) y, en *Signing & Capabilities*, elegirlo como *Team*. Cambia el identificador de equipo (hoy `4XDZ484XHZ`, el del equipo personal). Al archivar con firma automática, Xcode crea el certificado *Apple Distribution* y registra el bundle ID `es.guzman.connecter` en el equipo nuevo.
-
-   Las contraseñas guardadas por la build actual siguen en el llavero de inicio de sesión, pero pertenecen a una app firmada por otro equipo: la primera vez que la build nueva use cada una, macOS pedirá permiso ("Connecter quiere usar tu información confidencial…"). Elige *Permitir siempre*.
-
-3. **Probar la build con sandbox** (no hace falta esperar a la cuenta de pago: la build actual, firmada con el equipo personal, ya lleva el sandbox) contra el NAS real: montar, desmontar, "Abrir en el Finder", "Probar conexión" y el aviso de NetAuth (`CONNECTER_SIMULATE_NETAUTH_HANG=1` como variable de entorno en el esquema).
+   La primera vez que la build de la tienda use cada contraseña guardada, macOS puede pedir permiso ("Connecter quiere usar tu información confidencial…"), porque la firma de distribución no es la de desarrollo. Elige *Permitir siempre*. Mirar también en el registro si las contraseñas nuevas se guardan como sincronizables: con el perfil de distribución la app ya lleva `application-identifier` y el `-34018` podría desaparecer, con lo que pasarían al llavero de iCloud.
 
    Comprobar en concreto que, si existe un directorio huérfano `/Volumes/<recurso>`, el recurso se monta ahí y no en `/Volumes/<recurso>-1` (montaje con `mountpath` explícito desde el sandbox, aún sin confirmar). **Si no funciona, quitar de la descripción** la viñeta "Keeps the same mount point…" / "Mantiene el mismo punto de montaje…" en los dos idiomas.
 
-4. **Migrar tu configuración local** (solo en tu Mac). La app sandboxed guarda sus ajustes en `~/Library/Containers/es.guzman.connecter/`, no en `~/Library/Preferences`. Si la lista de recursos sale vacía la primera vez, copia las preferencias antes de abrir la build nueva:
+2. **Migrar tu configuración local** (solo en tu Mac). La app sandboxed guarda sus ajustes en `~/Library/Containers/es.guzman.connecter/`, no en `~/Library/Preferences`. Si la lista de recursos sale vacía la primera vez, copia las preferencias antes de abrir la build nueva:
 
    ```bash
    defaults export es.guzman.connecter - | defaults import ~/Library/Containers/es.guzman.connecter/Data/Library/Preferences/es.guzman.connecter -
@@ -41,13 +38,13 @@ Estado a 1 de noviembre de 2026. Los textos de la ficha (nombre, subtítulo, des
 
    Alternativa sin comando: la app guarda cada recurso en el llavero al arrancar, así que la lista vacía ofrece **Recuperar del llavero** (también en Ajustes → Llavero). Las contraseñas guardadas por el Finder siguen funcionando: macOS pide permiso una vez por servidor.
 
-5. **LuLu**: la app abre conexiones TCP directamente (comprobación del puerto 445). LuLu preguntará la primera vez; permite Connecter.
+3. **LuLu**: la app abre conexiones TCP directamente (comprobación del puerto 445). LuLu preguntará la primera vez; permite Connecter.
 
-6. **Capturas de pantalla** (16:10; 1280×800, 1440×900, 2560×1600 o 2880×1800). Lista sugerida en [app-store-metadata.md](app-store-metadata.md#screenshots-1610-at-least-one-up-to-ten). Usar nombres de servidor y direcciones inventados. Hechas: cuatro de 2880×1800 en inglés y en español, en [docs/app-store/screenshots/](app-store/screenshots/) (`en/` para el idioma principal; los demás idiomas usan esas). Se sacaron con la build de Debug en modo demo (`CONNECTER_DEMO=1`, datos inventados) y `-AppleLanguages`/`-app.appearance` al arrancar.
+4. **Capturas de pantalla** (16:10; 1280×800, 1440×900, 2560×1600 o 2880×1800). Lista sugerida en [app-store-metadata.md](app-store-metadata.md#screenshots-1610-at-least-one-up-to-ten). Usar nombres de servidor y direcciones inventados. Hechas: cuatro de 2880×1800 en inglés y en español, en [docs/app-store/screenshots/](app-store/screenshots/) (`en/` para el idioma principal; los demás idiomas usan esas). Se sacaron con la build de Debug en modo demo (`CONNECTER_DEMO=1`, datos inventados) y `-AppleLanguages`/`-app.appearance` al arrancar.
 
-7. **Vídeo corto para el revisor** (montar, ver el estado, expulsar en el Finder y ver cómo vuelve a montarse) publicado como vídeo oculto, y su enlace en lugar de `[VIDEO URL]` en las notas para el revisor. Sin servidor SMB el revisor no puede probar la app, y "no hemos podido revisar la app" es un motivo de rechazo habitual.
+5. **Vídeo corto para el revisor** (montar, ver el estado, expulsar en el Finder y ver cómo vuelve a montarse) publicado como vídeo oculto, y su enlace en lugar de `[VIDEO URL]` en las notas para el revisor. Sin servidor SMB el revisor no puede probar la app, y "no hemos podido revisar la app" es un motivo de rechazo habitual.
 
-8. **Icono Liquid Glass (opcional, recomendable en macOS 26/27)**: abrir `AppIcon-512@2x.png` en *Icon Composer* (Xcode → Open Developer Tool), separar carpeta y puntos en capas y guardar `AppIcon.icon` en el catálogo. El PNG actual es válido; el sistema le aplica el contorno automáticamente.
+6. **Icono Liquid Glass (opcional, recomendable en macOS 26/27)**: abrir `AppIcon-512@2x.png` en *Icon Composer* (Xcode → Open Developer Tool), separar carpeta y puntos en capas y guardar `AppIcon.icon` en el catálogo. El PNG actual es válido; el sistema le aplica el contorno automáticamente.
 
 ## En App Store Connect
 
