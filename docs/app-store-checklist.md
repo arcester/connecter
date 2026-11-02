@@ -14,7 +14,7 @@ Estado a 2 de noviembre de 2026. Los textos de la ficha (nombre, subtítulo, des
 - [x] Categoría `public.app-category.utilities`, `LSUIElement` (app de barra de menús); la ventana principal se abre al arrancar por defecto.
 - [x] Localización en String Catalog (en, es, de, fr, it, ja, pt-BR, zh-Hans) con plurales. Las traducciones a de, fr, it, ja, pt-BR y zh-Hans no las ha revisado un nativo.
 - [x] Etiquetas de accesibilidad en botones de solo icono y conmutadores.
-- [x] Versión 1.0 (build 1). La build de Release compila sin avisos del compilador con el SDK de macOS 27 (comprobado el 1-11-2026).
+- [x] Versión 1.0 (build 2; la 1 se rechazó por la firma, ver *Subida*). La build de Release compila sin avisos del compilador con el SDK de macOS 27 (comprobado el 1-11-2026).
 - [x] Recursos agrupados por servidor, con credenciales compartidas (o propias por recurso) y pausa por servidor.
 - [x] Nombre en la tienda: **Connecter SMB** ("Connecter" a secas lo tiene reservado otra cuenta en App Store Connect, aunque no hay ninguna app publicada con ese nombre). En el Mac la app sigue llamándose Connecter (`CFBundleDisplayName`).
 - [x] Páginas de privacidad y soporte en la web (`#privacy`, `#support`, en inglés y español).
@@ -56,10 +56,13 @@ Estado a 2 de noviembre de 2026. Los textos de la ficha (nombre, subtítulo, des
 
 ## Subida
 
-1. Product → Archive (Release).
-2. En Organizer: *Validate App* (detecta problemas de entitlements, icono y privacidad) y después *Distribute App → App Store Connect*.
-3. Al terminar el procesado, elegir la build en la versión 1.0 y enviar a revisión.
-4. Para builds fuera de la tienda: mismo archivo, *Direct Distribution* (Developer ID + notarización). Si se quiere el reinicio automático de NetAuth, desactivar App Sandbox solo en esa configuración.
+**No usar *Distribute App* del Organizer ni `xcodebuild -exportArchive`.** La exportación escribe el requisito de firma con el nombre del certificado ("José Guzmán Arce Sáez") con las tildes descompuestas, no coincide con el certificado y App Store Connect rechaza la build (ITMS-90238, build 1 del 2-11-2026).
+
+1. Subir `CURRENT_PROJECT_VERSION` (App Store Connect no acepta un número de build repetido).
+2. `tools/release/app-store-pkg.sh <carpeta>`: archiva, vuelve a firmar con *Apple Distribution* y un requisito por Team ID, incrusta el perfil de la tienda, comprueba la firma y crea `Connecter-<build>.pkg` firmado con *3rd Party Mac Developer Installer*. Necesita los dos certificados en el llavero (Xcode → Settings → Accounts → Manage Certificates) y que el perfil gestionado por Xcode los incluya.
+3. Subir el `.pkg` con **Transporter**.
+4. Al terminar el procesado, elegir la build en la versión 1.0 y enviar a revisión.
+5. Para builds fuera de la tienda: mismo archivo, *Direct Distribution* (Developer ID + notarización). Si se quiere el reinicio automático de NetAuth, desactivar App Sandbox solo en esa configuración. Sin probar: es probable que la exportación con Developer ID tenga el mismo fallo de las tildes.
 
 ## Fuera de la 1.0
 
