@@ -122,6 +122,8 @@ final class MountManager: ObservableObject {
     private static var simulateNetAuthHang =
         ProcessInfo.processInfo.environment["CONNECTER_SIMULATE_NETAUTH_HANG"] != nil
 
+    private var didLaunchMount = false
+
     init() {
         log.info("MountManager started\(AppEnvironment.isSandboxed ? " (App Sandbox)" : "")")
         startWakeObserver()
@@ -162,7 +164,11 @@ final class MountManager: ObservableObject {
         guard !AppEnvironment.isDemo else { return }   // demo states stay as set
         backUpSharesToKeychain()
         syncTasks()
-        mountOnce(configs.filter { isActive($0) && !isWatched($0) })
+        // Called again each time the main window appears: mount-once servers only at launch
+        if !didLaunchMount {
+            didLaunchMount = true
+            mountOnce(mountOnceShares)
+        }
         log.info("Monitor started (\(shareTasks.count) task(s), interval: \(Int(AppSettings.shared.monitorInterval))s)")
     }
 
@@ -282,7 +288,9 @@ final class MountManager: ObservableObject {
             try? await Task.sleep(for: .seconds(3))
             guard !Task.isCancelled, let self else { return }
             self.failureCounts.removeAll()
-            let ids = self.configs.filter(self.isWatched).map(\.id)
+            let ids = self.configs.filter {
+                self.isWatched($0) || (self.isActive($0) && $0.connectionStatus == .offline)
+            }.map(\.id)
             await withTaskGroup(of: Void.self) { group in
                 for id in ids {
                     group.addTask { await self.checkShare(id: id) }
@@ -372,6 +380,7 @@ final class MountManager: ObservableObject {
         netAuthSuspected = false
         restartAllTasks()
         syncTasks()
+        mountOnce(mountOnceShares.filter { $0.connectionStatus != .connected })
     }
 
     /// Forgets failures and retries every enabled share right away — used after
@@ -382,6 +391,7 @@ final class MountManager: ObservableObject {
         netAuthSuspected = false
         restartAllTasks()
         syncTasks()
+        mountOnce(mountOnceShares.filter { $0.connectionStatus != .connected })
     }
 
     /// Hides the NetAuth warning until the next mount timeout.
@@ -549,6 +559,11 @@ final class MountManager: ObservableObject {
     /// Active and on an automatic server: checked every interval and remounted.
     func isWatched(_ config: ShareConfig) -> Bool {
         isActive(config) && (servers[config.serverKey]?.mode ?? .automatic) == .automatic
+    }
+
+    /// Active shares on mount-once servers.
+    private var mountOnceShares: [ShareConfig] {
+        configs.filter { isActive($0) && !isWatched($0) }
     }
 
     /// One check (mount if needed) per share, without starting a watch task.

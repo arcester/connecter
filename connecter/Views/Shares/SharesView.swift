@@ -198,8 +198,9 @@ struct ServerHeader: View {
                 set: { new in Task { await mountManager.setMode(new, host: group.host) } }
             )) {
                 ForEach(ServerSettings.Mode.allCases, id: \.self) { mode in
-                    Image(systemName: mode.symbolName)
-                        .accessibilityLabel(Text(mode.title))
+                    Label(mode.title, systemImage: mode.symbolName)
+                        .labelStyle(.iconOnly)
+                        .help(mode.help)
                         .tag(mode)
                 }
             }
@@ -207,7 +208,6 @@ struct ServerHeader: View {
             .labelsHidden()
             .controlSize(.mini)
             .fixedSize()
-            .help(mode.help)
             Menu {
                 Button("Server Credentials…", systemImage: "key", action: onEditCredentials)
                 Button("Add Share on This Server…", systemImage: "plus", action: onAddShare)
