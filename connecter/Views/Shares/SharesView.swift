@@ -162,7 +162,7 @@ struct SharesBody: View {
 // MARK: - Server header
 
 /// Title of a server's group: host, how many of its shares are mounted, and
-/// the pause / credentials / add-share actions that apply to all of them.
+/// the mode / credentials / add-share actions that apply to all of them.
 struct ServerHeader: View {
     static let height: CGFloat = 28
 
@@ -192,15 +192,22 @@ struct ServerHeader: View {
                     .foregroundStyle(.tertiary)
             }
             Spacer()
-            Button {
-                Task { await mountManager.setPaused(!isPaused, host: group.host) }
-            } label: {
-                Image(systemName: isPaused ? "play.circle" : "pause.circle")
+            let mode = mountManager.settings(forHost: group.host).mode
+            Picker("Mode", selection: Binding(
+                get: { mode },
+                set: { new in Task { await mountManager.setMode(new, host: group.host) } }
+            )) {
+                ForEach(ServerSettings.Mode.allCases, id: \.self) { mode in
+                    Image(systemName: mode.symbolName)
+                        .accessibilityLabel(Text(mode.title))
+                        .tag(mode)
+                }
             }
-            .buttonStyle(.plain)
-            .foregroundStyle(.secondary)
-            .help(isPaused ? "Resume this server" : "Pause this server: unmount its shares and stop reconnecting them")
-            .accessibilityLabel(Text(isPaused ? "Resume this server" : "Pause this server"))
+            .pickerStyle(.segmented)
+            .labelsHidden()
+            .controlSize(.mini)
+            .fixedSize()
+            .help(mode.help)
             Menu {
                 Button("Server Credentials…", systemImage: "key", action: onEditCredentials)
                 Button("Add Share on This Server…", systemImage: "plus", action: onAddShare)
@@ -225,5 +232,33 @@ struct ServerHeader: View {
         if group.shares.contains(where: { $0.isEnabled && $0.connectionStatus == .error }) { return .red }
         if mounted == enabled { return .green }
         return mounted > 0 ? .orange : .secondary
+    }
+}
+
+// MARK: - Server mode
+
+extension ServerSettings.Mode {
+    var title: String {
+        switch self {
+        case .paused:    String(localized: "Paused")
+        case .manual:    String(localized: "Mount Once")
+        case .automatic: String(localized: "Automatic")
+        }
+    }
+
+    var symbolName: String {
+        switch self {
+        case .paused:    "pause.fill"
+        case .manual:    "externaldrive.fill"
+        case .automatic: "arrow.triangle.2.circlepath"
+        }
+    }
+
+    var help: String {
+        switch self {
+        case .paused:    String(localized: "Paused: its shares are unmounted and not checked")
+        case .manual:    String(localized: "Mount once: its shares are mounted now and not remounted if they drop")
+        case .automatic: String(localized: "Automatic: checks the server and mounts its shares whenever it answers")
+        }
     }
 }

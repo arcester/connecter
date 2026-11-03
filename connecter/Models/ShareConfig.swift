@@ -106,6 +106,24 @@ struct ServerSettings: Codable {
     var username = ""
     /// A paused server's shares are unmounted and not checked until it is resumed.
     var isPaused = false
+    /// Mounted on demand only, never watched. Optional so settings saved by
+    /// 1.0 still decode (and 1.0 still reads these).
+    var mountsOnce: Bool?
+
+    /// How the server's enabled shares are kept mounted.
+    enum Mode: CaseIterable {
+        /// Unmounted and not checked.
+        case paused
+        /// Mounted once when chosen (and at launch); not remounted if it drops.
+        case manual
+        /// Checked every interval and mounted whenever the server answers.
+        case automatic
+    }
+
+    var mode: Mode {
+        get { isPaused ? .paused : mountsOnce == true ? .manual : .automatic }
+        set { isPaused = newValue == .paused; mountsOnce = newValue == .manual ? true : nil }
+    }
 
     private static let storeKey = "serverSettings"
 

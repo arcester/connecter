@@ -162,6 +162,7 @@ final class MountManager: ObservableObject {
         guard !AppEnvironment.isDemo else { return }   // demo states stay as set
         backUpSharesToKeychain()
         syncTasks()
+        mountOnce(configs.filter { isActive($0) && !isWatched($0) })
         log.info("Monitor started (\(shareTasks.count) task(s), interval: \(Int(AppSettings.shared.monitorInterval))s)")
     }
 
@@ -195,7 +196,12 @@ final class MountManager: ObservableObject {
             $0.connectionStatus == .connected && isActive($0) && mountPoint(for: $0) == nil
         }
         for config in dropped {
-            Task { await checkShare(id: config.id) }
+            if isWatched(config) {
+                Task { await checkShare(id: config.id) }
+            } else {
+                log.info("[\(config.displayName)] No longer mounted — not remounting (server set to mount once)")
+                setStatus(.disconnected, forID: config.id)
+            }
         }
     }
 
@@ -244,7 +250,7 @@ final class MountManager: ObservableObject {
         shareTasks.removeAll()
         failureCounts.removeAll()
         inFlight.removeAll()
-        for i in configs.indices where isActive(configs[i]) {
+        for i in configs.indices where isWatched(configs[i]) {
             configs[i].connectionStatus = .connecting
         }
     }
@@ -265,7 +271,7 @@ final class MountManager: ObservableObject {
         guard available else {
             log.warning("Network unavailable — mount checks paused")
             for i in configs.indices
-            where isActive(configs[i]) && configs[i].connectionStatus != .connected {
+            where isWatched(configs[i]) && configs[i].connectionStatus != .connected {
                 configs[i].connectionStatus = .offline
             }
             return
@@ -276,7 +282,7 @@ final class MountManager: ObservableObject {
             try? await Task.sleep(for: .seconds(3))
             guard !Task.isCancelled, let self else { return }
             self.failureCounts.removeAll()
-            let ids = self.configs.filter(self.isActive).map(\.id)
+            let ids = self.configs.filter(self.isWatched).map(\.id)
             await withTaskGroup(of: Void.self) { group in
                 for id in ids {
                     group.addTask { await self.checkShare(id: id) }
@@ -492,7 +498,11 @@ final class MountManager: ObservableObject {
         log.info("Share \"\(name)\" \(enabled ? "enabled" : "disabled")")
 
         if enabled {
-            if !isPaused(configs[i]) { startTask(for: configs[i]) }
+            if isWatched(configs[i]) {
+                startTask(for: configs[i])
+            } else if isActive(configs[i]) {
+                mountOnce([configs[i]])
+            }
         } else {
             configs[i].connectionStatus = .disconnected
             shareTasks[id]?.cancel()
@@ -531,29 +541,46 @@ final class MountManager: ObservableObject {
         servers[config.serverKey]?.isPaused == true
     }
 
-    /// Monitored and kept mounted: enabled, on a server that is not paused.
+    /// Meant to be mounted: enabled, on a server that is not paused.
     func isActive(_ config: ShareConfig) -> Bool {
         config.isEnabled && !isPaused(config)
     }
 
-    /// Pausing unmounts the server's shares and stops checking them; resuming
-    /// brings the enabled ones back. Each share's own switch is left as it is.
-    func setPaused(_ paused: Bool, host: String) async {
+    /// Active and on an automatic server: checked every interval and remounted.
+    func isWatched(_ config: ShareConfig) -> Bool {
+        isActive(config) && (servers[config.serverKey]?.mode ?? .automatic) == .automatic
+    }
+
+    /// One check (mount if needed) per share, without starting a watch task.
+    private func mountOnce(_ shares: [ShareConfig]) {
+        for share in shares { Task { await checkShare(id: share.id) } }
+    }
+
+    /// Paused unmounts the server's shares and stops checking them; mount-once
+    /// mounts the enabled ones now and stops watching; automatic watches and
+    /// remounts them. Each share's own switch is left as it is.
+    func setMode(_ mode: ServerSettings.Mode, host: String) async {
         let key = host.lowercased()
-        servers[key, default: ServerSettings()].isPaused = paused
+        servers[key, default: ServerSettings()].mode = mode
         ServerSettings.saveAll(servers)
-        log.info("Server \(host) \(paused ? "paused" : "resumed")")
+        log.info("Server \(host) set to \(mode)")
 
         let shares = configs.filter { $0.serverKey == key && $0.isEnabled }
         for share in shares { failureCounts.removeValue(forKey: share.id) }
-        syncTasks()   // stops or starts their tasks
-        guard paused else { return }
-        for share in shares {
-            if isMounted(share) {
-                markDisconnecting(id: share.id)
-                try? await unmount(share)
+        syncTasks()   // stops or starts their watch tasks
+        switch mode {
+        case .automatic:
+            break
+        case .manual:
+            mountOnce(shares)
+        case .paused:
+            for share in shares {
+                if isMounted(share) {
+                    markDisconnecting(id: share.id)
+                    try? await unmount(share)
+                }
+                setStatus(.disconnected, forID: share.id)
             }
-            setStatus(.disconnected, forID: share.id)
         }
     }
 
@@ -928,11 +955,11 @@ final class MountManager: ObservableObject {
 
     // MARK: - Private: task management
 
-    /// Ensures every active share has a running task and no other share has
-    /// one (paused servers); does not restart existing ones.
+    /// Ensures every watched share has a running task and no other share has
+    /// one (paused or mount-once servers); does not restart existing ones.
     private func syncTasks() {
         for config in configs {
-            if isActive(config) {
+            if isWatched(config) {
                 if shareTasks[config.id] == nil { startTask(for: config) }
             } else if let task = shareTasks.removeValue(forKey: config.id) {
                 task.cancel()

@@ -84,13 +84,13 @@ private struct GeneralSettingsPane: View {
             }
 
             Section {
-                HStack {
-                    Spacer()
+                VStack(spacing: 2) {
                     Text("Connecter \(AppEnvironment.shortVersion) (\(AppEnvironment.buildNumber))")
-                        .font(.caption)
                         .foregroundStyle(.tertiary)
-                    Spacer()
+                    Link("Connecter Website", destination: URL(string: "https://arcester.github.io/connecter/")!)
                 }
+                .font(.caption)
+                .frame(maxWidth: .infinity)
                 .listRowBackground(Color.clear)
             }
         }

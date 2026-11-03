@@ -28,13 +28,18 @@ struct MenuBarMenuView: View {
                 .foregroundStyle(.secondary)
         } else {
             ForEach(groups) { group in
-                let isPaused = mountManager.settings(forHost: group.host).isPaused
+                let mode = mountManager.settings(forHost: group.host).mode
                 Section(group.host) {
                     ForEach(group.shares) { config in
-                        ShareMenuItem(config: config, isPaused: isPaused)
+                        ShareMenuItem(config: config, isPaused: mode == .paused)
                     }
-                    Button(isPaused ? "Resume \(group.host)" : "Pause \(group.host)") {
-                        Task { await mountManager.setPaused(!isPaused, host: group.host) }
+                    Picker("Mode", selection: Binding(
+                        get: { mode },
+                        set: { new in Task { await mountManager.setMode(new, host: group.host) } }
+                    )) {
+                        ForEach(ServerSettings.Mode.allCases, id: \.self) { mode in
+                            Text(mode.title).tag(mode)
+                        }
                     }
                 }
             }
