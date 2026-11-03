@@ -198,8 +198,7 @@ struct ServerHeader: View {
                 set: { new in Task { await mountManager.setMode(new, host: group.host) } }
             )) {
                 ForEach(ServerSettings.Mode.allCases, id: \.self) { mode in
-                    Label(mode.title, systemImage: mode.symbolName)
-                        .labelStyle(.iconOnly)
+                    Text(mode.shortTitle)
                         .help(mode.help)
                         .tag(mode)
                 }
@@ -246,11 +245,12 @@ extension ServerSettings.Mode {
         }
     }
 
-    var symbolName: String {
+    /// For the segmented control in the server header.
+    var shortTitle: String {
         switch self {
-        case .paused:    "pause.fill"
-        case .manual:    "externaldrive.fill"
-        case .automatic: "arrow.triangle.2.circlepath"
+        case .paused:    String(localized: "Pause")
+        case .manual:    String(localized: "Mount")
+        case .automatic: String(localized: "Auto")
         }
     }
 
