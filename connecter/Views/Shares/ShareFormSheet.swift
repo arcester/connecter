@@ -238,7 +238,7 @@ struct ShareFormSheet: View {
             }
         }
         .padding(24)
-        .frame(width: 480)
+        .modifier(SheetWidth())
         .fixedSize(horizontal: false, vertical: true)
         .onAppear {
             allConfigs = MountManager.shared.configs

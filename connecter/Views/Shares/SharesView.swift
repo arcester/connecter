@@ -13,6 +13,8 @@ struct SharesBody: View {
     /// Layout constants shared with the window-height calculation in ContentView.
     static let groupSpacing: CGFloat = 16
     static let headerSpacing: CGFloat = 4
+    /// Small: the title bar above already leaves room.
+    static let topPadding: CGFloat = 4
 
     var body: some View {
         if mountManager.configs.isEmpty {
@@ -47,7 +49,9 @@ struct SharesBody: View {
                         }
                     }
                 }
-                .padding(16)
+                .padding(.horizontal, 16)
+                .padding(.top, Self.topPadding)
+                .padding(.bottom, 16)
             }
             .sheet(item: $editingServer) { group in
                 ServerCredentialsSheet(host: group.host)

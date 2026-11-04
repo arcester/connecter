@@ -13,6 +13,7 @@ struct ContentView: View {
     @State private var isRestartingNetAuth = false
     @State private var netAuthError: String?
     @State private var showNetAuthHelp = false
+    @AppStorage(WindowResizer.widthKey) private var windowWidth = WindowResizer.minWidth
 
     var body: some View {
         NavigationStack {
@@ -64,8 +65,9 @@ struct ContentView: View {
                 }
             }
         }
-        .frame(width: 440)
-        .background(WindowResizer(width: 440, height: desiredContentHeight))
+        // Width: the user's, from 440 pt up. Height: fitted to the list by WindowResizer.
+        .frame(minWidth: WindowResizer.minWidth, maxWidth: .infinity)
+        .background(WindowResizer(width: contentWidth, height: desiredContentHeight) { windowWidth = $0 })
         .escapeClosesWindow()
         .sheet(isPresented: $showAddSheet) {
             ShareFormSheet(existing: nil, initialHost: addSheetHost) { newConfig in
@@ -168,8 +170,14 @@ struct ContentView: View {
     // MARK: - Window sizing
 
     private static let toolbarHeight: CGFloat = 55  // NavigationStack toolbar inside the frame
-    private static let listPadding: CGFloat = 32
+    private static let listPadding: CGFloat = SharesBody.topPadding + 16
     private static let minVisible = 2
+
+    /// Saved width, kept on screen if the display got smaller since.
+    private var contentWidth: CGFloat {
+        let screenW = NSScreen.main?.visibleFrame.width ?? 1440
+        return min(max(windowWidth, WindowResizer.minWidth), screenW)
+    }
 
     private var desiredContentHeight: CGFloat {
         let count = mountManager.configs.count

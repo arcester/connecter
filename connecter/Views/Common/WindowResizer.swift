@@ -4,17 +4,25 @@ import AppKit
 /// Animates the host NSWindow's content size and applies window chrome tweaks.
 /// Window sizing is driven from SwiftUI via `width`/`height`; the actual frame
 /// transition uses `NSWindow.setFrame(_:display:animate:)` for a smooth resize.
+/// The user can drag the width; `onUserResize` reports it when the drag ends.
 struct WindowResizer: NSViewRepresentable {
+    /// Main window width, saved between launches; sheets read it too.
+    static let widthKey = "mainWindowWidth"
+    static let minWidth: CGFloat = 440
+
     let width: CGFloat
     let height: CGFloat
+    var onUserResize: (CGFloat) -> Void = { _ in }
 
     func makeNSView(context: Context) -> ResizingView {
         let view = ResizingView()
         view.targetSize = NSSize(width: width, height: height)
+        view.onUserResize = onUserResize
         return view
     }
 
     func updateNSView(_ nsView: ResizingView, context: Context) {
+        nsView.onUserResize = onUserResize
         let newSize = NSSize(width: width, height: height)
         // Only apply when the target actually changes — prevents redundant work
         // when SwiftUI re-renders for unrelated reasons.
@@ -25,11 +33,24 @@ struct WindowResizer: NSViewRepresentable {
 
     final class ResizingView: NSView {
         var targetSize: NSSize = .zero
+        var onUserResize: (CGFloat) -> Void = { _ in }
         private var settled = false
+        private var resizeObserver: NSObjectProtocol?
 
         override func viewDidMoveToWindow() {
             super.viewDidMoveToWindow()
+            if let resizeObserver { NotificationCenter.default.removeObserver(resizeObserver) }
             guard let window else { return }
+            resizeObserver = NotificationCenter.default.addObserver(
+                forName: NSWindow.didEndLiveResizeNotification, object: window, queue: .main
+            ) { [weak self, weak window] _ in
+                guard let self, let window else { return }
+                // Keep the dragged width; the height goes back to the list's.
+                let width = window.contentRect(forFrameRect: window.frame).width.rounded()
+                self.targetSize.width = width
+                self.applyIfNeeded(animated: true)
+                self.onUserResize(width)
+            }
             settled = false
             window.alphaValue = 0
             applyWindowChrome()
@@ -43,6 +64,10 @@ struct WindowResizer: NSViewRepresentable {
             window.standardWindowButton(.miniaturizeButton)?.isHidden = true
             window.standardWindowButton(.zoomButton)?.isHidden = true
             window.tabbingMode = .disallowed
+        }
+
+        deinit {
+            if let resizeObserver { NotificationCenter.default.removeObserver(resizeObserver) }
         }
 
         func applyIfNeeded(animated: Bool) {
@@ -78,5 +103,15 @@ struct WindowResizer: NSViewRepresentable {
                 window.animator().setFrame(frame, display: true)
             }
         }
+    }
+}
+
+/// Sheets follow the main window's width, up to their usual 480 pt, and stay
+/// narrower than it so they never line up with its edges.
+struct SheetWidth: ViewModifier {
+    @AppStorage(WindowResizer.widthKey) private var windowWidth = WindowResizer.minWidth
+
+    func body(content: Content) -> some View {
+        content.frame(width: min(480, max(windowWidth, WindowResizer.minWidth) - 40))
     }
 }
