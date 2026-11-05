@@ -32,6 +32,21 @@ final class AppSettings: ObservableObject {
         didSet { UserDefaults.standard.set(showOnLaunch, forKey: Keys.showOnLaunch) }
     }
 
+    /// What a click on the menu bar icon does.
+    enum IconClick: String, CaseIterable {
+        /// Left click shows or hides the window, right click opens the menu.
+        case leftWindow
+        /// Left click opens the menu, right click shows or hides the window.
+        case rightWindow
+        /// Both open the menu (1.0 behaviour).
+        case menu
+        // No "both show the window": the menu (and Quit) must stay reachable.
+    }
+
+    @Published var iconClick: IconClick {
+        didSet { UserDefaults.standard.set(iconClick.rawValue, forKey: Keys.iconClick) }
+    }
+
     /// Name of the accent color used across the share list UI.
     @Published var accentColorName: String {
         didSet { UserDefaults.standard.set(accentColorName, forKey: Keys.accentColorName) }
@@ -109,6 +124,7 @@ final class AppSettings: ObservableObject {
         static let iCloudSync            = "app.iCloudSync"
         static let accentColorName       = "app.accentColorName"
         static let appearance            = "app.appearance"
+        static let iconClick             = "app.iconClick"
     }
 
     private init() {
@@ -137,6 +153,7 @@ final class AppSettings: ObservableObject {
 
         accentColorName = d.string(forKey: Keys.accentColorName) ?? "system"
         appearance = d.string(forKey: Keys.appearance) ?? "system"
+        iconClick = IconClick(rawValue: d.string(forKey: Keys.iconClick) ?? "") ?? .leftWindow
 
         // iCloudSync = d.bool(forKey: Keys.iCloudSync)
     }

@@ -15,6 +15,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     /// Set when another copy of Connecter is already running: this process
     /// only hands over to it and quits, without touching shares or windows.
     private var isHandingOver = false
+    /// The menu bar icon MenuBarExtra created, and its menu, kept aside so
+    /// that it opens only when the click setting says so.
+    private var statusItem: NSStatusItem?
+    private var statusMenu: NSMenu?
 
     func applicationWillFinishLaunching(_ notification: Notification) {
         deferToRunningInstanceIfNeeded()
@@ -27,6 +31,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
 
         AppSettings.apply(appearance: AppSettings.shared.appearance)
+        // MenuBarExtra creates its icon once the scene is up.
+        DispatchQueue.main.async { self.takeOverStatusItemClicks() }
 
         // Start share monitoring unconditionally — must not depend on the main
         // window's onAppear, which never fires if the window starts hidden.
@@ -41,6 +47,64 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             DispatchQueue.main.async {
                 NSApp.windows.forEach { $0.orderOut(nil) }
             }
+        }
+    }
+
+    /// The main window, whether shown or not. SwiftUI names it "main-…";
+    /// otherwise the first ordinary window, as before.
+    static var mainWindow: NSWindow? {
+        NSApp.windows.first { $0.identifier?.rawValue.hasPrefix("main") == true }
+            ?? NSApp.windows.first { !($0 is NSPanel) && $0.canBecomeMain }
+    }
+
+    /// Clicks on the menu bar icon show or hide the main window or open the
+    /// menu, as chosen in Settings (`AppSettings.iconClick`). MenuBarExtra
+    /// gives its icon a menu, which opens on any click, so the menu is taken
+    /// off the icon and shown only when wanted. If the icon can't be found,
+    /// every click keeps opening the menu.
+    private func takeOverStatusItemClicks() {
+        // shortcut: reads AppKit's private `_statusItem` of its status bar window
+        // (checked first, so a macOS without it only keeps MenuBarExtra's clicks).
+        let items = NSApp.windows
+            .filter { $0.className == "NSStatusBarWindow" && class_getInstanceVariable(type(of: $0), "_statusItem") != nil }
+            .compactMap { $0.value(forKey: "statusItem") as? NSStatusItem }
+        guard let item = items.first(where: { $0.menu != nil }), let button = item.button else {
+            LogManager.shared.warning("Menu bar icon not found — clicks open the menu")
+            return
+        }
+        statusItem = item
+        statusMenu = item.menu
+        item.menu = nil
+        button.target = self
+        button.action = #selector(statusItemClicked)
+        button.sendAction(on: [.leftMouseUp, .rightMouseUp])
+    }
+
+    @objc private func statusItemClicked() {
+        let event = NSApp.currentEvent
+        let isRight = event?.type == .rightMouseUp || event?.modifierFlags.contains(.control) == true
+        let opensMenu: Bool = switch AppSettings.shared.iconClick {
+            case .leftWindow:  isRight
+            case .rightWindow: !isRight
+            case .menu:        true
+        }
+        guard opensMenu else {
+            Self.toggleMainWindow()
+            return
+        }
+        guard let button = statusItem?.button, let menu = statusMenu else { return }
+        // Just below the icon, like a menu bar menu.
+        menu.popUp(positioning: nil, at: NSPoint(x: 0, y: button.bounds.height + 5), in: button)
+    }
+
+    /// Hides the main window when it can be seen; brings it up when it is
+    /// hidden or fully covered. Not "is it in front": an agent app clicked from
+    /// the menu bar is often not the active one, and macOS reorders its windows.
+    private static func toggleMainWindow() {
+        if let window = mainWindow, window.isVisible, window.occlusionState.contains(.visible) {
+            window.orderOut(nil)
+        } else {
+            NotificationCenter.default.post(name: .showMainWindow, object: nil)
         }
     }
 
@@ -113,9 +177,10 @@ struct connecterApp: App {
         } label: {
             MenuBarIcon(status: mountManager.overallStatus)
                 .onReceive(NotificationCenter.default.publisher(for: .showMainWindow)) { _ in
-                    let regularWindows = NSApp.windows.filter { !($0 is NSPanel) && $0.canBecomeMain }
-                    if let window = regularWindows.first {
+                    if let window = AppDelegate.mainWindow {
                         window.makeKeyAndOrderFront(nil)
+                        // Up front even if macOS doesn't let the app become active.
+                        window.orderFrontRegardless()
                     } else {
                         openWindow(id: "main")
                     }

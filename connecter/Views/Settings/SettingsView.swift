@@ -81,6 +81,13 @@ private struct GeneralSettingsPane: View {
                         .toggleStyle(.switch)
                         .labelsHidden()
                 }
+
+                Picker("Click on Menu Bar Icon", selection: $settings.iconClick) {
+                    ForEach(AppSettings.IconClick.allCases, id: \.self) { option in
+                        Text(option.title).tag(option)
+                    }
+                }
+                .pickerStyle(.radioGroup)
             }
 
             Section {
@@ -312,5 +319,15 @@ private extension View {
             .formStyle(.grouped)
             .scrollDisabled(true)
             .fixedSize(horizontal: false, vertical: true)
+    }
+}
+
+extension AppSettings.IconClick {
+    var title: String {
+        switch self {
+        case .leftWindow:  String(localized: "Left: window · Right: menu")
+        case .rightWindow: String(localized: "Left: menu · Right: window")
+        case .menu:        String(localized: "Both: menu")
+        }
     }
 }
