@@ -95,6 +95,7 @@ private struct GeneralSettingsPane: View {
                     Text("Connecter \(AppEnvironment.shortVersion) (\(AppEnvironment.buildNumber))")
                         .foregroundStyle(.tertiary)
                     Link("Connecter Website", destination: URL(string: "https://arcester.github.io/connecter/")!)
+                    Link("Star on GitHub", destination: URL(string: "https://github.com/arcester/connecter")!)
                 }
                 .font(.caption)
                 .frame(maxWidth: .infinity)
