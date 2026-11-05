@@ -73,6 +73,10 @@ final class MountManager: ObservableObject {
     @Published private(set) var mountedVolumes: [MountedSMBVolume] = []
     private var volumeObservers: [NSObjectProtocol] = []
 
+    /// Scan in progress, shared by concurrent `refreshMountedVolumes()` callers
+    /// (several share checks at once) so the mount table is read only once.
+    private var ongoingVolumeRefresh: Task<[MountedSMBVolume], Never>?
+
     /// One task per share ID. Each task checks and mounts its share independently.
     private var shareTasks: [UUID: Task<Void, Never>] = [:]
 
@@ -125,7 +129,7 @@ final class MountManager: ObservableObject {
     private var didLaunchMount = false
 
     init() {
-        log.info("MountManager started\(AppEnvironment.isSandboxed ? " (App Sandbox)" : "")")
+        log.debug("MountManager started\(AppEnvironment.isSandboxed ? " (App Sandbox)" : "")")
         startWakeObserver()
         startNetworkObserver()
         startVolumeObserver()
@@ -169,13 +173,13 @@ final class MountManager: ObservableObject {
             didLaunchMount = true
             mountOnce(mountOnceShares)
         }
-        log.info("Monitor started (\(shareTasks.count) task(s), interval: \(Int(AppSettings.shared.monitorInterval))s)")
+        log.debug("Monitor started (\(shareTasks.count) task(s), interval: \(Int(AppSettings.shared.monitorInterval))s)")
     }
 
     func stopMonitoring() {
         for task in shareTasks.values { task.cancel() }
         shareTasks.removeAll()
-        log.info("Monitor stopped")
+        log.debug("Monitor stopped")
     }
 
     // MARK: - Mounted volume snapshot
@@ -187,7 +191,8 @@ final class MountManager: ObservableObject {
                      NSWorkspace.didRenameVolumeNotification] {
             volumeObservers.append(center.addObserver(forName: name, object: nil, queue: .main) { [weak self] _ in
                 Task { @MainActor [weak self] in
-                    await self?.refreshMountedVolumes()
+                    // Fresh scan: one already running may predate this (un)mount.
+                    await self?.refreshMountedVolumes(reuseInFlight: false)
                     if name == NSWorkspace.didUnmountNotification { self?.recheckDroppedShares() }
                 }
             })
@@ -212,11 +217,14 @@ final class MountManager: ObservableObject {
     }
 
     /// Rescans the mounted volumes off the main actor and updates `mountedVolumes`.
+    /// Joins a scan already in progress unless `reuseInFlight` is false.
     @discardableResult
-    func refreshMountedVolumes() async -> [MountedSMBVolume] {
-        let volumes = await Task.detached(priority: .utility) {
-            Self.mountedSMBVolumes()
-        }.value
+    func refreshMountedVolumes(reuseInFlight: Bool = true) async -> [MountedSMBVolume] {
+        if reuseInFlight, let ongoing = ongoingVolumeRefresh { return await ongoing.value }
+        let task = Task.detached(priority: .utility) { Self.mountedSMBVolumes() }
+        if reuseInFlight { ongoingVolumeRefresh = task }
+        let volumes = await task.value
+        if reuseInFlight { ongoingVolumeRefresh = nil }
         mountedVolumes = volumes
         return volumes
     }
@@ -241,12 +249,12 @@ final class MountManager: ObservableObject {
     /// resets failure counts, and restarts monitoring after a short delay
     /// so the network stack has time to come back up.
     private func handleSystemWake() async {
-        log.info("System wake detected — restarting monitors in 5 s")
+        log.debug("System wake detected — restarting monitors in 5 s")
 
         restartAllTasks()
         try? await Task.sleep(for: .seconds(5))
         syncTasks()
-        log.info("Monitors restarted after wake (\(shareTasks.count) task(s))")
+        log.debug("Monitors restarted after wake (\(shareTasks.count) task(s))")
     }
 
     /// Cancels every share task, forgets failures and in-flight attempts, and
@@ -283,7 +291,7 @@ final class MountManager: ObservableObject {
             return
         }
 
-        log.info("Network available — re-checking shares in 3 s")
+        log.debug("Network available — re-checking shares in 3 s")
         networkRecoveryTask = Task { [weak self] in
             try? await Task.sleep(for: .seconds(3))
             guard !Task.isCancelled, let self else { return }
@@ -738,7 +746,9 @@ final class MountManager: ObservableObject {
         }
 
         // NetFS only completes after the volume is confirmed mounted: report where.
-        if let mountPoint = await mountPointOffMain(for: config) {
+        // Fresh scan: one already running predates this mount.
+        let volumes = await refreshMountedVolumes(reuseInFlight: false)
+        if let mountPoint = Self.findMountPoint(host: config.host, path: config.path, in: volumes) {
             log.info("[\(config.displayName)] Mounted at \(mountPoint)")
             if mountPoint != "/Volumes/\(volumeName)" {
                 let stale = await Task.detached(priority: .utility) {

@@ -141,6 +141,7 @@ private struct LogEntryRow: View {
 
     private var textColor: Color {
         switch entry.level {
+        case .debug:   return .secondary
         case .info:    return .primary
         case .warning: return .orange
         case .error:   return .red
