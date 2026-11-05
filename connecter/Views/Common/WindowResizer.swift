@@ -64,6 +64,9 @@ struct WindowResizer: NSViewRepresentable {
             window.standardWindowButton(.miniaturizeButton)?.isHidden = true
             window.standardWindowButton(.zoomButton)?.isHidden = true
             window.tabbingMode = .disallowed
+            // Shown from the menu bar icon on another desktop, it comes to
+            // that desktop instead of switching back to where it was.
+            window.collectionBehavior.insert(.moveToActiveSpace)
         }
 
         deinit {

@@ -24,6 +24,9 @@ struct ModalWindowStyle: NSViewRepresentable {
 
             window.standardWindowButton(.miniaturizeButton)?.isHidden = true
             window.standardWindowButton(.zoomButton)?.isHidden = true
+            // Reopened, it comes to the current desktop (where the main
+            // window is) instead of the one it was last shown on.
+            window.collectionBehavior.insert(.moveToActiveSpace)
 
             // Avoid registering twice if the view moves to a different window.
             observers.forEach { NotificationCenter.default.removeObserver($0) }
