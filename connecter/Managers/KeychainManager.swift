@@ -200,20 +200,8 @@ enum KeychainManager {
     /// attributes only — no secret is read. Used to rebuild the share list.
     static func storedShares() -> [StoredShare] {
         if AppEnvironment.isDemo { return DemoData.storedShares }
-        let query: [String: Any] = [
-            kSecClass as String: kSecClassInternetPassword,
-            kSecAttrSecurityDomain as String: securityDomain,
-            kSecAttrSynchronizable as String: kSecAttrSynchronizableAny,
-            kSecReturnAttributes as String: true,
-            kSecMatchLimit as String: kSecMatchLimitAll,
-        ]
-        var result: AnyObject?
-        guard SecItemCopyMatching(query as CFDictionary, &result) == errSecSuccess,
-              let items = result as? [[String: Any]]
-        else { return [] }
-
         var seen: Set<String> = []
-        return items.compactMap { item in
+        return appItemAttributes().compactMap { item in
             guard let host = item[kSecAttrServer as String] as? String, !host.isEmpty,
                   let path = item[kSecAttrPath as String] as? String, !path.isEmpty
             else { return nil }
@@ -230,6 +218,32 @@ enum KeychainManager {
                 usesServerCredentials: kind == kindServerCredentials
             )
         }
+    }
+
+    /// The user of each server that has shared credentials in the Keychain,
+    /// by `ShareConfig.serverKey` — attributes only, no secret is read.
+    static func storedServerUsers() -> [String: String] {
+        if AppEnvironment.isDemo { return [:] }
+        var users: [String: String] = [:]
+        for item in appItemAttributes() where item[kSecAttrDescription as String] as? String == kindServer {
+            guard let host = item[kSecAttrServer as String] as? String, !host.isEmpty else { continue }
+            users[host.lowercased()] = item[kSecAttrAccount as String] as? String ?? ""
+        }
+        return users
+    }
+
+    /// Attributes of every Connecter item, local and synchronizable.
+    private static func appItemAttributes() -> [[String: Any]] {
+        let query: [String: Any] = [
+            kSecClass as String: kSecClassInternetPassword,
+            kSecAttrSecurityDomain as String: securityDomain,
+            kSecAttrSynchronizable as String: kSecAttrSynchronizableAny,
+            kSecReturnAttributes as String: true,
+            kSecMatchLimit as String: kSecMatchLimitAll,
+        ]
+        var result: AnyObject?
+        guard SecItemCopyMatching(query as CFDictionary, &result) == errSecSuccess else { return [] }
+        return result as? [[String: Any]] ?? []
     }
 
     // MARK: - System Keychain fallback

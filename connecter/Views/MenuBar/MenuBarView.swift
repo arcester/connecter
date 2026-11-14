@@ -140,7 +140,8 @@ private struct ShareMenuItem: View {
         case .error:                      Color(nsColor: .systemRed)
         case .disconnected, .offline, .unreachable: Color(nsColor: .systemGray)
         }
-        return (color, "\(name) — \(status.label)")
+        let label = status == .error ? mountManager.problems[config.id]?.title ?? status.label : status.label
+        return (color, "\(name) — \(label)")
     }
 
     private var clickHint: String {

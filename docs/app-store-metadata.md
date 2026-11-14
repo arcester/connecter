@@ -33,6 +33,8 @@ Before submitting, check the note on "same mount point" in [app-store-checklist.
 > AT A GLANCE
 > • Shares grouped by server, with one set of credentials for the whole server or separate ones for each share
 > • Pause a server to unmount its shares and stop retrying until you resume it
+> • Add a server and pick several of its shares at once
+> • Works over VPN and Tailscale: give a server other addresses and Connecter uses the one that answers
 > • Menu bar icon with a colour dot that sums up all your shares
 > • Each share's status in the menu, with mount and unmount in one click
 > • Open in Finder, copy the share's address and test the connection to the server
@@ -59,6 +61,15 @@ nas,network drive,mount,samba,synology,qnap,truenas,file sharing,auto mount,reco
 **Privacy Policy URL**: https://arcester.github.io/connecter/#privacy
 
 **Copyright**: © 2026 J. Guzmán Arce Sáez
+
+**What's New in This Version** (1.2):
+
+> • Add a whole server: choose several of its shares at once in the macOS share picker
+> • VPN and Tailscale: give a server other addresses and Connecter mounts through the one that answers; the main address can be changed
+> • When a share fails, its status shows the probable cause (wrong password, share not found…)
+> • Shares that use the same user and password as their server switch to the server's credentials automatically
+> • Delete a server with all its shares, and manage what Connecter keeps in the Keychain
+> • Server modes simplified to Pause and Auto; pausing unmounts the server's shares
 
 ---
 
@@ -89,6 +100,8 @@ nas,network drive,mount,samba,synology,qnap,truenas,file sharing,auto mount,reco
 > DE UN VISTAZO
 > • Recursos agrupados por servidor, con las mismas credenciales para todo el servidor o unas propias para cada recurso
 > • Pausa un servidor para desmontar sus recursos y dejar de reintentar hasta que lo reanudes
+> • Añade un servidor y elige varios de sus recursos a la vez
+> • Funciona con VPN y Tailscale: da a un servidor otras direcciones y Connecter usa la que responda
 > • Icono en la barra de menús con un punto de color que resume el estado de todos tus recursos
 > • El estado de cada recurso en el menú, con montar y desmontar en un clic
 > • Abrir en el Finder, copiar la dirección del recurso y probar la conexión con el servidor
@@ -113,6 +126,15 @@ nas,unidad de red,montar,samba,synology,qnap,truenas,carpeta compartida,reconect
 **URL de marketing**: https://arcester.github.io/connecter/es/
 
 **URL de la política de privacidad**: https://arcester.github.io/connecter/es/#privacy
+
+**Novedades de esta versión** (1.2):
+
+> • Añade un servidor completo: elige varios de sus recursos a la vez en el selector de macOS
+> • VPN y Tailscale: da a un servidor otras direcciones y Connecter monta por la que responda; la dirección principal se puede cambiar
+> • Cuando un recurso falla, su estado muestra la causa probable (contraseña incorrecta, recurso no encontrado…)
+> • Los recursos con el mismo usuario y contraseña que su servidor pasan solos a usar las credenciales del servidor
+> • Elimina un servidor con todos sus recursos y gestiona lo que Connecter guarda en el llavero
+> • Modos del servidor simplificados a Pausa y Auto; al pausar se desmontan sus recursos
 
 ---
 

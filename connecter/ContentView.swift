@@ -70,13 +70,8 @@ struct ContentView: View {
         .background(WindowResizer(width: contentWidth, height: desiredContentHeight) { windowWidth = $0 })
         .escapeClosesWindow()
         .sheet(isPresented: $showAddSheet) {
-            ShareFormSheet(existing: nil, initialHost: addSheetHost) { newConfig in
-                var configs = mountManager.configs
-                configs.append(newConfig)
-                KeychainManager.save(newConfig)
-                ShareConfig.saveList(configs)
-                mountManager.reloadConfigs()
-            }
+            ShareFormSheet(existing: nil, initialHost: addSheetHost,
+                           onSave: { addShares([$0]) }, onAddShares: addShares)
         }
         .sheet(item: $editingConfig) { config in
             ShareFormSheet(existing: config) { updated in
@@ -130,6 +125,12 @@ struct ContentView: View {
     }
 
     // MARK: - Actions
+
+    private func addShares(_ new: [ShareConfig]) {
+        for config in new { KeychainManager.save(config) }
+        ShareConfig.saveList(mountManager.configs + new)
+        mountManager.reloadConfigs()
+    }
 
     private func refreshAll() {
         withAnimation(.linear(duration: 0.5)) {

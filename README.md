@@ -10,6 +10,10 @@ A macOS menu bar utility for managing SMB network share connections. Connecter m
 - **Smart retry** — exponential backoff (×2, ×4, then 5 min) with configurable auto-disable after repeated failures, and a notification when a share is switched off
 - **Network-aware** — pauses checks while offline (`NWPathMonitor`) and re-checks every share as soon as connectivity returns
 - **Server-aware** — probes the SMB port before every mount attempt, so an unreachable NAS costs nothing (no NetFS calls, no failure count) and shares come back within one check interval of the server returning
+- **Add a whole server** — pick several of a server's shares at once in macOS's own share picker, or add a single share (shares already mounted in Finder are offered)
+- **VPN and Tailscale** — a server can have other addresses (a Tailscale name, a VPN IP); each mount goes through the first one that answers, and a share mounted through any of them counts as mounted
+- **Probable cause** — a failed share's status tag names the likely problem (wrong password, missing password, share not found, SMB refused…) with a hint on hover, instead of a bare "Error"
+- **Server credentials** — a share whose own credentials fail retries with its server's and keeps them if they work; shares with the same user and password as their server switch to the server's automatically
 - **Stable mount points** — reuses a stale `/Volumes/<share>` left by an interrupted mount instead of ending up at `/Volumes/<share>-1`, so saved paths keep working
 - **Launch at login** — via `SMAppService`, off by default
 - **Activity log** — filterable log of all mount/unmount/error events, also written to a rotating file
@@ -82,7 +86,7 @@ PrivacyInfo.xcprivacy    — privacy manifest
 | Passwords | Keychain internet-password items (protocol SMB, security domain `es.guzman.connecter`) whose attributes carry host, share path, user name and display name |
 | Activity log | `Library/Logs/Connecter/connecter.log` |
 
-Every share gets a Keychain item at launch and whenever it is saved (the secret is empty for shares that rely on a password saved by Finder), so **Settings → Keychain** lists what is stored and **Recover** rebuilds the list — for example after moving to the sandboxed build, whose container starts empty. Items are created as synchronizable so that, once the app is signed with the Keychain Sharing capability, they also follow the user to other Macs through iCloud Keychain; without that entitlement macOS refuses synchronizable items (`errSecMissingEntitlement`) and Connecter stores them locally.
+Every share gets a Keychain item at launch and whenever it is saved (the secret is empty for shares that rely on a password saved by Finder), so **Settings → Keychain** lists what is stored (shares and server credentials), **Recover** rebuilds the list and items nothing uses any more can be deleted — for example after moving to the sandboxed build, whose container starts empty. Items are created as synchronizable so that, once the app is signed with the Keychain Sharing capability, they also follow the user to other Macs through iCloud Keychain; without that entitlement macOS refuses synchronizable items (`errSecMissingEntitlement`) and Connecter stores them locally.
 
 ## Privacy
 

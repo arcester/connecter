@@ -9,6 +9,7 @@ struct SharesBody: View {
     @State private var recoverableShares = 0
     @State private var recoveryMessage: String?
     @State private var editingServer: MountManager.ServerGroup?
+    @State private var deletingServer: MountManager.ServerGroup?
 
     /// Layout constants shared with the window-height calculation in ContentView.
     static let groupSpacing: CGFloat = 16
@@ -28,6 +29,8 @@ struct SharesBody: View {
                                 editingServer = group
                             } onAddShare: {
                                 onAddShare(group.host)
+                            } onDelete: {
+                                deletingServer = group
                             }
                             // The server's shares in one outlined box, separated by hairlines
                             VStack(spacing: 0) {
@@ -35,7 +38,8 @@ struct SharesBody: View {
                                     if config.id != group.shares.first?.id {
                                         Divider().padding(.leading, 44)
                                     }
-                                    ShareCard(config: config, isPaused: mountManager.isPaused(config)) { enabled in
+                                    ShareCard(config: config, isPaused: mountManager.isPaused(config),
+                                              problem: mountManager.problems[config.id]) { enabled in
                                         setEnabled(enabled, for: config)
                                     } onTap: {
                                         editingConfig = config
@@ -55,6 +59,22 @@ struct SharesBody: View {
             }
             .sheet(item: $editingServer) { group in
                 ServerCredentialsSheet(host: group.host)
+            }
+            .confirmationDialog(
+                "Delete \(deletingServer?.host ?? "") and its shares?",
+                isPresented: Binding(
+                    get: { deletingServer != nil },
+                    set: { if !$0 { deletingServer = nil } }
+                ),
+                titleVisibility: .visible,
+                presenting: deletingServer
+            ) { group in
+                Button("Delete", role: .destructive) {
+                    mountManager.deleteServer(host: group.host)
+                }
+                Button("Cancel", role: .cancel) {}
+            } message: { group in
+                Text("Its shares, its settings and its saved credentials are removed from Connecter and the Keychain. Shares that are mounted stay mounted until you eject them. This action cannot be undone.")
             }
         }
     }
@@ -113,8 +133,12 @@ struct SharesBody: View {
 
     /// A sandboxed app may not open arbitrary paths under /Volumes, but Finder
     /// opens the share's smb:// URL and reuses the existing mount.
+    /// The URL uses the address the volume is mounted through (it may be the
+    /// server's VPN address): any other would make Finder mount it again.
     private func openInFinder(_ config: ShareConfig, mountPoint: String) {
-        if AppEnvironment.isSandboxed, let url = URL(string: config.smbURLString) {
+        let volume = mountManager.mountedVolumes.first { $0.mountPoint == mountPoint }
+        let smbURL = volume.map { "smb://\($0.host)/\($0.sharePath)" } ?? config.smbURLString
+        if AppEnvironment.isSandboxed, let url = URL(string: smbURL) {
             NSWorkspace.shared.open(url)
         } else {
             NSWorkspace.shared.open(URL(fileURLWithPath: mountPoint))
@@ -174,6 +198,7 @@ struct ServerHeader: View {
     let group: MountManager.ServerGroup
     let onEditCredentials: () -> Void
     let onAddShare: () -> Void
+    let onDelete: () -> Void
 
     private var isPaused: Bool { mountManager.settings(forHost: group.host).isPaused }
 
@@ -212,8 +237,10 @@ struct ServerHeader: View {
             .controlSize(.mini)
             .fixedSize()
             Menu {
-                Button("Server Credentials…", systemImage: "key", action: onEditCredentials)
+                Button("Server Settings…", systemImage: "server.rack", action: onEditCredentials)
                 Button("Add Share on This Server…", systemImage: "plus", action: onAddShare)
+                Divider()
+                Button("Delete Server…", systemImage: "trash", role: .destructive, action: onDelete)
             } label: {
                 Image(systemName: "ellipsis.circle")
             }
@@ -244,7 +271,6 @@ extension ServerSettings.Mode {
     var title: String {
         switch self {
         case .paused:    String(localized: "Paused")
-        case .manual:    String(localized: "Mount Once")
         case .automatic: String(localized: "Automatic")
         }
     }
@@ -253,7 +279,6 @@ extension ServerSettings.Mode {
     var shortTitle: String {
         switch self {
         case .paused:    String(localized: "Pause")
-        case .manual:    String(localized: "Mount")
         case .automatic: String(localized: "Auto")
         }
     }
@@ -261,7 +286,6 @@ extension ServerSettings.Mode {
     var help: String {
         switch self {
         case .paused:    String(localized: "Paused: its shares are unmounted and not checked")
-        case .manual:    String(localized: "Mount once: its shares are mounted now and not remounted if they drop")
         case .automatic: String(localized: "Automatic: checks the server and mounts its shares whenever it answers")
         }
     }

@@ -969,6 +969,52 @@
         }
       }
     },
+    "Account restricted": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Account eingeschränkt"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cuenta restringida"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compte restreint"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Account limitato"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "アカウントが制限されています"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conta restrita"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "账户受限"
+          }
+        }
+      }
+    },
     "Activity Log": {
       "localizations": {
         "de": {
@@ -1245,6 +1291,52 @@
         }
       }
     },
+    "Addresses": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adressen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Direcciones"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adresses"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Indirizzi"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "アドレス"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Endereços"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "地址"
+          }
+        }
+      }
+    },
     "All": {
       "localizations": {
         "de": {
@@ -1425,6 +1517,52 @@
           "stringUnit": {
             "state": "translated",
             "value": "所有共享均已存储在钥匙串中。"
+          }
+        }
+      }
+    },
+    "Another server in the list already uses this address.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ein anderer Server in der Liste verwendet diese Adresse bereits."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Otro servidor de la lista ya usa esta dirección."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un autre serveur de la liste utilise déjà cette adresse."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un altro server dell’elenco usa già questo indirizzo."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "リスト内の別のサーバがすでにこのアドレスを使用しています。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Outro servidor da lista já usa este endereço."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "列表中的另一台服务器已在使用此地址。"
           }
         }
       }
@@ -1885,6 +2023,98 @@
           "stringUnit": {
             "state": "translated",
             "value": "检查间隔"
+          }
+        }
+      }
+    },
+    "Check the server’s address and the share’s path.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prüfe die Adresse des Servers und den Pfad der Freigabe."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisa la dirección del servidor y la ruta del recurso."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vérifiez l’adresse du serveur et le chemin du partage."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Controlla l’indirizzo del server e il percorso della condivisione."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "サーバのアドレスと共有のパスを確認してください。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verifique o endereço do servidor e o caminho do compartilhamento."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "请检查服务器地址和共享路径。"
+          }
+        }
+      }
+    },
+    "Choose Shares…": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Freigaben auswählen …"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elegir recursos…"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choisir les partages…"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scegli condivisioni…"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "共有を選択…"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Escolher compartilhamentos…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "选择共享…"
           }
         }
       }
@@ -2858,6 +3088,144 @@
         }
       }
     },
+    "Delete %@ and its shares?": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ und seine Freigaben löschen?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Eliminar %@ y sus recursos?"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Supprimer %@ et ses partages ?"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eliminare %@ e le sue condivisioni?"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ とその共有を削除しますか？"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apagar %@ e seus compartilhamentos?"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "要删除 %@ 及其共享吗？"
+          }
+        }
+      }
+    },
+    "Delete Server…": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Server löschen …"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eliminar servidor…"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Supprimer le serveur…"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elimina server…"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "サーバを削除…"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apagar servidor…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "删除服务器…"
+          }
+        }
+      }
+    },
+    "Delete from the Keychain": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aus dem Schlüsselbund löschen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eliminar del llavero"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Supprimer du trousseau"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elimina dal portachiavi"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "キーチェーンから削除"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apagar das Chaves"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "从钥匙串中删除"
+          }
+        }
+      }
+    },
     "Delete share": {
       "localizations": {
         "de": {
@@ -2900,6 +3268,52 @@
           "stringUnit": {
             "state": "translated",
             "value": "删除共享"
+          }
+        }
+      }
+    },
+    "Delete “%@” from the Keychain?": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "„%@“ aus dem Schlüsselbund löschen?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Eliminar «%@» del llavero?"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Supprimer « %@ » du trousseau ?"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eliminare «%@» dal portachiavi?"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "「%@」をキーチェーンから削除しますか？"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apagar “%@” das Chaves?"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "要从钥匙串中删除“%@”吗？"
           }
         }
       }
@@ -3914,6 +4328,52 @@
         }
       }
     },
+    "Guest": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gast"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Invitado"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Invité"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ospite"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ゲスト"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Convidado"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "客人"
+          }
+        }
+      }
+    },
     "Host / IP": {
       "localizations": {
         "de": {
@@ -4094,6 +4554,144 @@
           "stringUnit": {
             "state": "translated",
             "value": "在列表中"
+          }
+        }
+      }
+    },
+    "Invalid address": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ungültige Adresse"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dirección no válida"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adresse non valide"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Indirizzo non valido"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "無効なアドレス"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Endereço inválido"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "地址无效"
+          }
+        }
+      }
+    },
+    "Its shares, its settings and its saved credentials are removed from Connecter and the Keychain. Shares that are mounted stay mounted until you eject them. This action cannot be undone.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Seine Freigaben, Einstellungen und gespeicherten Anmeldedaten werden aus Connecter und dem Schlüsselbund entfernt. Eingebundene Freigaben bleiben eingebunden, bis du sie auswirfst. Dieser Vorgang kann nicht widerrufen werden."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sus recursos, sus ajustes y sus credenciales guardadas se eliminan de Connecter y del llavero. Los recursos montados siguen montados hasta que los expulses. Esta acción no se puede deshacer."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ses partages, ses réglages et ses identifiants enregistrés sont supprimés de Connecter et du trousseau. Les partages montés le restent jusqu’à ce que vous les éjectiez. Cette action est irréversible."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le sue condivisioni, le impostazioni e le credenziali salvate vengono rimosse da Connecter e dal portachiavi. Le condivisioni montate restano montate finché non le espelli. Questa azione non può essere annullata."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "その共有、設定、保存済みの資格情報が Connecter とキーチェーンから削除されます。マウント中の共有は取り出すまでマウントされたままです。この操作は取り消せません。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Seus compartilhamentos, ajustes e credenciais salvas são removidos do Connecter e das Chaves. Os compartilhamentos montados continuam montados até você ejetá-los. Esta ação não pode ser desfeita."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "它的共享、设置和存储的凭证将从 Connecter 和钥匙串中移除。已装载的共享会保持装载，直到你将其推出。此操作无法撤销。"
+          }
+        }
+      }
+    },
+    "Its user and password are deleted from the Keychain. This action cannot be undone.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Benutzer und Passwort werden aus dem Schlüsselbund gelöscht. Dieser Vorgang kann nicht widerrufen werden."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Su usuario y su contraseña se eliminan del llavero. Esta acción no se puede deshacer."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Son utilisateur et son mot de passe sont supprimés du trousseau. Cette action est irréversible."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Utente e password vengono eliminati dal portachiavi. Questa azione non può essere annullata."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ユーザ名とパスワードがキーチェーンから削除されます。この操作は取り消せません。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O usuário e a senha são apagados das Chaves. Esta ação não pode ser desfeita."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "其用户名和密码将从钥匙串中删除。此操作无法撤销。"
           }
         }
       }
@@ -4420,6 +5018,52 @@
         }
       }
     },
+    "Main": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Haupt"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Principal"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Principale"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Principale"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "メイン"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Principal"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "主要"
+          }
+        }
+      }
+    },
     "Mode": {
       "localizations": {
         "de": {
@@ -4512,98 +5156,6 @@
         }
       }
     },
-    "Mount": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Verbinden"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Montar"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Monter"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Monta"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "マウント"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Montar"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "挂载"
-          }
-        }
-      }
-    },
-    "Mount Once": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Einmal verbinden"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Montar una vez"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Monter une fois"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Monta una volta"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "1回だけマウント"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Montar uma vez"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "挂载一次"
-          }
-        }
-      }
-    },
     "Mount error": {
       "localizations": {
         "de": {
@@ -4646,52 +5198,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "装载错误"
-          }
-        }
-      }
-    },
-    "Mount once: its shares are mounted now and not remounted if they drop": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Einmal verbinden: Die Freigaben werden jetzt verbunden und nach einem Abbruch nicht neu verbunden"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Montar una vez: sus recursos se montan ahora y no se vuelven a montar si se caen"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Monter une fois : ses partages sont montés maintenant et ne sont pas remontés s’ils se déconnectent"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Monta una volta: le sue condivisioni vengono montate ora e non rimontate se cadono"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "1回だけマウント：共有を今マウントし、切断されても再マウントしません"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Montar uma vez: os compartilhamentos são montados agora e não são remontados se caírem"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "挂载一次：立即挂载其共享，断开后不再重新挂载"
           }
         }
       }
@@ -5110,6 +5616,52 @@
         }
       }
     },
+    "No answer": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keine Antwort"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sin respuesta"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pas de réponse"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nessuna risposta"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "応答なし"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sem resposta"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "无响应"
+          }
+        }
+      }
+    },
     "No entries": {
       "localizations": {
         "de": {
@@ -5243,7 +5795,7 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "无密码"
+            "value": "没有密码"
           }
         }
       }
@@ -5520,6 +6072,52 @@
           "stringUnit": {
             "state": "translated",
             "value": "好"
+          }
+        }
+      }
+    },
+    "One share": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eine Freigabe"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un recurso"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un partage"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Una condivisione"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 つの共有"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Um compartilhamento"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "单个共享"
           }
         }
       }
@@ -5846,6 +6444,98 @@
         }
       }
     },
+    "Other shares of this server can then use them": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Andere Freigaben dieses Servers können sie dann verwenden"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Así los demás recursos de este servidor también pueden usarlas"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les autres partages de ce serveur pourront alors les utiliser"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Così le altre condivisioni di questo server potranno usarle"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "このサーバのほかの共有でも使えるようになります"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Assim os outros compartilhamentos deste servidor também podem usá-las"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "这样此服务器上的其他共享也可以使用它们"
+          }
+        }
+      }
+    },
+    "Others": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Weitere"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Otras"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Autres"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Altri"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "その他"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Outros"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "其他"
+          }
+        }
+      }
+    },
     "Partial connection": {
       "localizations": {
         "de": {
@@ -6118,6 +6808,52 @@
           "stringUnit": {
             "state": "translated",
             "value": "已暂停：推出其共享且不再检查"
+          }
+        }
+      }
+    },
+    "Pick the shares in the macOS window": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wähle die Freigaben im macOS-Fenster aus"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elige los recursos en la ventana de macOS"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choisissez les partages dans la fenêtre de macOS"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scegli le condivisioni nella finestra di macOS"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "macOS のウインドウで共有を選んでください"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Escolha os compartilhamentos na janela do macOS"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在 macOS 窗口中选择共享"
           }
         }
       }
@@ -6950,6 +7686,52 @@
         }
       }
     },
+    "SMB refused": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SMB abgelehnt"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SMB rechazado"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SMB refusé"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SMB rifiutato"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SMB が拒否されました"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SMB recusado"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SMB 被拒绝"
+          }
+        }
+      }
+    },
     "Save": {
       "localizations": {
         "de": {
@@ -7042,6 +7824,98 @@
         }
       }
     },
+    "Save as this server’s credentials": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Als Anmeldedaten dieses Servers speichern"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guardar como credenciales de este servidor"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enregistrer comme identifiants de ce serveur"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Salva come credenziali di questo server"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "このサーバの資格情報として保存"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Salvar como credenciais deste servidor"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "存储为此服务器的凭证"
+          }
+        }
+      }
+    },
+    "Server": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Server"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Servidor"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Serveur"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Server"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "サーバ"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Servidor"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "服务器"
+          }
+        }
+      }
+    },
     "Server Credentials": {
       "localizations": {
         "de": {
@@ -7088,48 +7962,94 @@
         }
       }
     },
-    "Server Credentials…": {
+    "Server Settings": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Server-Anmeldedaten …"
+            "value": "Server-Einstellungen"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Credenciales del servidor…"
+            "value": "Ajustes del servidor"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Identifiants du serveur…"
+            "value": "Réglages du serveur"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Credenziali del server…"
+            "value": "Impostazioni del server"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "サーバの資格情報…"
+            "value": "サーバの設定"
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Credenciais do servidor…"
+            "value": "Ajustes do servidor"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "服务器凭证…"
+            "value": "服务器设置"
+          }
+        }
+      }
+    },
+    "Server Settings…": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Server-Einstellungen …"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ajustes del servidor…"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Réglages du serveur…"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Impostazioni del server…"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "サーバの設定…"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ajustes do servidor…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "服务器设置…"
           }
         }
       }
@@ -7410,6 +8330,144 @@
         }
       }
     },
+    "Share not found": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Freigabe nicht gefunden"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recurso no encontrado"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Partage introuvable"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Condivisione non trovata"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "共有が見つかりません"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compartilhamento não encontrado"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "找不到共享"
+          }
+        }
+      }
+    },
+    "Shares of a server": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Freigaben eines Servers"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recursos de un servidor"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Partages d’un serveur"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Condivisioni di un server"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "サーバの共有"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compartilhamentos de um servidor"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "服务器上的共享"
+          }
+        }
+      }
+    },
+    "Shares to Add": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hinzuzufügende Freigaben"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recursos que se añadirán"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Partages à ajouter"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Condivisioni da aggiungere"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "追加する共有"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compartilhamentos a adicionar"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "要添加的共享"
+          }
+        }
+      }
+    },
     "Show on Launch": {
       "localizations": {
         "de": {
@@ -7498,6 +8556,52 @@
           "stringUnit": {
             "state": "translated",
             "value": "在访达中显示日志文件"
+          }
+        }
+      }
+    },
+    "Sign-in not supported": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anmeldung nicht unterstützt"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inicio de sesión no admitido"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connexion non prise en charge"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Accesso non supportato"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "サインイン方式に非対応"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Login não suportado"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "不支持该登录方式"
           }
         }
       }
@@ -7686,6 +8790,52 @@
         }
       }
     },
+    "The macOS window for choosing shares did not finish in time.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Das macOS-Fenster zur Auswahl der Freigaben wurde nicht rechtzeitig abgeschlossen."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La ventana de macOS para elegir recursos no terminó a tiempo."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La fenêtre de macOS pour choisir les partages ne s’est pas terminée à temps."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La finestra di macOS per scegliere le condivisioni non è stata completata in tempo."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "共有を選択する macOS のウインドウが時間内に完了しませんでした。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A janela do macOS para escolher compartilhamentos não terminou a tempo."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "用于选择共享的 macOS 窗口未能及时完成。"
+          }
+        }
+      }
+    },
     "The saved password could not be read from the Keychain. Enter it again to replace it.": {
       "localizations": {
         "de": {
@@ -7728,6 +8878,374 @@
           "stringUnit": {
             "state": "translated",
             "value": "无法从钥匙串读取已存储的密码。请重新输入以替换。"
+          }
+        }
+      }
+    },
+    "The server and macOS have no sign-in method in common. Turn on SMB 2 or 3 and NTLMv2 on the server.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Server und macOS haben kein gemeinsames Anmeldeverfahren. Aktiviere SMB 2 oder 3 und NTLMv2 auf dem Server."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El servidor y macOS no tienen ningún método de inicio de sesión en común. Activa SMB 2 o 3 y NTLMv2 en el servidor."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le serveur et macOS n’ont aucune méthode de connexion en commun. Activez SMB 2 ou 3 et NTLMv2 sur le serveur."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Il server e macOS non hanno nessun metodo di accesso in comune. Attiva SMB 2 o 3 e NTLMv2 sul server."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "サーバと macOS に共通のサインイン方式がありません。サーバで SMB 2 または 3 と NTLMv2 をオンにしてください。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O servidor e o macOS não têm nenhum método de login em comum. Ative SMB 2 ou 3 e NTLMv2 no servidor."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "服务器与 macOS 没有共同的登录方式。请在服务器上打开 SMB 2 或 3 以及 NTLMv2。"
+          }
+        }
+      }
+    },
+    "The server answers, but the mount did not finish in time. It is usually a wrong password; if it keeps happening, restart NetAuth.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der Server antwortet, aber das Einbinden wurde nicht rechtzeitig abgeschlossen. Meist ist das Passwort falsch; wenn es wieder passiert, starte NetAuth neu."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El servidor responde, pero el montaje no terminó a tiempo. Suele ser una contraseña incorrecta; si sigue pasando, reinicia NetAuth."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le serveur répond, mais le montage ne s’est pas terminé à temps. C’est souvent un mot de passe incorrect ; si cela continue, redémarrez NetAuth."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Il server risponde, ma il montaggio non è terminato in tempo. Di solito è una password errata; se continua a succedere, riavvia NetAuth."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "サーバは応答していますが、マウントが時間内に完了しませんでした。多くの場合パスワードの誤りです。繰り返す場合は NetAuth を再起動してください。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O servidor responde, mas a montagem não terminou a tempo. Geralmente é uma senha incorreta; se continuar acontecendo, reinicie o NetAuth."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "服务器有响应，但装载未能及时完成。这通常是密码错误；如果反复出现，请重新启动 NetAuth。"
+          }
+        }
+      }
+    },
+    "The server has no share with this name, or this user cannot see it. Check the share’s path.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der Server hat keine Freigabe mit diesem Namen, oder dieser Benutzer kann sie nicht sehen. Prüfe den Pfad der Freigabe."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El servidor no tiene ningún recurso con ese nombre o este usuario no puede verlo. Revisa la ruta del recurso."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le serveur n’a aucun partage de ce nom, ou cet utilisateur ne peut pas le voir. Vérifiez le chemin du partage."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Il server non ha nessuna condivisione con questo nome, oppure questo utente non può vederla. Controlla il percorso della condivisione."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "サーバにこの名前の共有がないか、このユーザには表示されません。共有のパスを確認してください。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O servidor não tem nenhum compartilhamento com esse nome, ou este usuário não pode vê-lo. Verifique o caminho do compartilhamento."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "服务器上没有此名称的共享，或此用户看不到它。请检查共享的路径。"
+          }
+        }
+      }
+    },
+    "The server refuses SMB connections. Check that file sharing over SMB is turned on.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der Server lehnt SMB-Verbindungen ab. Prüfe, ob die Dateifreigabe über SMB aktiviert ist."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El servidor rechaza las conexiones SMB. Comprueba que tiene activado compartir archivos por SMB."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le serveur refuse les connexions SMB. Vérifiez que le partage de fichiers via SMB est activé."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Il server rifiuta le connessioni SMB. Controlla che la condivisione file tramite SMB sia attiva."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "サーバが SMB 接続を拒否しています。SMB によるファイル共有がオンになっているか確認してください。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O servidor recusa conexões SMB. Verifique se o compartilhamento de arquivos via SMB está ativado."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "服务器拒绝 SMB 连接。请检查是否已打开通过 SMB 共享文件。"
+          }
+        }
+      }
+    },
+    "The server rejected the user or the password. Correct them in the share, or in Server Settings… if it uses the server’s credentials.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der Server hat den Benutzer oder das Passwort abgelehnt. Korrigiere sie in der Freigabe oder, wenn sie die Anmeldedaten des Servers verwendet, unter „Server-Einstellungen …“."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El servidor rechazó el usuario o la contraseña. Corrígelos en el recurso o, si usa las credenciales del servidor, en «Ajustes del servidor…»."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le serveur a refusé l’utilisateur ou le mot de passe. Corrigez-les dans le partage ou, s’il utilise les identifiants du serveur, dans « Réglages du serveur… »."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Il server ha rifiutato l’utente o la password. Correggili nella condivisione o, se usa le credenziali del server, in «Impostazioni del server…»."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "サーバがユーザ名またはパスワードを拒否しました。共有で修正するか、サーバの資格情報を使っている場合は「サーバの設定…」で修正してください。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O servidor recusou o usuário ou a senha. Corrija-os no compartilhamento ou, se ele usa as credenciais do servidor, em “Ajustes do servidor…”."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "服务器拒绝了用户名或密码。请在共享中更正；如果它使用服务器凭证，请在“服务器设置…”中更正。"
+          }
+        }
+      }
+    },
+    "The server says the account is locked or not allowed to connect.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Laut Server ist der Account gesperrt oder darf sich nicht verbinden."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El servidor indica que la cuenta está bloqueada o no tiene permiso para conectarse."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le serveur indique que le compte est verrouillé ou n’est pas autorisé à se connecter."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Il server indica che l’account è bloccato o non è autorizzato a connettersi."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "サーバによると、アカウントがロックされているか接続が許可されていません。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O servidor informa que a conta está bloqueada ou não tem permissão para se conectar."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "服务器表示该账户已锁定或不允许连接。"
+          }
+        }
+      }
+    },
+    "The shares you picked are already in Connecter.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die ausgewählten Freigaben sind bereits in Connecter."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los recursos que elegiste ya están en Connecter."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les partages choisis sont déjà dans Connecter."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le condivisioni scelte sono già in Connecter."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "選んだ共有はすでに Connecter にあります。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Os compartilhamentos escolhidos já estão no Connecter."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "你选择的共享已在 Connecter 中。"
+          }
+        }
+      }
+    },
+    "There is no saved password for this user, and macOS does not answer without one. Enter it in the share or in Server Settings…": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Für diesen Benutzer ist kein Passwort gespeichert, und macOS antwortet ohne eines nicht. Gib es in der Freigabe oder unter „Server-Einstellungen …“ ein."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No hay ninguna contraseña guardada para este usuario y macOS no responde sin ella. Escríbela en el recurso o en «Ajustes del servidor…»."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aucun mot de passe n’est enregistré pour cet utilisateur, et macOS ne répond pas sans. Saisissez-le dans le partage ou dans « Réglages du serveur… »."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Non c’è nessuna password salvata per questo utente e macOS non risponde senza. Inseriscila nella condivisione o in «Impostazioni del server…»."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "このユーザのパスワードが保存されておらず、macOS はパスワードなしでは応答しません。共有または「サーバの設定…」で入力してください。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Não há senha salva para este usuário, e o macOS não responde sem ela. Digite-a no compartilhamento ou em “Ajustes do servidor…”."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "此用户没有存储的密码，而 macOS 没有密码就不会响应。请在共享或“服务器设置…”中输入密码。"
           }
         }
       }
@@ -7778,48 +9296,48 @@
         }
       }
     },
-    "This server has no credentials yet. Set them with “Server Credentials…” in the server’s menu.": {
+    "This server has no credentials yet. Set them with “Server Settings…” in the server’s menu.": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Dieser Server hat noch keine Anmeldedaten. Lege sie im Menü des Servers mit „Server-Anmeldedaten …“ fest."
+            "value": "Dieser Server hat noch keine Anmeldedaten. Lege sie im Menü des Servers mit „Server-Einstellungen …“ fest."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Este servidor aún no tiene credenciales. Configúralas con «Credenciales del servidor…» en su menú."
+            "value": "Este servidor aún no tiene credenciales. Configúralas con «Ajustes del servidor…» en su menú."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ce serveur n’a pas encore d’identifiants. Définissez-les avec « Identifiants du serveur… » dans le menu du serveur."
+            "value": "Ce serveur n’a pas encore d’identifiants. Définissez-les avec « Réglages du serveur… » dans le menu du serveur."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Questo server non ha ancora credenziali. Impostale con «Credenziali del server…» nel menu del server."
+            "value": "Questo server non ha ancora credenziali. Impostale con «Impostazioni del server…» nel menu del server."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "このサーバにはまだ資格情報がありません。サーバのメニューの「サーバの資格情報…」で設定してください。"
+            "value": "このサーバにはまだ資格情報がありません。サーバのメニューの「サーバの設定…」で設定してください。"
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Este servidor ainda não tem credenciais. Defina-as com “Credenciais do servidor…” no menu do servidor."
+            "value": "Este servidor ainda não tem credenciais. Defina-as com “Ajustes do servidor…” no menu do servidor."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "此服务器还没有凭证。请在服务器菜单中通过“服务器凭证…”进行设置。"
+            "value": "此服务器还没有凭证。请在服务器菜单中通过“服务器设置…”进行设置。"
           }
         }
       }
@@ -7866,6 +9384,52 @@
           "stringUnit": {
             "state": "translated",
             "value": "此共享已配置。"
+          }
+        }
+      }
+    },
+    "Use the others for the same server reached another way, such as its VPN or Tailscale name or IP; separate them with commas. Before each mount, Connecter checks every address at once and uses the first one that answers, in order: the main one, then the others. A share mounted through any of them counts as mounted. Shares mounted through an address you remove are mounted again through the rest.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unter „Weitere“ trägst du andere Wege zum selben Server ein, etwa seinen VPN- oder Tailscale-Namen oder seine IP, durch Kommas getrennt. Vor jedem Einbinden prüft Connecter alle Adressen gleichzeitig und verwendet die erste, die antwortet, in dieser Reihenfolge: zuerst die Hauptadresse, dann die weiteren. Eine Freigabe, die über eine davon eingebunden ist, gilt als eingebunden. Freigaben, die über eine entfernte Adresse eingebunden sind, werden über die übrigen neu eingebunden."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En «Otras» pon otras formas de llegar al mismo servidor, como su nombre o IP de la VPN o de Tailscale, separadas por comas. Antes de cada montaje, Connecter comprueba todas a la vez y usa la primera que responde, por orden: primero la principal y después las otras. Un recurso montado por cualquiera de ellas cuenta como montado. Los recursos montados por una dirección que quites se vuelven a montar por las demás."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dans « Autres », indiquez d’autres moyens d’atteindre le même serveur, comme son nom ou son IP VPN ou Tailscale, séparés par des virgules. Avant chaque montage, Connecter vérifie toutes les adresses à la fois et utilise la première qui répond, dans l’ordre : la principale, puis les autres. Un partage monté par l’une d’elles est considéré comme monté. Les partages montés par une adresse que vous retirez sont remontés par les autres."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In «Altri» inserisci altri modi per raggiungere lo stesso server, come il nome o l’IP della VPN o di Tailscale, separati da virgole. Prima di ogni montaggio, Connecter controlla tutti gli indirizzi insieme e usa il primo che risponde, in ordine: prima il principale, poi gli altri. Una condivisione montata tramite uno qualsiasi di essi risulta montata. Le condivisioni montate tramite un indirizzo che rimuovi vengono rimontate tramite gli altri."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "「その他」には、同じサーバへの別の経路（VPN や Tailscale の名前や IP など）をコンマで区切って入力します。マウントの前に Connecter はすべてのアドレスを同時に確認し、応答した最初のアドレスを使います。順番はメイン、次にその他です。いずれかのアドレスでマウントされている共有はマウント済みとみなされます。削除したアドレスでマウントされている共有は、残りのアドレスでマウントし直されます。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Em “Outros”, coloque outras formas de chegar ao mesmo servidor, como o nome ou IP da VPN ou do Tailscale, separados por vírgulas. Antes de cada montagem, o Connecter verifica todos os endereços ao mesmo tempo e usa o primeiro que responder, nesta ordem: o principal e depois os outros. Um compartilhamento montado por qualquer um deles conta como montado. Os compartilhamentos montados por um endereço que você remover são montados de novo pelos demais."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在“其他”中填写到达同一服务器的其他方式，例如其 VPN 或 Tailscale 名称或 IP，用逗号分隔。每次装载前，Connecter 会同时检查所有地址，并按顺序使用第一个响应的地址：先是主要地址，然后是其他地址。通过其中任一地址装载的共享都视为已装载。通过你移除的地址装载的共享会通过其余地址重新装载。"
           }
         }
       }
@@ -8146,6 +9710,52 @@
         }
       }
     },
+    "Wrong user or password": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Falscher Benutzer oder falsches Passwort"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usuario o contraseña incorrectos"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Utilisateur ou mot de passe incorrect"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Utente o password errati"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ユーザ名またはパスワードが違います"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usuário ou senha incorretos"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "用户名或密码错误"
+          }
+        }
+      }
+    },
     "Yellow": {
       "localizations": {
         "de": {
@@ -8188,6 +9798,52 @@
           "stringUnit": {
             "state": "translated",
             "value": "黄色"
+          }
+        }
+      }
+    },
+    "macOS could not mount the shares. The activity log has the details.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "macOS konnte die Freigaben nicht einbinden. Details stehen im Aktivitätsprotokoll."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "macOS no pudo montar los recursos. Los detalles están en el registro de actividad."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "macOS n’a pas pu monter les partages. Les détails figurent dans le journal d’activité."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "macOS non è riuscito a montare le condivisioni. I dettagli sono nel registro attività."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "macOS は共有をマウントできませんでした。詳細はアクティビティログにあります。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O macOS não conseguiu montar os compartilhamentos. Os detalhes estão no registro de atividade."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "macOS 无法装载这些共享。详细信息见活动日志。"
           }
         }
       }
@@ -8238,6 +9894,52 @@
         }
       }
     },
+    "macOS lists the server’s shares and mounts the ones you pick. They are added with these credentials as the server’s.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "macOS zeigt die Freigaben des Servers an und bindet die ausgewählten ein. Sie werden mit diesen Anmeldedaten als Anmeldedaten des Servers hinzugefügt."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "macOS muestra los recursos del servidor y monta los que elijas. Se añaden con estas credenciales como las del servidor."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "macOS affiche les partages du serveur et monte ceux que vous choisissez. Ils sont ajoutés avec ces identifiants comme identifiants du serveur."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "macOS mostra le condivisioni del server e monta quelle che scegli. Vengono aggiunte con queste credenziali come credenziali del server."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "macOS がサーバの共有を表示し、選んだ共有をマウントします。これらの資格情報をサーバの資格情報として追加されます。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O macOS mostra os compartilhamentos do servidor e monta os que você escolher. Eles são adicionados com estas credenciais como as do servidor."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "macOS 会列出服务器上的共享并装载你选择的共享。它们会以这些凭证作为服务器凭证添加。"
+          }
+        }
+      }
+    },
     "macOS's NetAuth service is not responding. Restart it to recover the mounts.": {
       "localizations": {
         "de": {
@@ -8280,6 +9982,52 @@
           "stringUnit": {
             "state": "translated",
             "value": "macOS 的 NetAuth 服务未响应。重新启动它以恢复装载。"
+          }
+        }
+      }
+    },
+    "nas.tailnet.ts.net, 100.64.0.5": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "nas.tailnet.ts.net, 100.64.0.5"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "nas.tailnet.ts.net, 100.64.0.5"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "nas.tailnet.ts.net, 100.64.0.5"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "nas.tailnet.ts.net, 100.64.0.5"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "nas.tailnet.ts.net, 100.64.0.5"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "nas.tailnet.ts.net, 100.64.0.5"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "nas.tailnet.ts.net, 100.64.0.5"
           }
         }
       }

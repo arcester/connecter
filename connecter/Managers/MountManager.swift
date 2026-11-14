@@ -7,7 +7,10 @@ import AppKit
 
 enum MountError: LocalizedError {
     case invalidURL
-    case mountFailed(String)
+    /// NetFS refused the mount; `status` is its error code (0 if unknown).
+    case mountFailed(String, status: Int32 = 0)
+    /// A user is set but no password was found for it anywhere.
+    case missingPassword(user: String)
     case mountTimedOut(TimeInterval)
     case unmountFailed(String)
     case alreadyMounted
@@ -15,11 +18,14 @@ enum MountError: LocalizedError {
     case netAuthRestartCancelled
     case netAuthRestartFailed(String)
     case netAuthRestartUnavailable
+    case serverUnreachable
 
     var errorDescription: String? {
         switch self {
         case .invalidURL:               return "Invalid SMB URL"
-        case .mountFailed(let msg):     return "Mount failed: \(msg)"
+        case .mountFailed(let msg, _):  return "Mount failed: \(msg)"
+        case .missingPassword(let user):
+            return "No password saved for \(user) — on macOS 27 NetAuth does not answer without one"
         case .mountTimedOut(let secs):
             return "Mount did not complete within \(Int(secs)) s — check the share's username and password"
         case .unmountFailed(let msg):   return "Unmount failed: \(msg)"
@@ -27,6 +33,7 @@ enum MountError: LocalizedError {
         case .notMounted:               return "Volume is not mounted"
         case .netAuthRestartCancelled:  return "NetAuth restart was cancelled"
         case .netAuthRestartFailed(let msg): return "Could not restart NetAuth: \(msg)"
+        case .serverUnreachable:        return "The server does not answer on the SMB port (445)"
         case .netAuthRestartUnavailable:
             return "The sandboxed build cannot restart NetAuth; run “\(MountManager.netAuthRestartCommand)” in Terminal"
         }
@@ -95,6 +102,10 @@ final class MountManager: ObservableObject {
     /// a newer one started after a NetAuth restart or system wake.
     private var inFlight: [UUID: UUID] = [:]
 
+    /// Probable cause of each share's last failed mount, shown instead of
+    /// "Error"; cleared as soon as the share leaves the error state.
+    @Published private(set) var problems: [UUID: MountProblem] = [:]
+
     /// True when a mount timed out although the server's SMB port answers —
     /// the signature of a hung NetAuth agent (seen on macOS 27). Cleared as soon
     /// as any mount succeeds, NetAuth is restarted, or the user dismisses it.
@@ -125,8 +136,6 @@ final class MountManager: ObservableObject {
     /// QA-only: simulate a hung NetAuth (see `mount()`); cleared by `restartNetAuth()`.
     private static var simulateNetAuthHang =
         ProcessInfo.processInfo.environment["CONNECTER_SIMULATE_NETAUTH_HANG"] != nil
-
-    private var didLaunchMount = false
 
     init() {
         log.debug("MountManager started\(AppEnvironment.isSandboxed ? " (App Sandbox)" : "")")
@@ -166,13 +175,9 @@ final class MountManager: ObservableObject {
     /// Starts independent monitoring tasks for all enabled shares.
     func startMonitoring() {
         guard !AppEnvironment.isDemo else { return }   // demo states stay as set
+        adoptServerCredentials()
         backUpSharesToKeychain()
         syncTasks()
-        // Called again each time the main window appears: mount-once servers only at launch
-        if !didLaunchMount {
-            didLaunchMount = true
-            mountOnce(mountOnceShares)
-        }
         log.debug("Monitor started (\(shareTasks.count) task(s), interval: \(Int(AppSettings.shared.monitorInterval))s)")
     }
 
@@ -207,12 +212,7 @@ final class MountManager: ObservableObject {
             $0.connectionStatus == .connected && isActive($0) && mountPoint(for: $0) == nil
         }
         for config in dropped {
-            if isWatched(config) {
-                Task { await checkShare(id: config.id) }
-            } else {
-                log.info("[\(config.displayName)] No longer mounted — not remounting (server set to mount once)")
-                setStatus(.disconnected, forID: config.id)
-            }
+            Task { await checkShare(id: config.id) }
         }
     }
 
@@ -264,7 +264,7 @@ final class MountManager: ObservableObject {
         shareTasks.removeAll()
         failureCounts.removeAll()
         inFlight.removeAll()
-        for i in configs.indices where isWatched(configs[i]) {
+        for i in configs.indices where isActive(configs[i]) {
             configs[i].connectionStatus = .connecting
         }
     }
@@ -285,7 +285,7 @@ final class MountManager: ObservableObject {
         guard available else {
             log.warning("Network unavailable — mount checks paused")
             for i in configs.indices
-            where isWatched(configs[i]) && configs[i].connectionStatus != .connected {
+            where isActive(configs[i]) && configs[i].connectionStatus != .connected {
                 configs[i].connectionStatus = .offline
             }
             return
@@ -296,9 +296,7 @@ final class MountManager: ObservableObject {
             try? await Task.sleep(for: .seconds(3))
             guard !Task.isCancelled, let self else { return }
             self.failureCounts.removeAll()
-            let ids = self.configs.filter {
-                self.isWatched($0) || (self.isActive($0) && $0.connectionStatus == .offline)
-            }.map(\.id)
+            let ids = self.configs.filter(self.isActive).map(\.id)
             await withTaskGroup(of: Void.self) { group in
                 for id in ids {
                     group.addTask { await self.checkShare(id: id) }
@@ -388,7 +386,6 @@ final class MountManager: ObservableObject {
         netAuthSuspected = false
         restartAllTasks()
         syncTasks()
-        mountOnce(mountOnceShares.filter { $0.connectionStatus != .connected })
     }
 
     /// Forgets failures and retries every enabled share right away — used after
@@ -399,7 +396,6 @@ final class MountManager: ObservableObject {
         netAuthSuspected = false
         restartAllTasks()
         syncTasks()
-        mountOnce(mountOnceShares.filter { $0.connectionStatus != .connected })
     }
 
     /// Hides the NetAuth warning until the next mount timeout.
@@ -499,6 +495,16 @@ final class MountManager: ObservableObject {
             current.append(config)
             result.added += 1
         }
+        // Shares that inherit their server's credentials need the server's user,
+        // which lives in the preferences: take it from the server's Keychain item.
+        let serverUsers = KeychainManager.storedServerUsers()
+        for key in Set(current.filter(\.usesServerCredentials).map(\.serverKey))
+        where settings(forHost: key).username.isEmpty {
+            guard let user = serverUsers[key], !user.isEmpty else { continue }
+            servers[key, default: ServerSettings()].username = user
+            ServerSettings.saveAll(servers)
+            log.info("Recover from Keychain: user \(user) restored for server \(key)")
+        }
         if result.added > 0 {
             ShareConfig.saveList(current)   // the Keychain items already exist
             reloadConfigs()
@@ -516,13 +522,10 @@ final class MountManager: ObservableObject {
         log.info("Share \"\(name)\" \(enabled ? "enabled" : "disabled")")
 
         if enabled {
-            if isWatched(configs[i]) {
-                startTask(for: configs[i])
-            } else if isActive(configs[i]) {
-                mountOnce([configs[i]])
-            }
+            if isActive(configs[i]) { startTask(for: configs[i]) }
         } else {
             configs[i].connectionStatus = .disconnected
+            problems[id] = nil
             shareTasks[id]?.cancel()
             shareTasks.removeValue(forKey: id)
             failureCounts.removeValue(forKey: id)
@@ -551,6 +554,98 @@ final class MountManager: ObservableObject {
             .sorted { $0.host.localizedCaseInsensitiveCompare($1.host) == .orderedAscending }
     }
 
+    /// Every address the share's server answers to: its host first, then the
+    /// server's other addresses (VPN, Tailscale…) in the user's order.
+    func hosts(for config: ShareConfig) -> [String] {
+        [config.host] + (settings(forHost: config.host).otherHosts ?? [])
+    }
+
+    /// Sets the server's main address (`newHost`, may equal `host`) and its
+    /// other addresses, then retries its shares that are not mounted.
+    ///
+    /// Shares mounted through an address that is no longer the server's are
+    /// unmounted first: the app would not see them as mounted any more and
+    /// would mount a second copy at /Volumes/<share>-1. A new main address
+    /// moves every share to it, with their Keychain items and the server's
+    /// settings and credentials.
+    func setAddresses(host: String, main newHost: String, others: [String]) async {
+        let oldKey = host.lowercased()
+        let newKey = newHost.lowercased()
+        let oldAddresses = Set(([oldKey] + (settings(forHost: oldKey).otherHosts ?? [])).map { $0.lowercased() })
+        let removed = oldAddresses.subtracting(([newKey] + others).map { $0.lowercased() })
+
+        if !removed.isEmpty {
+            let volumes = await refreshMountedVolumes(reuseInFlight: false)
+            for share in configs where share.serverKey == oldKey {
+                let mountedThroughRemoved = volumes.contains {
+                    removed.contains($0.host.lowercased())
+                        && $0.sharePath.caseInsensitiveCompare(share.normalizedPath) == .orderedSame
+                }
+                guard mountedThroughRemoved else { continue }
+                log.info("[\(share.displayName)] Unmounting: mounted through an address the server no longer has")
+                markDisconnecting(id: share.id)
+                try? await unmount(share)
+                setStatus(.disconnected, forID: share.id)
+            }
+        }
+
+        if newKey != oldKey {
+            moveServer(from: oldKey, to: newHost)
+        }
+        servers[newKey, default: ServerSettings()].otherHosts = others.isEmpty ? nil : others
+        ServerSettings.saveAll(servers)
+        log.info("Addresses for server \(newHost): \(([newHost] + others).joined(separator: ", "))")
+
+        let ids = configs
+            .filter { $0.serverKey == newKey && isActive($0) && $0.connectionStatus != .connected }
+            .map(\.id)
+        for id in ids { await retryShare(id: id) }
+    }
+
+    /// Re-keys a server under a new main address: its shares (and their
+    /// Keychain items), its settings and its credentials.
+    private func moveServer(from oldKey: String, to newHost: String) {
+        let newKey = newHost.lowercased()
+        let username = settings(forHost: oldKey).username
+        servers[newKey] = servers.removeValue(forKey: oldKey)
+        ServerSettings.saveAll(servers)
+
+        // The server's password: moved only when it could be read, so a locked
+        // or denied item is never replaced by an empty one.
+        let oldCredentials = ShareConfig.serverCredentials(host: oldKey, username: username)
+        if case .found(let password) = KeychainManager.load(for: oldCredentials) {
+            let newCredentials = ShareConfig.serverCredentials(host: newKey, username: username, password: password)
+            KeychainManager.save(newCredentials)
+            KeychainManager.removeSuperseded(oldCredentials, replacedBy: newCredentials)
+        }
+
+        var moved = configs
+        for i in moved.indices where moved[i].serverKey == oldKey {
+            let old = moved[i]
+            moved[i].host = newHost
+            KeychainManager.save(moved[i])
+            KeychainManager.removeSuperseded(old, replacedBy: moved[i])
+        }
+        ShareConfig.saveList(moved)
+        log.info("Server \(oldKey) renamed to \(newHost)")
+        reloadConfigs()
+    }
+
+    /// The first of the share's server addresses, in order, whose SMB port
+    /// answers. All are probed at once: a dead VPN name can take the whole timeout.
+    private func reachableHost(for config: ShareConfig) async -> String? {
+        let hosts = hosts(for: config)
+        let open = await withTaskGroup(of: (Int, Bool).self) { group in
+            for (i, host) in hosts.enumerated() {
+                group.addTask { (i, await PortProbe.isOpen(host: host)) }
+            }
+            var open = Set<Int>()
+            for await (i, isOpen) in group where isOpen { open.insert(i) }
+            return open
+        }
+        return hosts.indices.first(where: open.contains).map { hosts[$0] }
+    }
+
     func settings(forHost host: String) -> ServerSettings {
         servers[host.lowercased()] ?? ServerSettings()
     }
@@ -559,29 +654,14 @@ final class MountManager: ObservableObject {
         servers[config.serverKey]?.isPaused == true
     }
 
-    /// Meant to be mounted: enabled, on a server that is not paused.
+    /// Monitored and kept mounted: enabled, on a server that is not paused.
     func isActive(_ config: ShareConfig) -> Bool {
         config.isEnabled && !isPaused(config)
     }
 
-    /// Active and on an automatic server: checked every interval and remounted.
-    func isWatched(_ config: ShareConfig) -> Bool {
-        isActive(config) && (servers[config.serverKey]?.mode ?? .automatic) == .automatic
-    }
-
-    /// Active shares on mount-once servers.
-    private var mountOnceShares: [ShareConfig] {
-        configs.filter { isActive($0) && !isWatched($0) }
-    }
-
-    /// One check (mount if needed) per share, without starting a watch task.
-    private func mountOnce(_ shares: [ShareConfig]) {
-        for share in shares { Task { await checkShare(id: share.id) } }
-    }
-
-    /// Paused unmounts the server's shares and stops checking them; mount-once
-    /// mounts the enabled ones now and stops watching; automatic watches and
-    /// remounts them. Each share's own switch is left as it is.
+    /// Paused unmounts the server's shares and stops checking them; automatic
+    /// checks them every interval and mounts them. Each share's own switch is
+    /// left as it is.
     func setMode(_ mode: ServerSettings.Mode, host: String) async {
         let key = host.lowercased()
         servers[key, default: ServerSettings()].mode = mode
@@ -591,12 +671,7 @@ final class MountManager: ObservableObject {
         let shares = configs.filter { $0.serverKey == key && $0.isEnabled }
         for share in shares { failureCounts.removeValue(forKey: share.id) }
         syncTasks()   // stops or starts their watch tasks
-        switch mode {
-        case .automatic:
-            break
-        case .manual:
-            mountOnce(shares)
-        case .paused:
+        if mode == .paused {
             for share in shares {
                 if isMounted(share) {
                     markDisconnecting(id: share.id)
@@ -605,6 +680,20 @@ final class MountManager: ObservableObject {
                 setStatus(.disconnected, forID: share.id)
             }
         }
+    }
+
+    /// Removes the server with all its shares, their Keychain items, its
+    /// settings and its credentials. Mounted shares stay mounted, as when a
+    /// single share is deleted.
+    func deleteServer(host: String) {
+        let key = host.lowercased()
+        let count = configs.filter { $0.serverKey == key }.count
+        KeychainManager.delete(for: .serverCredentials(host: key, username: settings(forHost: key).username))
+        servers.removeValue(forKey: key)
+        ServerSettings.saveAll(servers)
+        ShareConfig.saveList(configs.filter { $0.serverKey != key })
+        log.info("Server \(host) deleted with \(count) share(s)")
+        reloadConfigs()   // stops their tasks and deletes their Keychain items
     }
 
     /// Stores the user and password the server's inheriting shares mount with,
@@ -619,11 +708,63 @@ final class MountManager: ObservableObject {
         servers[key, default: ServerSettings()].username = username
         ServerSettings.saveAll(servers)
         log.info("Credentials saved for server \(host) — user=\(username.isEmpty ? "(guest)" : username)")
+        adoptServerCredentials()
 
         let ids = configs
             .filter { $0.serverKey == key && $0.usesServerCredentials && isActive($0) && $0.connectionStatus != .connected }
             .map(\.id)
         Task { for id in ids { await retryShare(id: id) } }
+    }
+
+    /// Shares that mount with the same user and password as their server
+    /// switch to inheriting them, and their duplicate password leaves the
+    /// Keychain. A share without a password of its own mounts with the one
+    /// Finder saved, so that is the one compared.
+    func adoptServerCredentials() {
+        var serverPasswords: [String: String?] = [:]   // by server key, read once; nil = unreadable
+        for config in configs where !config.usesServerCredentials {
+            let user = settings(forHost: config.host).username
+            guard !user.isEmpty, config.username.caseInsensitiveCompare(user) == .orderedSame else { continue }
+            let key = config.serverKey
+            if serverPasswords[key] == nil {
+                switch KeychainManager.load(for: .serverCredentials(host: key, username: user)) {
+                case .found(let password): serverPasswords[key] = password
+                case .notFound:            serverPasswords[key] = ""
+                case .unavailable:         serverPasswords[key] = .some(nil)
+                }
+            }
+            guard let serverPassword = serverPasswords[key] ?? nil else { continue }
+            // Both empty: both mount with Finder's password, no need to read it.
+            var ownPassword = config.password
+            if ownPassword.isEmpty && !serverPassword.isEmpty {
+                ownPassword = KeychainManager.findSystemPassword(server: config.host, username: config.username) ?? ""
+            }
+            guard ownPassword == serverPassword else { continue }
+            log.info("[\(config.displayName)] Same user and password as its server — now uses the server’s credentials")
+            switchToServerCredentials(id: config.id)
+        }
+    }
+
+    /// Worth a second try with the server's credentials: the share's own were
+    /// rejected or missing, and its server has a user set.
+    private func canRetryWithServerCredentials(_ config: ShareConfig, after error: Error) -> Bool {
+        guard !config.usesServerCredentials, !settings(forHost: config.host).username.isEmpty else { return false }
+        let problem = MountProblem(error)
+        return problem == .wrongCredentials || problem == .missingPassword
+    }
+
+    /// Turns on "Use the server's credentials" for the share and removes its
+    /// own password from the Keychain (the item stays, without a secret, as
+    /// the share's backup).
+    private func switchToServerCredentials(id: UUID) {
+        guard let i = configs.firstIndex(where: { $0.id == id }) else { return }
+        let old = configs[i]
+        configs[i].usesServerCredentials = true
+        configs[i].password = ""
+        configs[i].passwordUnavailable = false
+        KeychainManager.save(configs[i])
+        KeychainManager.removeSuperseded(old, replacedBy: configs[i])
+        ShareConfig.saveList(configs)
     }
 
     // MARK: - Public: immediate actions
@@ -643,7 +784,9 @@ final class MountManager: ObservableObject {
 
     // MARK: - Public: mount / unmount
 
-    func mount(_ config: ShareConfig) async throws {
+    /// Mounts through `host`, one of the server's addresses (default: its own host).
+    func mount(_ config: ShareConfig, via host: String? = nil) async throws {
+        let host = host ?? config.host
         await acquireMountSlot()
         defer { releaseMountSlot() }
         // The share may have been disabled, or mounted by Finder or the system's
@@ -652,8 +795,8 @@ final class MountManager: ObservableObject {
         guard await mountPointOffMain(for: config) == nil else { throw MountError.alreadyMounted }
 
         let sharePath = Self.normalizedSharePath(config.path)
-        let urlString = "smb://\(config.host)/\(sharePath)"
-        guard !config.host.isEmpty, !sharePath.isEmpty, let url = URL(string: urlString) else {
+        let urlString = "smb://\(host)/\(sharePath)"
+        guard !host.isEmpty, !sharePath.isEmpty, let url = URL(string: urlString) else {
             log.error("Invalid SMB URL for \(config.displayName)")
             throw MountError.invalidURL
         }
@@ -673,7 +816,9 @@ final class MountManager: ObservableObject {
             log.warning("[\(config.displayName)] The stored password could not be read from the Keychain")
         }
         if password.isEmpty {
-            password = KeychainManager.findSystemPassword(server: config.host, username: username) ?? ""
+            password = KeychainManager.findSystemPassword(server: config.host, username: username)
+                ?? (host == config.host ? nil : KeychainManager.findSystemPassword(server: host, username: username))
+                ?? ""
             passwordSource = password.isEmpty ? "none" : "system keychain"
         }
 
@@ -737,18 +882,20 @@ final class MountManager: ObservableObject {
 
         if result.timedOut {
             log.error("NetFS mount timed out after \(Int(Self.mountTimeout)) s (NetAuth did not answer): \(urlString)")
-            throw MountError.mountTimedOut(Self.mountTimeout)
+        } else if result.status != 0 {
+            log.error("NetFS mount failed (\(result.status)): \(netFSError(result.status))")
         }
-        if result.status != 0 {
-            let msg = netFSError(result.status)
-            log.error("NetFS mount failed (\(result.status)): \(msg)")
-            throw MountError.mountFailed(msg)
+        // With a user but no password the cause is known, whatever NetFS answered.
+        if (result.timedOut || result.status != 0) && !username.isEmpty && password.isEmpty {
+            throw MountError.missingPassword(user: username)
         }
+        if result.timedOut { throw MountError.mountTimedOut(Self.mountTimeout) }
+        if result.status != 0 { throw MountError.mountFailed(netFSError(result.status), status: result.status) }
 
         // NetFS only completes after the volume is confirmed mounted: report where.
         // Fresh scan: one already running predates this mount.
         let volumes = await refreshMountedVolumes(reuseInFlight: false)
-        if let mountPoint = Self.findMountPoint(host: config.host, path: config.path, in: volumes) {
+        if let mountPoint = Self.findMountPoint(hosts: hosts(for: config), path: config.path, in: volumes) {
             log.info("[\(config.displayName)] Mounted at \(mountPoint)")
             if mountPoint != "/Volumes/\(volumeName)" {
                 let stale = await Task.detached(priority: .utility) {
@@ -760,6 +907,54 @@ final class MountManager: ObservableObject {
                 }
             }
         }
+    }
+
+    // MARK: - Adding a whole server
+
+    /// Generous: the user is choosing shares in the system window meanwhile.
+    /// shortcut: the picker holds the mount slot until it closes (other shares'
+    /// mounts wait, closing the sheet does not cancel it); cancel the NetFS
+    /// request from the sheet if users leave the window open.
+    private static let pickerTimeout: TimeInterval = 300
+
+    /// Asks macOS to show its own window for choosing shares on `host` (the
+    /// NetAuth picker Finder's "Connect to Server" uses) and mounts the ones
+    /// the user picks. Returns every SMB volume of that host mounted afterwards.
+    /// Throws `CancellationError` when the user cancels the window.
+    func mountSharesFromSystemPicker(host: String, username: String, password: String) async throws -> [MountedSMBVolume] {
+        guard !host.isEmpty, let url = URL(string: "smb://\(host)") else { throw MountError.invalidURL }
+        guard await PortProbe.isOpen(host: host) else { throw MountError.serverUnreachable }
+
+        await acquireMountSlot()
+        defer { releaseMountSlot() }
+        log.info("Opening the system share picker for smb://\(host) — user=\(username.isEmpty ? "(ask)" : username)")
+        // No share path and no "NoUI": NetAuth asks which shares to mount (and
+        // for a password if the one given is wrong).
+        let result = await Self.netFSMount(
+            url: url as CFURL, mountPath: nil,
+            user: username.isEmpty ? nil : username as CFString,
+            pass: password.isEmpty ? nil : password as CFString,
+            openOptions: NSMutableDictionary(),
+            mountOptions: NSMutableDictionary(dictionary: ["SoftMount": true]),
+            timeout: Self.pickerTimeout
+        )
+        if result.timedOut {
+            log.error("The system share picker for \(host) did not finish in \(Int(Self.pickerTimeout)) s")
+            throw MountError.mountTimedOut(Self.pickerTimeout)
+        }
+        switch result.status {
+        case 0, EEXIST:   // EEXIST: what was picked was already mounted
+            break
+        case -128:        // userCanceledErr
+            log.info("System share picker for \(host) cancelled")
+            throw CancellationError()
+        default:
+            let message = netFSError(result.status)
+            log.error("System share picker for \(host) failed (\(result.status)): \(message)")
+            throw MountError.mountFailed(message, status: result.status)
+        }
+        let key = host.lowercased()
+        return await refreshMountedVolumes(reuseInFlight: false).filter { $0.host.lowercased() == key }
     }
 
     // MARK: - One NetFS request at a time
@@ -929,12 +1124,12 @@ final class MountManager: ObservableObject {
     /// Local path where the share is currently mounted according to the
     /// cached snapshot, or `nil` if it isn't.
     func mountPoint(for config: ShareConfig) -> String? {
-        Self.findMountPoint(host: config.host, path: config.path, in: mountedVolumes)
+        Self.findMountPoint(hosts: hosts(for: config), path: config.path, in: mountedVolumes)
     }
 
     /// Fresh answer: rescans the volumes off the main actor first.
     private func mountPointOffMain(for config: ShareConfig) async -> String? {
-        Self.findMountPoint(host: config.host, path: config.path, in: await refreshMountedVolumes())
+        Self.findMountPoint(hosts: hosts(for: config), path: config.path, in: await refreshMountedVolumes())
     }
 
     /// Every browsable SMB volume currently mounted, as seen by the system.
@@ -963,12 +1158,14 @@ final class MountManager: ObservableObject {
     }
 
     private nonisolated static func findMountPoint(
-        host: String, path: String, in volumes: [MountedSMBVolume]
+        hosts: [String], path: String, in volumes: [MountedSMBVolume]
     ) -> String? {
-        let targetHost = host.lowercased()
+        // Mounted through any of the server's addresses counts: otherwise a share
+        // mounted over the VPN would be mounted again at /Volumes/<share>-1.
+        let targetHosts = Set(hosts.map { $0.lowercased() })
         let targetPath = normalizedSharePath(path).lowercased()
         return volumes.first {
-            $0.host.lowercased() == targetHost && $0.sharePath.lowercased() == targetPath
+            targetHosts.contains($0.host.lowercased()) && $0.sharePath.lowercased() == targetPath
         }?.mountPoint
     }
 
@@ -980,11 +1177,11 @@ final class MountManager: ObservableObject {
 
     // MARK: - Private: task management
 
-    /// Ensures every watched share has a running task and no other share has
-    /// one (paused or mount-once servers); does not restart existing ones.
+    /// Ensures every active share has a running task and no other share has
+    /// one (paused servers); does not restart existing ones.
     private func syncTasks() {
         for config in configs {
-            if isWatched(config) {
+            if isActive(config) {
                 if shareTasks[config.id] == nil { startTask(for: config) }
             } else if let task = shareTasks.removeValue(forKey: config.id) {
                 task.cancel()
@@ -1072,16 +1269,27 @@ final class MountManager: ObservableObject {
         // Server down? Don't knock on NetFS (that is what leaves NetAuth hanging
         // and stale mount points behind) and don't count a failure: keep probing
         // the SMB port at the normal interval and mount as soon as it answers.
-        guard await PortProbe.isOpen(host: config.host) else {
+        guard let host = await reachableHost(for: config) else {
             if config.connectionStatus != .unreachable {
-                log.info("[\(name)] Server does not answer on port \(PortProbe.smbPort) — will mount when it is back")
+                log.info("[\(name)] Server does not answer on port \(PortProbe.smbPort) at \(hosts(for: config).joined(separator: ", ")) — will mount when it is back")
             }
             setStatus(.unreachable, forID: id)
             return
         }
 
         do {
-            try await mount(config)
+            do {
+                try await mount(config, via: host)
+            } catch let original where canRetryWithServerCredentials(config, after: original) {
+                // Its own credentials failed and its server has some: try those,
+                // and keep them for good if they work.
+                log.info("[\(name)] Trying the server’s credentials…")
+                var inheriting = config
+                inheriting.usesServerCredentials = true
+                do { try await mount(inheriting, via: host) } catch { throw original }
+                log.info("[\(name)] Mounted with the server’s credentials — the share now uses them")
+                switchToServerCredentials(id: id)
+            }
             log.info("[\(name)] ✅ Mounted successfully")
             NotificationManager.shared.sendMounted(config: config)
             failureCounts[id] = 0
@@ -1100,7 +1308,6 @@ final class MountManager: ObservableObject {
 
             // A timeout while the server's SMB port answers means NetAuth is stuck
             if case MountError.mountTimedOut = error {
-                let host = config.host
                 Task { await self.diagnoseNetAuth(host: host) }
             }
 
@@ -1116,7 +1323,10 @@ final class MountManager: ObservableObject {
                 NotificationManager.shared.sendAutoDisabled(config: config, failures: failures)
                 return
             }
+            let problem = MountProblem(error)
+            if problem != problems[id] { log.info("[\(name)] Probable cause: \(problem.advice)") }
             setStatus(.error, forID: id)
+            problems[id] = problem
         }
     }
 
@@ -1130,6 +1340,7 @@ final class MountManager: ObservableObject {
     private func setStatus(_ status: ShareConfig.ConnectionStatus, forID id: UUID) {
         guard let i = configs.firstIndex(where: { $0.id == id }) else { return }
         configs[i].connectionStatus = status
+        if status != .error { problems[id] = nil }
     }
 
     // MARK: - Private: helpers

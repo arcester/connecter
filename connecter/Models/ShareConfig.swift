@@ -106,23 +106,39 @@ struct ServerSettings: Codable {
     var username = ""
     /// A paused server's shares are unmounted and not checked until it is resumed.
     var isPaused = false
-    /// Mounted on demand only, never watched. Optional so settings saved by
-    /// 1.0 still decode (and 1.0 still reads these).
+    /// The 1.1 "mount once" mode, dropped in 1.2: such servers are automatic
+    /// now. Kept so 1.1 still reads what it saved; cleared on any mode change.
     var mountsOnce: Bool?
+    /// Other names or IPs of the same server (a VPN or Tailscale address),
+    /// tried in order after the host when it does not answer. Optional so
+    /// settings saved by 1.1 still decode.
+    var otherHosts: [String]?
 
     /// How the server's enabled shares are kept mounted.
     enum Mode: CaseIterable {
         /// Unmounted and not checked.
         case paused
-        /// Mounted once when chosen (and at launch); not remounted if it drops.
-        case manual
         /// Checked every interval and mounted whenever the server answers.
         case automatic
     }
 
     var mode: Mode {
-        get { isPaused ? .paused : mountsOnce == true ? .manual : .automatic }
-        set { isPaused = newValue == .paused; mountsOnce = newValue == .manual ? true : nil }
+        get { isPaused ? .paused : .automatic }
+        set { isPaused = newValue == .paused; mountsOnce = nil }
+    }
+
+    /// Addresses typed as a list ("nas.tailnet.ts.net, 100.64.0.5"): split on
+    /// commas and spaces, `smb://` and slashes removed, without `host` itself
+    /// or repeats.
+    static func parseHosts(_ text: String, excluding host: String) -> [String] {
+        var seen: Set<String> = [host.lowercased()]
+        return text.split(whereSeparator: { $0 == "," || $0.isWhitespace }).compactMap { raw in
+            var value = String(raw)
+            if value.lowercased().hasPrefix("smb://") { value = String(value.dropFirst(6)) }
+            value = value.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+            guard !value.isEmpty, seen.insert(value.lowercased()).inserted else { return nil }
+            return value
+        }
     }
 
     private static let storeKey = "serverSettings"

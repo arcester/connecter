@@ -202,6 +202,10 @@ private struct KeychainSettingsPane: View {
     @ObservedObject private var mountManager = MountManager.shared
     @State private var keychainMessage: String?
     @State private var storedShares: [KeychainManager.StoredShare] = []
+    /// Servers with saved credentials: host → user.
+    @State private var storedServers: [String: String] = [:]
+    /// An item waiting for the user to confirm its deletion.
+    @State private var pendingDeletion: (name: String, delete: () -> Void)?
 
     var body: some View {
         Form {
@@ -244,8 +248,32 @@ private struct KeychainSettingsPane: View {
                 }
                 .controlSize(.small)
             }
+
+            if !storedServers.isEmpty {
+                Section("Server Credentials") {
+                    ForEach(storedServers.keys.sorted(), id: \.self) { host in
+                        storedServerRow(host: host, username: storedServers[host] ?? "")
+                    }
+                }
+            }
         }
         .settingsPane()
+        .confirmationDialog(
+            "Delete “\(pendingDeletion?.name ?? "")” from the Keychain?",
+            isPresented: Binding(
+                get: { pendingDeletion != nil },
+                set: { if !$0 { pendingDeletion = nil } }
+            ),
+            titleVisibility: .visible
+        ) {
+            Button("Delete", role: .destructive) {
+                pendingDeletion?.delete()
+                refreshStoredShares()
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("Its user and password are deleted from the Keychain. This action cannot be undone.")
+        }
         .onAppear(perform: refreshStoredShares)
         .onChange(of: mountManager.configs.count) { _, _ in refreshStoredShares() }
         .alert(
@@ -264,6 +292,49 @@ private struct KeychainSettingsPane: View {
     private func refreshStoredShares() {
         storedShares = KeychainManager.storedShares()
             .sorted { $0.displayName.localizedCaseInsensitiveCompare($1.displayName) == .orderedAscending }
+        storedServers = KeychainManager.storedServerUsers()
+    }
+
+    /// Only items nothing in the list uses can be deleted: the app writes the
+    /// others back, and their passwords would be lost.
+    @ViewBuilder
+    private func deleteButton(name: String, delete: @escaping () -> Void) -> some View {
+        Button {
+            pendingDeletion = (name, delete)
+        } label: {
+            Image(systemName: "trash")
+        }
+        .buttonStyle(.borderless)
+        .help("Delete from the Keychain")
+        .accessibilityLabel(Text("Delete from the Keychain"))
+    }
+
+    @ViewBuilder
+    private func storedServerRow(host: String, username: String) -> some View {
+        let inUse = mountManager.configs.contains { $0.serverKey == host }
+        HStack(spacing: 10) {
+            Image(systemName: "server.rack")
+                .foregroundStyle(.secondary)
+                .accessibilityHidden(true)
+            VStack(alignment: .leading, spacing: 1) {
+                Text(verbatim: host)
+                    .font(.callout.weight(.medium))
+                Text(verbatim: username.isEmpty ? String(localized: "Guest") : username)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+            Spacer()
+            if inUse {
+                Text("In list")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            } else {
+                deleteButton(name: host) {
+                    KeychainManager.delete(for: .serverCredentials(host: host, username: username))
+                }
+            }
+        }
+        .padding(.vertical, 2)
     }
 
     private func isInList(_ stored: KeychainManager.StoredShare) -> Bool {
@@ -303,6 +374,9 @@ private struct KeychainSettingsPane: View {
                 }
                 .controlSize(.small)
                 .help("Add this saved share to the list")
+                deleteButton(name: stored.displayName) {
+                    KeychainManager.delete(for: ShareConfig(host: stored.host, path: stored.sharePath, username: stored.username))
+                }
             }
         }
         .padding(.vertical, 2)

@@ -6,6 +6,8 @@ struct ShareCard: View {
     let config: ShareConfig
     /// Its server is paused: the share is shown as such whatever its state.
     var isPaused = false
+    /// Probable cause of the last failed mount, shown instead of "Error".
+    var problem: MountProblem? = nil
     let onEnable: (Bool) -> Void
     let onTap: () -> Void
     let onRetry: () -> Void
@@ -15,11 +17,14 @@ struct ShareCard: View {
 
     /// The state shown as a tag next to the name: paused, or any state other
     /// than `.disconnected`. Disabled shares show none.
-    private var statusTag: (text: String, color: Color)? {
+    private var statusTag: (text: String, color: Color, help: String?)? {
         guard config.isEnabled else { return nil }
-        if isPaused { return (String(localized: "Paused"), .secondary) }
+        if isPaused { return (String(localized: "Paused"), .secondary, nil) }
         if config.connectionStatus == .disconnected { return nil }
-        return (config.connectionStatus.label, config.connectionStatus.color)
+        if config.connectionStatus == .error, let problem {
+            return (problem.title, config.connectionStatus.color, problem.advice)
+        }
+        return (config.connectionStatus.label, config.connectionStatus.color, nil)
     }
 
     var body: some View {
@@ -40,6 +45,7 @@ struct ShareCard: View {
                         if let tag = statusTag {
                             StatusTag(text: tag.text, color: tag.color)
                                 .symbolEffect(.pulse, options: .repeating, isActive: config.isBusy)
+                                .help(tag.help ?? String(localized: "Click to edit"))
                         }
                     }
                     Text(config.smbURLString)
@@ -56,7 +62,7 @@ struct ShareCard: View {
             .accessibilityLabel(Text(config.displayName))
             .accessibilityValue(Text(
                 !config.isEnabled ? String(localized: "Disabled")
-                    : isPaused ? String(localized: "Paused") : config.connectionStatus.label
+                    : isPaused ? String(localized: "Paused") : statusTag?.text ?? config.connectionStatus.label
             ))
             .accessibilityHint(Text("Click to edit"))
 
