@@ -9388,48 +9388,48 @@
         }
       }
     },
-    "Use the others for the same server reached another way, such as its VPN or Tailscale name or IP; separate them with commas. Before each mount, Connecter checks every address at once and uses the first one that answers, in order: the main one, then the others. A share mounted through any of them counts as mounted. Shares mounted through an address you remove are mounted again through the rest.": {
+    "Use the others for the same server reached another way, such as its name or IP on a VPN; separate them with commas. Before each mount, Connecter checks every address at once and uses the first one that answers, in order: the main one, then the others. A share mounted through any of them counts as mounted. Shares mounted through an address you remove are mounted again through the rest.": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Unter „Weitere“ trägst du andere Wege zum selben Server ein, etwa seinen VPN- oder Tailscale-Namen oder seine IP, durch Kommas getrennt. Vor jedem Einbinden prüft Connecter alle Adressen gleichzeitig und verwendet die erste, die antwortet, in dieser Reihenfolge: zuerst die Hauptadresse, dann die weiteren. Eine Freigabe, die über eine davon eingebunden ist, gilt als eingebunden. Freigaben, die über eine entfernte Adresse eingebunden sind, werden über die übrigen neu eingebunden."
+            "value": "Unter „Weitere“ trägst du andere Wege zum selben Server ein, etwa seinen Namen oder seine IP im VPN, durch Kommas getrennt. Vor jedem Einbinden prüft Connecter alle Adressen gleichzeitig und verwendet die erste, die antwortet, in dieser Reihenfolge: zuerst die Hauptadresse, dann die weiteren. Eine Freigabe, die über eine davon eingebunden ist, gilt als eingebunden. Freigaben, die über eine entfernte Adresse eingebunden sind, werden über die übrigen neu eingebunden."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "En «Otras» pon otras formas de llegar al mismo servidor, como su nombre o IP de la VPN o de Tailscale, separadas por comas. Antes de cada montaje, Connecter comprueba todas a la vez y usa la primera que responde, por orden: primero la principal y después las otras. Un recurso montado por cualquiera de ellas cuenta como montado. Los recursos montados por una dirección que quites se vuelven a montar por las demás."
+            "value": "En «Otras» pon otras formas de llegar al mismo servidor, como su nombre o IP en la VPN, separadas por comas. Antes de cada montaje, Connecter comprueba todas a la vez y usa la primera que responde, por orden: primero la principal y después las otras. Un recurso montado por cualquiera de ellas cuenta como montado. Los recursos montados por una dirección que quites se vuelven a montar por las demás."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Dans « Autres », indiquez d’autres moyens d’atteindre le même serveur, comme son nom ou son IP VPN ou Tailscale, séparés par des virgules. Avant chaque montage, Connecter vérifie toutes les adresses à la fois et utilise la première qui répond, dans l’ordre : la principale, puis les autres. Un partage monté par l’une d’elles est considéré comme monté. Les partages montés par une adresse que vous retirez sont remontés par les autres."
+            "value": "Dans « Autres », indiquez d’autres moyens d’atteindre le même serveur, comme son nom ou son IP sur le VPN, séparés par des virgules. Avant chaque montage, Connecter vérifie toutes les adresses à la fois et utilise la première qui répond, dans l’ordre : la principale, puis les autres. Un partage monté par l’une d’elles est considéré comme monté. Les partages montés par une adresse que vous retirez sont remontés par les autres."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "In «Altri» inserisci altri modi per raggiungere lo stesso server, come il nome o l’IP della VPN o di Tailscale, separati da virgole. Prima di ogni montaggio, Connecter controlla tutti gli indirizzi insieme e usa il primo che risponde, in ordine: prima il principale, poi gli altri. Una condivisione montata tramite uno qualsiasi di essi risulta montata. Le condivisioni montate tramite un indirizzo che rimuovi vengono rimontate tramite gli altri."
+            "value": "In «Altri» inserisci altri modi per raggiungere lo stesso server, come il suo nome o IP nella VPN, separati da virgole. Prima di ogni montaggio, Connecter controlla tutti gli indirizzi insieme e usa il primo che risponde, in ordine: prima il principale, poi gli altri. Una condivisione montata tramite uno qualsiasi di essi risulta montata. Le condivisioni montate tramite un indirizzo che rimuovi vengono rimontate tramite gli altri."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "「その他」には、同じサーバへの別の経路（VPN や Tailscale の名前や IP など）をコンマで区切って入力します。マウントの前に Connecter はすべてのアドレスを同時に確認し、応答した最初のアドレスを使います。順番はメイン、次にその他です。いずれかのアドレスでマウントされている共有はマウント済みとみなされます。削除したアドレスでマウントされている共有は、残りのアドレスでマウントし直されます。"
+            "value": "「その他」には、同じサーバへの別の経路（VPN 上の名前や IP など）をコンマで区切って入力します。マウントの前に Connecter はすべてのアドレスを同時に確認し、応答した最初のアドレスを使います。順番はメイン、次にその他です。いずれかのアドレスでマウントされている共有はマウント済みとみなされます。削除したアドレスでマウントされている共有は、残りのアドレスでマウントし直されます。"
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Em “Outros”, coloque outras formas de chegar ao mesmo servidor, como o nome ou IP da VPN ou do Tailscale, separados por vírgulas. Antes de cada montagem, o Connecter verifica todos os endereços ao mesmo tempo e usa o primeiro que responder, nesta ordem: o principal e depois os outros. Um compartilhamento montado por qualquer um deles conta como montado. Os compartilhamentos montados por um endereço que você remover são montados de novo pelos demais."
+            "value": "Em “Outros”, coloque outras formas de chegar ao mesmo servidor, como o nome ou IP na VPN, separados por vírgulas. Antes de cada montagem, o Connecter verifica todos os endereços ao mesmo tempo e usa o primeiro que responder, nesta ordem: o principal e depois os outros. Um compartilhamento montado por qualquer um deles conta como montado. Os compartilhamentos montados por um endereço que você remover são montados de novo pelos demais."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "在“其他”中填写到达同一服务器的其他方式，例如其 VPN 或 Tailscale 名称或 IP，用逗号分隔。每次装载前，Connecter 会同时检查所有地址，并按顺序使用第一个响应的地址：先是主要地址，然后是其他地址。通过其中任一地址装载的共享都视为已装载。通过你移除的地址装载的共享会通过其余地址重新装载。"
+            "value": "在“其他”中填写到达同一服务器的其他方式，例如其在 VPN 中的名称或 IP，用逗号分隔。每次装载前，Connecter 会同时检查所有地址，并按顺序使用第一个响应的地址：先是主要地址，然后是其他地址。通过其中任一地址装载的共享都视为已装载。通过你移除的地址装载的共享会通过其余地址重新装载。"
           }
         }
       }
@@ -9986,48 +9986,48 @@
         }
       }
     },
-    "nas.tailnet.ts.net, 100.64.0.5": {
+    "nas.vpn.lan, 10.8.0.5": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "nas.tailnet.ts.net, 100.64.0.5"
+            "value": "nas.vpn.lan, 10.8.0.5"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "nas.tailnet.ts.net, 100.64.0.5"
+            "value": "nas.vpn.lan, 10.8.0.5"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "nas.tailnet.ts.net, 100.64.0.5"
+            "value": "nas.vpn.lan, 10.8.0.5"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "nas.tailnet.ts.net, 100.64.0.5"
+            "value": "nas.vpn.lan, 10.8.0.5"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "nas.tailnet.ts.net, 100.64.0.5"
+            "value": "nas.vpn.lan, 10.8.0.5"
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "nas.tailnet.ts.net, 100.64.0.5"
+            "value": "nas.vpn.lan, 10.8.0.5"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "nas.tailnet.ts.net, 100.64.0.5"
+            "value": "nas.vpn.lan, 10.8.0.5"
           }
         }
       }

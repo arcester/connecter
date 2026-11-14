@@ -104,7 +104,7 @@ final class MountManager: ObservableObject {
 
     /// Probable cause of each share's last failed mount, shown instead of
     /// "Error"; cleared as soon as the share leaves the error state.
-    @Published private(set) var problems: [UUID: MountProblem] = [:]
+    @Published private(set) var problems: [UUID: MountProblem] = AppEnvironment.isDemo ? DemoData.problems : [:]
 
     /// True when a mount timed out although the server's SMB port answers —
     /// the signature of a hung NetAuth agent (seen on macOS 27). Cleared as soon
@@ -555,7 +555,7 @@ final class MountManager: ObservableObject {
     }
 
     /// Every address the share's server answers to: its host first, then the
-    /// server's other addresses (VPN, Tailscale…) in the user's order.
+    /// server's other addresses (a VPN…) in the user's order.
     func hosts(for config: ShareConfig) -> [String] {
         [config.host] + (settings(forHost: config.host).otherHosts ?? [])
     }
@@ -1220,7 +1220,14 @@ final class MountManager: ObservableObject {
     private func checkShare(id: UUID) async {
         // One check at a time per share — a refresh while a mount is in progress
         // must not start a second (possibly hanging) NetFS request.
-        guard inFlight[id] == nil, !AppEnvironment.isDemo else { return }
+        guard inFlight[id] == nil else { return }
+        if AppEnvironment.isDemo {   // demo GIF: a share switched on "mounts" after a moment, nothing real
+            guard configs.first(where: { $0.id == id })?.connectionStatus == .disconnected else { return }
+            setStatus(.connecting, forID: id)
+            try? await Task.sleep(for: .seconds(1.2))
+            if !Task.isCancelled { setStatus(.connected, forID: id) }
+            return
+        }
         let attempt = UUID()
         inFlight[id] = attempt
         defer { if inFlight[id] == attempt { inFlight.removeValue(forKey: id) } }

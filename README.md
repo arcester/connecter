@@ -11,7 +11,7 @@ A macOS menu bar utility for managing SMB network share connections. Connecter m
 - **Network-aware** — pauses checks while offline (`NWPathMonitor`) and re-checks every share as soon as connectivity returns
 - **Server-aware** — probes the SMB port before every mount attempt, so an unreachable NAS costs nothing (no NetFS calls, no failure count) and shares come back within one check interval of the server returning
 - **Add a whole server** — pick several of a server's shares at once in macOS's own share picker, or add a single share (shares already mounted in Finder are offered)
-- **VPN and Tailscale** — a server can have other addresses (a Tailscale name, a VPN IP); each mount goes through the first one that answers, and a share mounted through any of them counts as mounted
+- **VPN** — a server can have other addresses (its name or IP on a VPN); each mount goes through the first one that answers, and a share mounted through any of them counts as mounted
 - **Probable cause** — a failed share's status tag names the likely problem (wrong password, missing password, share not found, SMB refused…) with a hint on hover, instead of a bare "Error"
 - **Server credentials** — a share whose own credentials fail retries with its server's and keeps them if they work; shares with the same user and password as their server switch to the server's automatically
 - **Stable mount points** — reuses a stale `/Volumes/<share>` left by an interrupted mount instead of ending up at `/Volumes/<share>-1`, so saved paths keep working

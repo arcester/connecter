@@ -223,7 +223,7 @@ enum KeychainManager {
     /// The user of each server that has shared credentials in the Keychain,
     /// by `ShareConfig.serverKey` — attributes only, no secret is read.
     static func storedServerUsers() -> [String: String] {
-        if AppEnvironment.isDemo { return [:] }
+        if AppEnvironment.isDemo { return DemoData.storedServers }
         var users: [String: String] = [:]
         for item in appItemAttributes() where item[kSecAttrDescription as String] as? String == kindServer {
             guard let host = item[kSecAttrServer as String] as? String, !host.isEmpty else { continue }

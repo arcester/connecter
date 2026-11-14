@@ -109,7 +109,7 @@ struct ServerSettings: Codable {
     /// The 1.1 "mount once" mode, dropped in 1.2: such servers are automatic
     /// now. Kept so 1.1 still reads what it saved; cleared on any mode change.
     var mountsOnce: Bool?
-    /// Other names or IPs of the same server (a VPN or Tailscale address),
+    /// Other names or IPs of the same server (its address on a VPN),
     /// tried in order after the host when it does not answer. Optional so
     /// settings saved by 1.1 still decode.
     var otherHosts: [String]?
@@ -127,7 +127,7 @@ struct ServerSettings: Codable {
         set { isPaused = newValue == .paused; mountsOnce = nil }
     }
 
-    /// Addresses typed as a list ("nas.tailnet.ts.net, 100.64.0.5"): split on
+    /// Addresses typed as a list ("nas.vpn.lan, 10.8.0.5"): split on
     /// commas and spaces, `smb://` and slashes removed, without `host` itself
     /// or repeats.
     static func parseHosts(_ text: String, excluding host: String) -> [String] {

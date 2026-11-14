@@ -36,7 +36,7 @@ struct ServerCredentialsSheet: View {
                     }
                     GridRow {
                         Text("Others").gridColumnAlignment(.trailing).foregroundStyle(.secondary)
-                        TextField("nas.tailnet.ts.net, 100.64.0.5", text: $otherHosts)
+                        TextField("nas.vpn.lan, 10.8.0.5", text: $otherHosts)
                     }
                 }
                 if isOtherServer {
@@ -44,7 +44,7 @@ struct ServerCredentialsSheet: View {
                         .font(.caption)
                         .foregroundStyle(.orange)
                 }
-                Text("Use the others for the same server reached another way, such as its VPN or Tailscale name or IP; separate them with commas. Before each mount, Connecter checks every address at once and uses the first one that answers, in order: the main one, then the others. A share mounted through any of them counts as mounted. Shares mounted through an address you remove are mounted again through the rest.")
+                Text("Use the others for the same server reached another way, such as its name or IP on a VPN; separate them with commas. Before each mount, Connecter checks every address at once and uses the first one that answers, in order: the main one, then the others. A share mounted through any of them counts as mounted. Shares mounted through an address you remove are mounted again through the rest.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
