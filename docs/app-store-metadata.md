@@ -64,7 +64,9 @@ nas,network drive,mount,samba,synology,qnap,truenas,file sharing,auto mount,reco
 
 **What's New in This Version** (1.3):
 
-> • Adding a share from a server that has credentials goes straight to its shares: the ones already mounted in Finder, and the macOS list of all of them
+> • Adding shares is one simple sheet: pick the server, or a new one, and its shares already mounted in Finder come ticked; the macOS list shows the rest, through any of the server’s addresses
+> • Adding shares never replaces a server’s saved credentials; a server without them takes those of its other shares
+> • A share mounted through a server’s VPN address joins that server instead of a new one
 
 **What's New in 1.2**:
 
@@ -133,7 +135,9 @@ nas,unidad de red,montar,samba,synology,qnap,truenas,carpeta compartida,reconect
 
 **Novedades de esta versión** (1.3):
 
-> • Añadir un recurso desde un servidor con credenciales va directo a sus recursos: los ya montados en el Finder y la lista de macOS con todos
+> • Añadir recursos es una sola hoja: elige el servidor, o uno nuevo, y sus recursos ya montados en el Finder salen marcados; la lista de macOS muestra el resto, por cualquiera de las direcciones del servidor
+> • Añadir recursos nunca sustituye las credenciales guardadas de un servidor; uno que no las tiene toma las de sus otros recursos
+> • Un recurso montado por la dirección VPN de un servidor se añade a ese servidor y no a uno nuevo
 
 **Novedades de la 1.2**:
 
