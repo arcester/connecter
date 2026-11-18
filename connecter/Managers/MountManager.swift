@@ -1145,7 +1145,7 @@ final class MountManager: ObservableObject {
 
     /// Every browsable SMB volume currently mounted, as seen by the system.
     nonisolated static func mountedSMBVolumes() -> [MountedSMBVolume] {
-        guard !AppEnvironment.isDemo else { return [] }   // no real volumes in screenshots
+        guard !AppEnvironment.isDemo else { return DemoData.finderVolumes }   // no real volumes in screenshots
         let keys: Set<URLResourceKey> = [.volumeURLForRemountingKey, .volumeLocalizedNameKey]
         guard let volumes = FileManager.default.mountedVolumeURLs(
             includingResourceValuesForKeys: Array(keys), options: [.skipHiddenVolumes]

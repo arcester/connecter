@@ -31,6 +31,15 @@ enum DemoData {
                            isEnabled: enabled, connectionStatus: status)
     }
 
+    /// Mounted in Finder but not in the list: what the new-share sheet offers.
+    nonisolated static var finderVolumes: [MountedSMBVolume] {
+        let names = Bundle.main.preferredLocalizations.first == "es" ? ["películas", "series"] : ["movies", "tv-shows"]
+        return names.map {
+            let path = $0.folding(options: .diacriticInsensitive, locale: nil)
+            return MountedSMBVolume(host: "nas.local", sharePath: path, mountPoint: "/Volumes/\(path)", volumeName: $0, user: "admin")
+        }
+    }
+
     /// The failed share's status tag names the probable cause.
     static var problems: [UUID: MountProblem] {
         Dictionary(uniqueKeysWithValues: shares.filter { $0.connectionStatus == .error }.map { ($0.id, .wrongCredentials) })
