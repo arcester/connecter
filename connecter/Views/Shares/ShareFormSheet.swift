@@ -197,14 +197,25 @@ struct ShareFormSheet: View {
             allConfigs = MountManager.shared.configs
             // Shares mounted in Finder but not in the app: start with picking one
             // of them; otherwise with the server's shares.
+            // Added from the menu of a server that has credentials: go straight to
+            // its shares, mounted ones first, then macOS's list of all of them.
+            let opensServer = !isEditing && onAddShares != nil && !cleanHost.isEmpty && !serverUsername.isEmpty
             if !isEditing && onAddShares != nil {
-                addsServer = !MountManager.shared.mountedVolumes.contains { !isConfigured($0) }
+                addsServer = opensServer || !MountManager.shared.mountedVolumes.contains { !isConfigured($0) }
             }
             if !isEditing {
                 Task {
                     // Scan off the main actor: a slow SMB mount must not freeze the sheet.
                     let volumes = await MountManager.shared.refreshMountedVolumes()
                     discoveredShares = volumes.filter { !isConfigured($0) }
+                    guard opensServer else { return }
+                    let addresses = MountManager.shared.hosts(for: ShareConfig(host: cleanHost))
+                    addServerVolumes(discoveredShares.filter { volume in
+                        addresses.contains { $0.caseInsensitiveCompare(volume.host) == .orderedSame }
+                    })
+                    guard addsServer else { return }   // the user switched to "One share"
+                    loadServerCredentials()
+                    await chooseServerShares()
                 }
             }
         }
@@ -431,8 +442,7 @@ extension ShareFormSheet {
                 username: username.trimmingCharacters(in: .whitespacesAndNewlines),
                 password: password
             )
-            serverVolumes = volumes.filter { !isConfigured($0) }
-            selectedVolumes = Set(serverVolumes.map(\.mountPoint))
+            addServerVolumes(volumes.filter { !isConfigured($0) })
             pickerFinished = true
         } catch is CancellationError {
             // The user closed the macOS window: nothing to show.
@@ -443,6 +453,13 @@ extension ShareFormSheet {
         } catch {
             pickerError = String(localized: "macOS could not mount the shares. The activity log has the details.")
         }
+    }
+
+    /// Lists (and ticks) volumes not listed yet; keeps the ones already there.
+    private func addServerVolumes(_ volumes: [MountedSMBVolume]) {
+        let new = volumes.filter { volume in !serverVolumes.contains { $0.mountPoint == volume.mountPoint } }
+        serverVolumes += new
+        selectedVolumes.formUnion(new.map(\.mountPoint))
     }
 
     /// Adds the picked shares on the server's credentials. With no user typed,
