@@ -10,7 +10,7 @@ A macOS menu bar utility for managing SMB network share connections. Connecter m
 - **Smart retry** — exponential backoff (×2, ×4, then 5 min) with configurable auto-disable after repeated failures, and a notification when a share is switched off
 - **Network-aware** — pauses checks while offline (`NWPathMonitor`) and re-checks every share as soon as connectivity returns
 - **Server-aware** — probes the SMB port before every mount attempt, so an unreachable NAS costs nothing (no NetFS calls, no failure count) and shares come back within one check interval of the server returning
-- **Add a whole server** — pick several of a server's shares at once in macOS's own share picker, or add a single share (shares already mounted in Finder are offered)
+- **Add shares by server** — pick a server in the list (or a new one): its shares already mounted in Finder come ticked, macOS's own share picker adds more at once, or type one by name; the server's saved credentials are never replaced
 - **VPN** — a server can have other addresses (its name or IP on a VPN); each mount goes through the first one that answers, and a share mounted through any of them counts as mounted
 - **Probable cause** — a failed share's status tag names the likely problem (wrong password, missing password, share not found, SMB refused…) with a hint on hover, instead of a bare "Error"
 - **Server credentials** — a share whose own credentials fail retries with its server's and keeps them if they work; shares with the same user and password as their server switch to the server's automatically

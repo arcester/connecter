@@ -17,10 +17,11 @@ struct ServerCredentialsSheet: View {
         ServerSettings.parseHosts(mainHost, excluding: "").first ?? ""
     }
 
-    /// The new main address is already another server in the list.
+    /// One of the addresses typed is already another server's, main or other.
     private var isOtherServer: Bool {
-        let key = cleanMainHost.lowercased()
-        return key != host.lowercased() && mountManager.configs.contains { $0.serverKey == key }
+        ([cleanMainHost] + ServerSettings.parseHosts(otherHosts, excluding: cleanMainHost)).contains {
+            mountManager.serverHost(forAddress: $0, excluding: host) != nil
+        }
     }
 
     var body: some View {

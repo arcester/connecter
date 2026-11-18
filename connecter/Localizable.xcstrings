@@ -5386,52 +5386,6 @@
         }
       }
     },
-    "Mounted in Finder": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Im Finder eingebunden"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Montado en el Finder"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Monté dans le Finder"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Montate nel Finder"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Finder でマウント済み"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Montados no Finder"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "已在访达中装载"
-          }
-        }
-      }
-    },
     "Mounts as %@, the user set for %@.": {
       "localizations": {
         "de": {
@@ -5566,6 +5520,52 @@
           "stringUnit": {
             "state": "translated",
             "value": "新建 SMB 共享"
+          }
+        }
+      }
+    },
+    "New Server…": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Neuer Server …"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nuevo servidor…"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nouveau serveur…"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nuovo server…"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "新規サーバ…"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Novo servidor…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "新服务器…"
           }
         }
       }
@@ -6072,52 +6072,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "好"
-          }
-        }
-      }
-    },
-    "One share": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Eine Freigabe"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Un recurso"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Un partage"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Una condivisione"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "1 つの共有"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Um compartilhamento"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "单个共享"
           }
         }
       }
@@ -7870,6 +7824,52 @@
         }
       }
     },
+    "Saved as the server’s credentials, for its other shares too.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wird als Anmeldedaten des Servers gesichert, auch für seine anderen Freigaben."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se guardan como credenciales del servidor, también para sus demás recursos."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enregistrés comme identifiants du serveur, aussi pour ses autres partages."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Salvate come credenziali del server, anche per le sue altre condivisioni."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "サーバの資格情報として保存され、このサーバのほかの共有でも使われます。"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Salvas como credenciais do servidor, também para os outros compartilhamentos dele."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "将存储为服务器凭证，也供此服务器上的其他共享使用。"
+          }
+        }
+      }
+    },
     "Server": {
       "localizations": {
         "de": {
@@ -8372,52 +8372,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "找不到共享"
-          }
-        }
-      }
-    },
-    "Shares of a server": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Freigaben eines Servers"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Recursos de un servidor"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Partages d’un serveur"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Condivisioni di un server"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "サーバの共有"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Compartilhamentos de um servidor"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "服务器上的共享"
           }
         }
       }
@@ -9480,52 +9434,6 @@
         }
       }
     },
-    "Use this share": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Diese Freigabe verwenden"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Usar este recurso"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Utiliser ce partage"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Usa questa condivisione"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "この共有を使用"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Usar este compartilhamento"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "使用此共享"
-          }
-        }
-      }
-    },
     "Used by the shares on this server that have “Use the server’s credentials” turned on.": {
       "localizations": {
         "de": {
@@ -9894,48 +9802,48 @@
         }
       }
     },
-    "macOS lists the server’s shares and mounts the ones you pick. They are added with these credentials as the server’s.": {
+    "macOS lists the server’s shares and mounts the ones you pick.": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "macOS zeigt die Freigaben des Servers an und bindet die ausgewählten ein. Sie werden mit diesen Anmeldedaten als Anmeldedaten des Servers hinzugefügt."
+            "value": "macOS zeigt die Freigaben des Servers an und bindet die ausgewählten ein."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "macOS muestra los recursos del servidor y monta los que elijas. Se añaden con estas credenciales como las del servidor."
+            "value": "macOS muestra los recursos del servidor y monta los que elijas."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "macOS affiche les partages du serveur et monte ceux que vous choisissez. Ils sont ajoutés avec ces identifiants comme identifiants du serveur."
+            "value": "macOS affiche les partages du serveur et monte ceux que vous choisissez."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "macOS mostra le condivisioni del server e monta quelle che scegli. Vengono aggiunte con queste credenziali come credenziali del server."
+            "value": "macOS mostra le condivisioni del server e monta quelle che scegli."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "macOS がサーバの共有を表示し、選んだ共有をマウントします。これらの資格情報をサーバの資格情報として追加されます。"
+            "value": "macOS がサーバの共有を表示し、選んだ共有をマウントします。"
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "O macOS mostra os compartilhamentos do servidor e monta os que você escolher. Eles são adicionados com estas credenciais como as do servidor."
+            "value": "O macOS mostra os compartilhamentos do servidor e monta os que você escolher."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "macOS 会列出服务器上的共享并装载你选择的共享。它们会以这些凭证作为服务器凭证添加。"
+            "value": "macOS 会列出服务器上的共享并装载你选择的共享。"
           }
         }
       }

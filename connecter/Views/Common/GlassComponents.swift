@@ -16,6 +16,7 @@ struct GlassSection<Content: View>: View {
                 .padding(.horizontal, 2)
             content
         }
+        .frame(maxWidth: .infinity, alignment: .leading)   // as wide as the sheet, whatever it holds
         .padding(12)
         .outlinedBox()
     }

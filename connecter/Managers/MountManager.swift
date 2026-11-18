@@ -560,6 +560,16 @@ final class MountManager: ObservableObject {
         [config.host] + (settings(forHost: config.host).otherHosts ?? [])
     }
 
+    /// The main host of the server in the list that answers to `address`
+    /// (its host or one of its other addresses, case-insensitive), skipping
+    /// the server `excluding`; `nil` when none does.
+    func serverHost(forAddress address: String, excluding: String? = nil) -> String? {
+        configs.first { config in
+            config.serverKey != excluding?.lowercased()
+                && hosts(for: config).contains { $0.caseInsensitiveCompare(address) == .orderedSame }
+        }?.host
+    }
+
     /// Sets the server's main address (`newHost`, may equal `host`) and its
     /// other addresses, then retries its shares that are not mounted.
     ///
@@ -631,10 +641,9 @@ final class MountManager: ObservableObject {
         reloadConfigs()
     }
 
-    /// The first of the share's server addresses, in order, whose SMB port
-    /// answers. All are probed at once: a dead VPN name can take the whole timeout.
-    private func reachableHost(for config: ShareConfig) async -> String? {
-        let hosts = hosts(for: config)
+    /// The first of a server's addresses, in order, whose SMB port answers.
+    /// All are probed at once: a dead VPN name can take the whole timeout.
+    private func reachableHost(among hosts: [String]) async -> String? {
         let open = await withTaskGroup(of: (Int, Bool).self) { group in
             for (i, host) in hosts.enumerated() {
                 group.addTask { (i, await PortProbe.isOpen(host: host)) }
@@ -917,13 +926,15 @@ final class MountManager: ObservableObject {
     /// request from the sheet if users leave the window open.
     private static let pickerTimeout: TimeInterval = 300
 
-    /// Asks macOS to show its own window for choosing shares on `host` (the
-    /// NetAuth picker Finder's "Connect to Server" uses) and mounts the ones
-    /// the user picks. Returns every SMB volume of that host mounted afterwards.
+    /// Asks macOS to show its own window for choosing shares on a server (the
+    /// NetAuth picker Finder's "Connect to Server" uses), through the first of
+    /// its `hosts` that answers, and mounts the ones the user picks. Returns
+    /// every SMB volume of the server mounted afterwards, through any of them.
     /// Throws `CancellationError` when the user cancels the window.
-    func mountSharesFromSystemPicker(host: String, username: String, password: String) async throws -> [MountedSMBVolume] {
-        guard !host.isEmpty, let url = URL(string: "smb://\(host)") else { throw MountError.invalidURL }
-        guard await PortProbe.isOpen(host: host) else { throw MountError.serverUnreachable }
+    func mountSharesFromSystemPicker(hosts: [String], username: String, password: String) async throws -> [MountedSMBVolume] {
+        guard !(hosts.first ?? "").isEmpty else { throw MountError.invalidURL }
+        guard let host = await reachableHost(among: hosts) else { throw MountError.serverUnreachable }
+        guard let url = URL(string: "smb://\(host)") else { throw MountError.invalidURL }
 
         await acquireMountSlot()
         defer { releaseMountSlot() }
@@ -953,8 +964,8 @@ final class MountManager: ObservableObject {
             log.error("System share picker for \(host) failed (\(result.status)): \(message)")
             throw MountError.mountFailed(message, status: result.status)
         }
-        let key = host.lowercased()
-        return await refreshMountedVolumes(reuseInFlight: false).filter { $0.host.lowercased() == key }
+        let keys = Set(hosts.map { $0.lowercased() })
+        return await refreshMountedVolumes(reuseInFlight: false).filter { keys.contains($0.host.lowercased()) }
     }
 
     // MARK: - One NetFS request at a time
@@ -1276,7 +1287,7 @@ final class MountManager: ObservableObject {
         // Server down? Don't knock on NetFS (that is what leaves NetAuth hanging
         // and stale mount points behind) and don't count a failure: keep probing
         // the SMB port at the normal interval and mount as soon as it answers.
-        guard let host = await reachableHost(for: config) else {
+        guard let host = await reachableHost(among: hosts(for: config)) else {
             if config.connectionStatus != .unreachable {
                 log.info("[\(name)] Server does not answer on port \(PortProbe.smbPort) at \(hosts(for: config).joined(separator: ", ")) — will mount when it is back")
             }

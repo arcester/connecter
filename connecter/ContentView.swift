@@ -70,8 +70,7 @@ struct ContentView: View {
         .background(WindowResizer(width: contentWidth, height: desiredContentHeight) { windowWidth = $0 })
         .escapeClosesWindow()
         .sheet(isPresented: $showAddSheet) {
-            ShareFormSheet(existing: nil, initialHost: addSheetHost,
-                           onSave: { addShares([$0]) }, onAddShares: addShares)
+            ShareFormSheet(existing: nil, initialHost: addSheetHost, onAddShares: addShares)
         }
         .sheet(item: $editingConfig) { config in
             ShareFormSheet(existing: config) { updated in
