@@ -62,7 +62,11 @@ nas,network drive,mount,samba,synology,qnap,truenas,file sharing,auto mount,reco
 
 **Copyright**: © 2026 J. Guzmán Arce Sáez
 
-**What's New in This Version** (1.2):
+**What's New in This Version** (1.3):
+
+> • Adding a share from a server that has credentials goes straight to its shares: the ones already mounted in Finder, and the macOS list of all of them
+
+**What's New in 1.2**:
 
 > • Add a whole server: choose several of its shares at once in the macOS share picker
 > • VPN: give a server other addresses and Connecter mounts through the one that answers; the main address can be changed
@@ -127,7 +131,11 @@ nas,unidad de red,montar,samba,synology,qnap,truenas,carpeta compartida,reconect
 
 **URL de la política de privacidad**: https://arcester.github.io/connecter/es/#privacy
 
-**Novedades de esta versión** (1.2):
+**Novedades de esta versión** (1.3):
+
+> • Añadir un recurso desde un servidor con credenciales va directo a sus recursos: los ya montados en el Finder y la lista de macOS con todos
+
+**Novedades de la 1.2**:
 
 > • Añade un servidor completo: elige varios de sus recursos a la vez en el selector de macOS
 > • VPN: da a un servidor otras direcciones y Connecter monta por la que responda; la dirección principal se puede cambiar
